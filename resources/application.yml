@@ -1,0 +1,5 @@
+spring:
+  profiles:
+    # 기본적으로 local 프로파일 활성화
+    default: local
+    active: local
