@@ -1,6 +1,6 @@
 package com.PickOne.user.repository;
 
-import com.PickOne.user.model.domain.User;
+import com.PickOne.user.model.domain.user.User;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

@@ -3,7 +3,7 @@ package com.PickOne.user.controller;
 import com.PickOne.user.controller.dto.UserRegistrationRequest;
 import com.PickOne.user.controller.dto.PasswordChangeRequest;
 import com.PickOne.user.controller.dto.UserResponse;
-import com.PickOne.user.model.domain.User;
+import com.PickOne.user.model.domain.user.User;
 import com.PickOne.user.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

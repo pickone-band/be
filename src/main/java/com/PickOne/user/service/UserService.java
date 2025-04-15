@@ -1,6 +1,6 @@
 package com.PickOne.user.service;
 
-import com.PickOne.user.model.domain.User;
+import com.PickOne.user.model.domain.user.User;
 
 import java.util.List;
 

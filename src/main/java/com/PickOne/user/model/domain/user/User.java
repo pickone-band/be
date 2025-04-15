@@ -1,4 +1,4 @@
-package com.PickOne.user.model.domain;
+package com.PickOne.user.model.domain.user;
 
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;

@@ -1,9 +1,8 @@
 package com.PickOne.user.model.entity;
 
-import com.PickOne.common.entity.EntityStatus;
-import com.PickOne.user.model.domain.Email;
-import com.PickOne.user.model.domain.Password;
-import com.PickOne.user.model.domain.User;
+import com.PickOne.user.model.domain.user.Email;
+import com.PickOne.user.model.domain.user.Password;
+import com.PickOne.user.model.domain.user.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

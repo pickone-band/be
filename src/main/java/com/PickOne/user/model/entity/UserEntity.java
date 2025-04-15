@@ -1,9 +1,9 @@
 package com.PickOne.user.model.entity;
 
 import com.PickOne.common.entity.BaseEntity;
-import com.PickOne.user.model.domain.Email;
-import com.PickOne.user.model.domain.Password;
-import com.PickOne.user.model.domain.User;
+import com.PickOne.user.model.domain.user.Email;
+import com.PickOne.user.model.domain.user.Password;
+import com.PickOne.user.model.domain.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package com.PickOne.user.model.domain;
+package com.PickOne.user.model.domain.user;
 
 import com.PickOne.user.service.PasswordEncoder;
 import lombok.AccessLevel;
