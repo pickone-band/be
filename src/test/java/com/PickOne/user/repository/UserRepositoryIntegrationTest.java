@@ -1,9 +1,9 @@
 package com.PickOne.user.repository;
 
 import com.PickOne.common.config.AuditConfig;
-import com.PickOne.user.model.domain.user.Email;
-import com.PickOne.user.model.domain.user.Password;
-import com.PickOne.user.model.domain.user.User;
+import com.PickOne.user.model.domain.Email;
+import com.PickOne.user.model.domain.Password;
+import com.PickOne.user.model.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

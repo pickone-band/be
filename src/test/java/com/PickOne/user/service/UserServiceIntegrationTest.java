@@ -3,7 +3,7 @@ package com.PickOne.user.service;
 import com.PickOne.user.exception.EmailAlreadyExistsException;
 import com.PickOne.user.exception.PasswordMismatchException;
 import com.PickOne.user.exception.UserNotFoundException;
-import com.PickOne.user.model.domain.user.User;
+import com.PickOne.user.model.domain.User;
 import com.PickOne.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
