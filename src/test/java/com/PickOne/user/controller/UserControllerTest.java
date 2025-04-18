@@ -6,7 +6,7 @@ import com.PickOne.user.controller.dto.UserRegistrationRequest;
 import com.PickOne.user.exception.EmailAlreadyExistsException;
 import com.PickOne.user.exception.PasswordMismatchException;
 import com.PickOne.user.exception.UserNotFoundException;
-import com.PickOne.user.model.domain.user.User;
+import com.PickOne.user.model.domain.User;
 import com.PickOne.user.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
