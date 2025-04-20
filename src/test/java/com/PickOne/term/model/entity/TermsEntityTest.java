@@ -28,11 +28,10 @@ class TermsEntityTest {
         Required required = Required.of(true);
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
-        Long createdBy = 1L;
 
         Terms terms = Terms.of(
                 id, title, content, type, version, effectiveDateObj, required,
-                createdAt, updatedAt, createdBy
+                createdAt, updatedAt
         );
 
         // when
@@ -73,7 +72,7 @@ class TermsEntityTest {
         LocalDateTime now = LocalDateTime.now();
         Terms originalTerms = Terms.of(
                 id, title, content, type, version, effectiveDateObj, required,
-                now, now, 1L
+                now, now
         );
 
         // when
@@ -112,12 +111,11 @@ class TermsEntityTest {
         Required required = Required.of(false);
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
-        Long createdBy = 2L;
 
         // 신규 약관은 ID가 null
         Terms newTerms = Terms.of(
                 null, title, content, type, version, effectiveDateObj, required,
-                createdAt, updatedAt, createdBy
+                createdAt, updatedAt
         );
 
         // when
@@ -147,7 +145,7 @@ class TermsEntityTest {
 
         Terms terms = Terms.of(
                 1L, title, content, type, version, effectiveDateObj, required,
-                LocalDateTime.now(), LocalDateTime.now(), 1L
+                LocalDateTime.now(), LocalDateTime.now()
         );
 
         TermsEntity entity = TermsEntity.from(terms);
@@ -180,7 +178,7 @@ class TermsEntityTest {
 
         Terms terms = Terms.of(
                 1L, title, content, type, version, effectiveDateObj, required,
-                LocalDateTime.now(), LocalDateTime.now(), 1L
+                LocalDateTime.now(), LocalDateTime.now()
         );
 
         TermsEntity entity = TermsEntity.from(terms);
@@ -213,7 +211,7 @@ class TermsEntityTest {
 
         Terms terms = Terms.of(
                 1L, title, content, type, version, effectiveDateObj, required,
-                LocalDateTime.now(), LocalDateTime.now(), 1L
+                LocalDateTime.now(), LocalDateTime.now()
         );
 
         TermsEntity entity = TermsEntity.from(terms);
@@ -246,7 +244,7 @@ class TermsEntityTest {
 
         Terms terms = Terms.of(
                 1L, title, content, type, version, effectiveDateObj, required,
-                LocalDateTime.now(), LocalDateTime.now(), 1L
+                LocalDateTime.now(), LocalDateTime.now()
         );
 
         TermsEntity entity = TermsEntity.from(terms);
@@ -280,7 +278,7 @@ class TermsEntityTest {
 
         Terms terms = Terms.of(
                 1L, title, content, type, version, effectiveDateObj, required,
-                LocalDateTime.now(), LocalDateTime.now(), 1L
+                LocalDateTime.now(), LocalDateTime.now()
         );
 
         TermsEntity entity = TermsEntity.from(terms);
@@ -307,7 +305,7 @@ class TermsEntityTest {
 
         Terms terms = Terms.of(
                 1L, title, content, type, version, effectiveDateObj, required,
-                LocalDateTime.now(), LocalDateTime.now(), 1L
+                LocalDateTime.now(), LocalDateTime.now()
         );
 
         TermsEntity entity = TermsEntity.from(terms);
