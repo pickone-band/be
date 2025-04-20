@@ -2,8 +2,7 @@ package com.PickOne.term.service;
 
 import com.PickOne.term.model.domain.TermsType;
 import com.PickOne.term.model.domain.UserConsent;
-import com.PickOne.term.model.entity.UserConsentEntity;
-import com.PickOne.term.repository.UserConsentRepository;
+import com.PickOne.term.repository.userConsent.UserConsentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
