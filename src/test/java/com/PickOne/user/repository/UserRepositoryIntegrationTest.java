@@ -1,6 +1,7 @@
 package com.PickOne.user.repository;
 
 import com.PickOne.common.config.AuditConfig;
+import com.PickOne.common.config.SecurityConfig;
 import com.PickOne.user.model.domain.Email;
 import com.PickOne.user.model.domain.Password;
 import com.PickOne.user.model.domain.User;
@@ -11,15 +12,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.query.sqm.tree.SqmNode.log;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DataJpaTest
-@Import(AuditConfig.class)
+@Import({AuditConfig.class, SecurityConfig.class})
 class JpaUserRepositoryIntegrationTest {
 
     @Autowired
