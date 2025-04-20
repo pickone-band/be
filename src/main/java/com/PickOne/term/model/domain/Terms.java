@@ -22,11 +22,10 @@ public class Terms {
     private Required required;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Long createdBy;
 
     private Terms(Long id, Title title, Content content, TermsType type, Version version,
                   EffectiveDate effectiveDate, Required required, LocalDateTime createdAt,
-                  LocalDateTime updatedAt, Long createdBy) {
+                  LocalDateTime updatedAt) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -36,25 +35,24 @@ public class Terms {
         this.required = required;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-        this.createdBy = createdBy;
     }
 
     // 신규 약관 생성 (ID 없음)
     public static Terms create(Title title, Content content, TermsType type, Version version,
-                               EffectiveDate effectiveDate, Required required, Long createdBy) {
+                               EffectiveDate effectiveDate, Required required) {
         validateTerms(title, content, type, version, effectiveDate, required);
         LocalDateTime now = LocalDateTime.now();
         return new Terms(null, title, content, type, version, effectiveDate, required,
-                now, now, createdBy);
+                now, now);
     }
 
     // 기존 약관 로드 (ID 있음)
     public static Terms of(Long id, Title title, Content content, TermsType type, Version version,
                            EffectiveDate effectiveDate, Required required, LocalDateTime createdAt,
-                           LocalDateTime updatedAt, Long createdBy) {
+                           LocalDateTime updatedAt) {
         validateTerms(title, content, type, version, effectiveDate, required);
         return new Terms(id, title, content, type, version, effectiveDate, required,
-                createdAt, updatedAt, createdBy);
+                createdAt, updatedAt);
     }
 
     // 약관 생성 시 추가 검증 로직
@@ -81,7 +79,7 @@ public class Terms {
     }
 
     // 내용 업데이트
-    public Terms updateContent(Content newContent, Long updatedBy) {
+    public Terms updateContent(Content newContent, String updatedBy) {
         validateUpdater(updatedBy);
         this.content = newContent;
         this.updatedAt = LocalDateTime.now();
@@ -89,7 +87,7 @@ public class Terms {
     }
 
     // 버전 업데이트
-    public Terms updateVersion(Version newVersion, Long updatedBy) {
+    public Terms updateVersion(Version newVersion, String updatedBy) {
         validateUpdater(updatedBy);
         this.version = newVersion;
         this.updatedAt = LocalDateTime.now();
@@ -97,7 +95,7 @@ public class Terms {
     }
 
     // 시행일 업데이트
-    public Terms updateEffectiveDate(EffectiveDate newEffectiveDate, Long updatedBy) {
+    public Terms updateEffectiveDate(EffectiveDate newEffectiveDate, String updatedBy) {
         validateUpdater(updatedBy);
         this.effectiveDate = newEffectiveDate;
         this.updatedAt = LocalDateTime.now();
@@ -105,7 +103,7 @@ public class Terms {
     }
 
     // 필수 여부 업데이트
-    public Terms updateRequired(Required newRequired, Long updatedBy) {
+    public Terms updateRequired(Required newRequired, String updatedBy) {
         validateUpdater(updatedBy);
         this.required = newRequired;
         this.updatedAt = LocalDateTime.now();
@@ -113,7 +111,7 @@ public class Terms {
     }
 
     // 업데이트 권한 검증
-    private void validateUpdater(Long updatedBy) {
+    private void validateUpdater(String updatedBy) {
         if (updatedBy == null) {
             throw new IllegalArgumentException("업데이트를 수행하는 사용자 ID는 null일 수 없습니다.");
         }

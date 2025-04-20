@@ -79,8 +79,7 @@ public class TermsEntity extends BaseEntity {
                 EffectiveDate.of(effectiveDate),
                 Required.of(required),
                 getCreatedAt(),
-                getUpdatedAt(),
-                Long.valueOf(getCreatedBy())
+                getUpdatedAt()
         );
     }
 
