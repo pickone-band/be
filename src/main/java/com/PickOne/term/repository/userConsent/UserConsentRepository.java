@@ -1,4 +1,4 @@
-package com.PickOne.term.repository;
+package com.PickOne.term.repository.userConsent;
 
 import com.PickOne.term.model.domain.UserConsent;
 import org.springframework.stereotype.Repository;
@@ -71,4 +71,9 @@ public interface UserConsentRepository {
      * @return 약관에 동의한 사용자 ID 목록
      */
     List<Long> findUserIdsByTermsIdAndConsented(Long termsId);
+
+    /**
+     * 모든 사용자 동의 정보를 삭제합니다.
+     */
+    void deleteAll();
 }

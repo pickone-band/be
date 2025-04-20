@@ -1,4 +1,4 @@
-package com.PickOne.term.repository;
+package com.PickOne.term.repository.userConsent;
 
 import com.PickOne.term.model.entity.UserConsentEntity;
 import org.springframework.data.jpa.repository.JpaRepository;

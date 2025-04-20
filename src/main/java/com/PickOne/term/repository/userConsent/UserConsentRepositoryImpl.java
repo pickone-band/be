@@ -1,9 +1,8 @@
-package com.PickOne.term.repository;
+package com.PickOne.term.repository.userConsent;
 
 import com.PickOne.term.model.domain.UserConsent;
 import com.PickOne.term.model.entity.UserConsentEntity;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -75,5 +74,10 @@ public class UserConsentRepositoryImpl implements UserConsentRepository {
     @Override
     public List<Long> findUserIdsByTermsIdAndConsented(Long termsId) {
         return jpaUserConsentRepository.findUserIdsByTermsIdAndConsented(termsId);
+    }
+
+    @Override
+    public void deleteAll() {
+        jpaUserConsentRepository.deleteAll();
     }
 }
