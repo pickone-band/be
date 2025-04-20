@@ -23,4 +23,5 @@ public class AuditConfig {
     public AuditorAware<String> productionAuditorProvider() {
         return () -> Optional.of("SYSTEM_USER");
     }
+
 }
