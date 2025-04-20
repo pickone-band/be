@@ -6,8 +6,8 @@ import com.PickOne.term.model.domain.UserConsent;
 import com.PickOne.term.model.domain.Version;
 import com.PickOne.term.model.entity.TermsEntity;
 import com.PickOne.term.model.entity.UserConsentEntity;
-import com.PickOne.term.repository.JpaTermsRepository;
-import com.PickOne.term.repository.JpaUserConsentRepository;
+import com.PickOne.term.repository.terms.JpaTermsRepository;
+import com.PickOne.term.repository.userConsent.JpaUserConsentRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;

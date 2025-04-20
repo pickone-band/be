@@ -3,8 +3,7 @@ package com.PickOne.term.service;
 import com.PickOne.term.model.domain.Terms;
 import com.PickOne.term.model.domain.TermsType;
 import com.PickOne.term.model.domain.UserConsent;
-import com.PickOne.term.repository.UserConsentRepository;
-import org.junit.jupiter.api.BeforeEach;
+import com.PickOne.term.repository.userConsent.UserConsentRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +18,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
