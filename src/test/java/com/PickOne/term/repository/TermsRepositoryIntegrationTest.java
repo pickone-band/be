@@ -4,13 +4,15 @@ import com.PickOne.common.config.AuditConfig;
 import com.PickOne.common.config.SecurityConfig;
 import com.PickOne.term.model.domain.*;
 import com.PickOne.term.model.entity.TermsEntity;
+import com.PickOne.term.repository.terms.JpaTermsRepository;
+import com.PickOne.term.repository.terms.TermsRepository;
+import com.PickOne.term.repository.terms.TermsRepositoryImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
 import java.util.List;

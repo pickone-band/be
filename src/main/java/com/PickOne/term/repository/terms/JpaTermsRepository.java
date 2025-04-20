@@ -1,4 +1,4 @@
-package com.PickOne.term.repository;
+package com.PickOne.term.repository.terms;
 
 import com.PickOne.term.model.domain.TermsType;
 import com.PickOne.term.model.entity.TermsEntity;
@@ -60,4 +60,5 @@ public interface JpaTermsRepository extends JpaRepository<TermsEntity, Long> {
      * @return 해당 날짜 이후에 시행되는 약관 목록
      */
     List<TermsEntity> findAllByEffectiveDateAfterOrderByEffectiveDateAsc(LocalDate date);
+
 }

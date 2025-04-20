@@ -1,10 +1,9 @@
-package com.PickOne.term.repository;
+package com.PickOne.term.repository.terms;
 
 import com.PickOne.term.model.domain.Terms;
 import com.PickOne.term.model.domain.TermsType;
 import com.PickOne.term.model.entity.TermsEntity;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -78,5 +77,10 @@ public class TermsRepositoryImpl implements TermsRepository {
     @Override
     public void deleteById(Long id) {
         jpaTermsRepository.deleteById(id);
+    }
+
+    @Override
+    public void deleteAll() {
+        jpaTermsRepository.deleteAll();
     }
 }

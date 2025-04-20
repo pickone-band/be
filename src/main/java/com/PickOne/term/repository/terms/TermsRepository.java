@@ -1,4 +1,4 @@
-package com.PickOne.term.repository;
+package com.PickOne.term.repository.terms;
 
 import com.PickOne.term.model.domain.Terms;
 import com.PickOne.term.model.domain.TermsType;
@@ -86,4 +86,9 @@ public interface TermsRepository {
      * @param id 삭제할 약관 ID
      */
     void deleteById(Long id);
+
+    /**
+     * 모든 약관을 삭제합니다.
+     */
+    void deleteAll();
 }
