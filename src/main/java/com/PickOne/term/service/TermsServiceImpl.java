@@ -1,7 +1,7 @@
 package com.PickOne.term.service;
 
 import com.PickOne.term.model.domain.*;
-import com.PickOne.term.repository.TermsRepository;
+import com.PickOne.term.repository.terms.TermsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
