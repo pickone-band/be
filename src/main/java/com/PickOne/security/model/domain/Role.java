@@ -24,7 +24,7 @@ public class Role {
         return new Role(id, RoleName.of(name), description);
     }
 
-    public static Role createNew(String name, String description) {
+    public static Role create(String name, String description) {
         return new Role(null, RoleName.of(name), description);
     }
 }
