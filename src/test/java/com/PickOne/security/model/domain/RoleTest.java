@@ -21,13 +21,13 @@ class RoleTest {
 
         // then
         assertThat(role.getId()).isEqualTo(id);
-        assertThat(role.getName().getValue()).isEqualTo(name);
+        assertThat(role.getName()).isEqualTo(name);
         assertThat(role.getDescription()).isEqualTo(description);
     }
 
     @Test
     @DisplayName("create 메서드: ID가 null인 새 역할 객체를 생성한다")
-    void createNew_ShouldCreateRoleWithNullIdAndNameAndDescription() {
+    void create_ShouldCreateRoleWithNullIdAndNameAndDescription() {
         // given
         String name = "USER";
         String description = "일반 사용자 역할";
@@ -37,7 +37,46 @@ class RoleTest {
 
         // then
         assertThat(role.getId()).isNull();
-        assertThat(role.getName().getValue()).isEqualTo(name);
+        assertThat(role.getName()).isEqualTo(name);
         assertThat(role.getDescription()).isEqualTo(description);
+    }
+
+    @Test
+    @DisplayName("유효하지 않은 역할 이름으로 역할 생성 시 예외가 발생한다")
+    void createRole_ShouldThrowException_WhenNameIsInvalid() {
+        // given
+        Long id = 1L;
+        String invalidName = "GUEST";
+        String description = "유효하지 않은 역할";
+
+        // when & then
+        assertThatThrownBy(() -> Role.of(id, invalidName, description))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("유효하지 않은 역할 이름입니다: " + invalidName);
+    }
+
+    @Test
+    @DisplayName("역할 이름이 null이면 예외가 발생한다")
+    void createRole_ShouldThrowException_WhenNameIsNull() {
+        // given
+        String nullName = null;
+        String description = "이름이 null인 역할";
+
+        // when & then
+        assertThatThrownBy(() -> Role.create(nullName, description))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("유효하지 않은 역할 이름입니다: " + nullName);
+    }
+
+    @Test
+    @DisplayName("빈 문자열은 유효하지 않은 역할 이름으로 예외 발생")
+    void createRole_ShouldThrowException_WhenNameIsEmpty() {
+        // given
+        String emptyName = "";
+        String description = "이름이 빈 문자열인 역할";
+
+        // when & then
+        assertThatThrownBy(() -> Role.of(1L, emptyName, description))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }
