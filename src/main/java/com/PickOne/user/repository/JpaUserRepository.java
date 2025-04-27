@@ -1,6 +1,6 @@
 package com.PickOne.user.repository;
 
-import com.PickOne.user.model.domain.user.User;
+import com.PickOne.user.model.domain.User;
 import com.PickOne.user.model.entity.UserEntity;
 import org.springframework.stereotype.Repository;
 
