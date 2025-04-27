@@ -2,7 +2,7 @@ package com.PickOne.security.model.entity;
 
 import com.PickOne.security.model.domain.Permission;
 import com.PickOne.security.model.domain.Role;
-import com.PickOne.user.model.domain.user.User;
+import com.PickOne.user.model.domain.User;
 import com.PickOne.user.model.entity.UserEntity;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
