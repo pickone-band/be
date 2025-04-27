@@ -4,7 +4,7 @@ import com.PickOne.term.model.domain.Content;
 import com.PickOne.term.model.domain.Terms;
 import com.PickOne.term.model.domain.TermsType;
 import com.PickOne.term.model.domain.Version;
-import com.PickOne.term.repository.TermsRepository;
+import com.PickOne.term.repository.terms.TermsRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
