@@ -56,7 +56,7 @@ public class User {
         // 새 객체 반환
         this.password = newPassword;
 
-        return this;
+        return new User(this.id, this.email, newPassword);
     }
 
     // 편의 메서드
