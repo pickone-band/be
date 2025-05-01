@@ -35,6 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
+application*.yml
 
 # 로컬 환경 설정만 제외
 application-local.yml
