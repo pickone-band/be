@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -48,13 +49,12 @@ class ConsentControllerTest {
 
     @BeforeEach
     void setUp() {
-        // 실제 Authentication 객체 생성 및 설정
-        authentication = new TestingAuthenticationToken(
-                userId.toString(), "credentials",
-                AuthorityUtils.createAuthorityList("ROLE_USER")
-        );
-        authentication.setAuthenticated(true);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        // Mock 인증 설정
+        Authentication authentication = Mockito.mock(Authentication.class);
+        when(authentication.getName()).thenReturn("1"); // userId를 문자열로 반환
+        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
     }
 
     @AfterEach
