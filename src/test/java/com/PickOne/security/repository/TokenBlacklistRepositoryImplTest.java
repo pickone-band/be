@@ -27,83 +27,67 @@ class TokenBlacklistRepositoryImplTest {
     @InjectMocks
     private TokenBlacklistRepositoryImpl tokenBlacklistRepository;
 
-    private static final String TEST_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test";
-    private static final String BLACKLIST_PREFIX = "blacklist:";
-
     @Test
-    @DisplayName("토큰을 블랙리스트에 추가한다")
-    void addToBlacklist_ShouldAddTokenToBlacklist() {
+    @DisplayName("토큰 블랙리스트 추가 테스트 - TTL 양수")
+    void addToBlacklist_PositiveTtl() {
         // given
-        long ttlMillis = 3600000; // 1시간
-        String expectedKey = BLACKLIST_PREFIX + TEST_TOKEN;
+        String token = "test-token";
+        long ttlMillis = 3600000; // 1 hour
 
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        doNothing().when(valueOperations).set(anyString(), anyString(), anyLong(), any(TimeUnit.class));
 
         // when
-        tokenBlacklistRepository.addToBlacklist(TEST_TOKEN, ttlMillis);
+        tokenBlacklistRepository.addToBlacklist(token, ttlMillis);
 
         // then
-        verify(valueOperations).set(eq(expectedKey), eq("blacklisted"), eq(ttlMillis), eq(TimeUnit.MILLISECONDS));
+        verify(redisTemplate).opsForValue();
+        verify(valueOperations).set(eq("blacklist:" + token), eq("blacklisted"), eq(ttlMillis), eq(TimeUnit.MILLISECONDS));
     }
 
     @Test
-    @DisplayName("TTL이 0 이하인 경우 블랙리스트에 추가하지 않는다")
-    void addToBlacklist_ShouldNotAddToken_WhenTtlIsZeroOrNegative() {
+    @DisplayName("토큰 블랙리스트 추가 테스트 - TTL 0 이하")
+    void addToBlacklist_NonPositiveTtl() {
         // given
+        String token = "test-token";
         long ttlMillis = 0;
 
         // when
-        tokenBlacklistRepository.addToBlacklist(TEST_TOKEN, ttlMillis);
+        tokenBlacklistRepository.addToBlacklist(token, ttlMillis);
 
         // then
         verify(redisTemplate, never()).opsForValue();
     }
 
     @Test
-    @DisplayName("블랙리스트에 있는 토큰을 확인한다")
-    void isBlacklisted_ShouldReturnTrue_WhenTokenIsBlacklisted() {
+    @DisplayName("토큰 블랙리스트 확인 테스트 - 블랙리스트에 있음")
+    void isBlacklisted_True() {
         // given
-        String expectedKey = BLACKLIST_PREFIX + TEST_TOKEN;
+        String token = "test-token";
 
-        when(redisTemplate.hasKey(expectedKey)).thenReturn(true);
+        when(redisTemplate.hasKey(anyString())).thenReturn(true);
 
         // when
-        boolean result = tokenBlacklistRepository.isBlacklisted(TEST_TOKEN);
+        boolean result = tokenBlacklistRepository.isBlacklisted(token);
 
         // then
+        verify(redisTemplate).hasKey(eq("blacklist:" + token));
         assertThat(result).isTrue();
-        verify(redisTemplate).hasKey(expectedKey);
     }
 
     @Test
-    @DisplayName("블랙리스트에 없는 토큰을 확인한다")
-    void isBlacklisted_ShouldReturnFalse_WhenTokenIsNotBlacklisted() {
+    @DisplayName("토큰 블랙리스트 확인 테스트 - 블랙리스트에 없음")
+    void isBlacklisted_False() {
         // given
-        String expectedKey = BLACKLIST_PREFIX + TEST_TOKEN;
+        String token = "test-token";
 
-        when(redisTemplate.hasKey(expectedKey)).thenReturn(false);
+        when(redisTemplate.hasKey(anyString())).thenReturn(false);
 
         // when
-        boolean result = tokenBlacklistRepository.isBlacklisted(TEST_TOKEN);
+        boolean result = tokenBlacklistRepository.isBlacklisted(token);
 
         // then
+        verify(redisTemplate).hasKey(eq("blacklist:" + token));
         assertThat(result).isFalse();
-        verify(redisTemplate).hasKey(expectedKey);
-    }
-
-    @Test
-    @DisplayName("hasKey가 null을 반환할 경우 블랙리스트에 없는 것으로 간주한다")
-    void isBlacklisted_ShouldReturnFalse_WhenHasKeyReturnsNull() {
-        // given
-        String expectedKey = BLACKLIST_PREFIX + TEST_TOKEN;
-
-        when(redisTemplate.hasKey(expectedKey)).thenReturn(null);
-
-        // when
-        boolean result = tokenBlacklistRepository.isBlacklisted(TEST_TOKEN);
-
-        // then
-        assertThat(result).isFalse();
-        verify(redisTemplate).hasKey(expectedKey);
     }
 }

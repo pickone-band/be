@@ -1,0 +1,20 @@
+package com.PickOne.term.repository;
+
+import com.PickOne.term.model.domain.TermConsent;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * UserConsent 도메인을 위한 기본 리포지토리 인터페이스
+ * 구현 기술에 독립적인 메서드 정의
+ */
+@Repository
+public interface TermConsentRepository {
+    TermConsent save(TermConsent termsConsent);
+
+    Optional<TermConsent> findByUserIdAndTermsId(Long userId, Long termsId);
+    List<TermConsent> findAllByUserId(Long userId);
+    boolean hasUserConsented(Long userId, Long termsId);
+}

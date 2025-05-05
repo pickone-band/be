@@ -1,9 +1,6 @@
 package com.PickOne.term.model.domain;
 
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.util.Arrays;
 

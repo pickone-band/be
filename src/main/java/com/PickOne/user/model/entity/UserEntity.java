@@ -1,3 +1,4 @@
+// UserEntity.java
 package com.PickOne.user.model.entity;
 
 import com.PickOne.common.entity.BaseEntity;
@@ -14,7 +15,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserEntity extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,22 +33,10 @@ public class UserEntity extends BaseEntity {
     }
 
     public User toDomain() {
-        return User.of(this.id,
+        return User.of(
+                this.id,
                 Email.of(this.email),
                 Password.ofEncoded(this.password)
         );
-    }
-
-    // 생성자
-    private UserEntity(String email, String password) {
-        this.email = email;
-        this.password = password;
-    }
-
-    // 비밀번호 변경 메서드
-    public UserEntity withPassword(String newPassword) {
-        UserEntity entity = new UserEntity(this.email, newPassword);
-        entity.id = this.id;
-        return entity;
     }
 }

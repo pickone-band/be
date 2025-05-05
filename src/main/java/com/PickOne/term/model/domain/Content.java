@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @EqualsAndHashCode
 public class Content {
+
     private String value;
 
     private Content(String value) {
