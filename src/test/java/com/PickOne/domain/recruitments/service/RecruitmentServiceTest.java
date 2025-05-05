@@ -17,7 +17,6 @@ import com.PickOne.domain.recruitments.repository.RecruitmentGenreRepository;
 import com.PickOne.domain.recruitments.repository.RecruitmentInstrumentRepository;
 import com.PickOne.domain.recruitments.repository.RecruitmentRepository;
 import com.PickOne.test.NoSecurityConfig;
-import com.PickOne.test.TestConfig;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import org.junit.jupiter.api.Test;
