@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.authority.AuthorityUtils;
 
@@ -90,6 +91,15 @@ class ConsentControllerTest {
     @DisplayName("약관 동의 여부 확인 테스트 - 동의한 경우")
     void hasConsented_WhenConsented() {
         // given
+        // SecurityContext 설정
+        SecurityContext securityContext = mock(SecurityContext.class);
+        SecurityContextHolder.setContext(securityContext);
+
+        Authentication authentication = mock(Authentication.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn(userId.toString());
+
+        // 서비스 호출 설정
         when(userConsentService.hasUserConsented(userId, termsId)).thenReturn(true);
 
         // when
@@ -99,6 +109,9 @@ class ConsentControllerTest {
         verify(userConsentService).hasUserConsented(userId, termsId);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getResult().consented()).isTrue();
+
+        // 테스트 완료 후 컨텍스트 정리
+        SecurityContextHolder.clearContext();
     }
 
     /**
