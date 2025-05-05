@@ -3,6 +3,7 @@ package com.PickOne.domain.recruitments.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.PickOne.common.config.SecurityConfig;
 import com.PickOne.domain.recruitments.dto.request.InstrumentProficiencyDto;
 import com.PickOne.domain.recruitments.dto.request.GenreRequestDto;
 import com.PickOne.domain.recruitments.dto.request.RecruitmentRequestDto;
@@ -25,7 +26,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
 @Import(NoSecurityConfig.class)
-@SpringBootTest
+@SpringBootTest(properties = "spring.main.allow-bean-definition-overriding=true")
 @Transactional
 class RecruitmentServiceTest {
 
