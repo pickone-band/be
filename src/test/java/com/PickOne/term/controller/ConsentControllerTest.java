@@ -51,6 +51,7 @@ class ConsentControllerTest {
 
     @BeforeEach
     void setUp() {
+        SecurityContextHolder.clearContext();
         // 실제 SecurityContext 설정
         Authentication authentication = new TestingAuthenticationToken(
                 userId.toString(), "credentials",
