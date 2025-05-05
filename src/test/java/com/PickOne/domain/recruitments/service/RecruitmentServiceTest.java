@@ -16,6 +16,7 @@ import com.PickOne.domain.recruitments.model.Visibility;
 import com.PickOne.domain.recruitments.repository.RecruitmentGenreRepository;
 import com.PickOne.domain.recruitments.repository.RecruitmentInstrumentRepository;
 import com.PickOne.domain.recruitments.repository.RecruitmentRepository;
+import com.PickOne.test.NoSecurityConfig;
 import com.PickOne.test.TestConfig;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -24,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
-@Import(TestConfig.class)
+@Import(NoSecurityConfig.class)
 @SpringBootTest
 @Transactional
 class RecruitmentServiceTest {
