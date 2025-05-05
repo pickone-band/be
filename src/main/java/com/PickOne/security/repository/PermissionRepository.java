@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PermissionRepository extends JpaRepository<PermissionEntity, Long> {
+public interface
+PermissionRepository extends JpaRepository<PermissionEntity, Long> {
     Optional<PermissionEntity> findByCode(PermissionCode code);
     List<PermissionEntity> findByCategory(Category category);
 }
