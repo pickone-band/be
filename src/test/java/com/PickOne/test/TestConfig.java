@@ -5,6 +5,7 @@ import com.PickOne.security.handler.CustomAccessDeniedHandler;
 import com.PickOne.security.handler.CustomAuthenticationEntryPoint;
 import com.PickOne.security.repository.TokenBlacklistRepository;
 import com.PickOne.security.service.CustomUserDetailsService;
+import com.PickOne.security.service.JwtService;
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,5 +44,10 @@ public class TestConfig {
     @Bean
     public CustomAccessDeniedHandler customAccessDeniedHandler() {
         return Mockito.mock(CustomAccessDeniedHandler.class);
+    }
+
+    @Bean
+    public JwtService jwtService() {
+        return Mockito.mock(JwtService.class);
     }
 }
