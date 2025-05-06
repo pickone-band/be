@@ -1,7 +1,6 @@
 package com.PickOne.domain.term.service;
 
 import com.PickOne.domain.term.model.domain.Term;
-import com.PickOne.term.model.domain.*;
 import com.PickOne.domain.term.repository.TermRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

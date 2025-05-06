@@ -3,7 +3,6 @@ package com.PickOne.domain.term.model.entity;
 import com.PickOne.domain.term.model.domain.*;
 import com.PickOne.domain.term.model.domain.Version;
 import com.PickOne.global.common.entity.BaseEntity;
-import com.PickOne.term.model.domain.*;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
