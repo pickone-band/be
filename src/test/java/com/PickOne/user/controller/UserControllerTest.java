@@ -1,10 +1,11 @@
 package com.PickOne.user.controller;
 
-import com.PickOne.user.dto.UserResponse;
-import com.PickOne.user.model.domain.Email;
-import com.PickOne.user.model.domain.Password;
-import com.PickOne.user.model.domain.User;
-import com.PickOne.user.service.UserService;
+import com.PickOne.domain.user.controller.UserController;
+import com.PickOne.domain.user.dto.UserResponse;
+import com.PickOne.domain.user.model.domain.Email;
+import com.PickOne.domain.user.model.domain.Password;
+import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.domain.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -1,6 +1,7 @@
 package com.PickOne.security.filter;
 
-import com.PickOne.security.service.JwtService;
+import com.PickOne.global.security.filter.JwtAuthenticationFilter;
+import com.PickOne.global.security.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

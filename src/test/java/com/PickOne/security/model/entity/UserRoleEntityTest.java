@@ -1,17 +1,18 @@
 package com.PickOne.security.model.entity;
 
-import com.PickOne.security.model.domain.Role;
-import com.PickOne.user.model.domain.Email;
-import com.PickOne.user.model.domain.Password;
-import com.PickOne.user.model.domain.User;
-import com.PickOne.user.model.entity.UserEntity;
+import com.PickOne.global.security.model.domain.Role;
+import com.PickOne.global.security.model.entity.RoleEntity;
+import com.PickOne.global.security.model.entity.UserRoleEntity;
+import com.PickOne.domain.user.model.domain.Email;
+import com.PickOne.domain.user.model.domain.Password;
+import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.domain.user.model.entity.UserEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 class UserRoleEntityTest {
 

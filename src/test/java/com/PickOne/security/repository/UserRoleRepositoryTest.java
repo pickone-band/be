@@ -1,12 +1,13 @@
 package com.PickOne.security.repository;
 
-import com.PickOne.security.model.domain.Role;
-import com.PickOne.security.model.entity.RoleEntity;
-import com.PickOne.security.model.entity.UserRoleEntity;
-import com.PickOne.user.model.domain.Email;
-import com.PickOne.user.model.domain.Password;
-import com.PickOne.user.model.domain.User;
-import com.PickOne.user.model.entity.UserEntity;
+import com.PickOne.global.security.model.domain.Role;
+import com.PickOne.global.security.model.entity.RoleEntity;
+import com.PickOne.global.security.model.entity.UserRoleEntity;
+import com.PickOne.global.security.repository.UserRoleRepository;
+import com.PickOne.domain.user.model.domain.Email;
+import com.PickOne.domain.user.model.domain.Password;
+import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.domain.user.model.entity.UserEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

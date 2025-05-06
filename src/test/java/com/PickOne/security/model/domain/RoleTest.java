@@ -1,5 +1,6 @@
 package com.PickOne.security.model.domain;
 
+import com.PickOne.global.security.model.domain.Role;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

@@ -1,13 +1,16 @@
 package com.PickOne.security.model.entity;
 
-import com.PickOne.security.model.domain.Category;
-import com.PickOne.security.model.domain.Permission;
-import com.PickOne.security.model.domain.PermissionCode;
-import com.PickOne.security.model.domain.Role;
-import com.PickOne.user.model.domain.Email;
-import com.PickOne.user.model.domain.Password;
-import com.PickOne.user.model.domain.User;
-import com.PickOne.user.model.entity.UserEntity;
+import com.PickOne.global.security.model.domain.Category;
+import com.PickOne.global.security.model.domain.Permission;
+import com.PickOne.global.security.model.domain.PermissionCode;
+import com.PickOne.global.security.model.domain.Role;
+import com.PickOne.global.security.model.entity.PermissionEntity;
+import com.PickOne.global.security.model.entity.RoleEntity;
+import com.PickOne.global.security.model.entity.SecurityUser;
+import com.PickOne.domain.user.model.domain.Email;
+import com.PickOne.domain.user.model.domain.Password;
+import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.domain.user.model.entity.UserEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,7 +22,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 class SecurityUserTest {
 

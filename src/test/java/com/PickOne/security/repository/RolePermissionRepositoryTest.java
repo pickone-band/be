@@ -1,12 +1,13 @@
 package com.PickOne.security.repository;
 
-import com.PickOne.security.model.domain.Category;
-import com.PickOne.security.model.domain.Permission;
-import com.PickOne.security.model.domain.PermissionCode;
-import com.PickOne.security.model.domain.Role;
-import com.PickOne.security.model.entity.PermissionEntity;
-import com.PickOne.security.model.entity.RoleEntity;
-import com.PickOne.security.model.entity.RolePermissionEntity;
+import com.PickOne.global.security.model.domain.Category;
+import com.PickOne.global.security.model.domain.Permission;
+import com.PickOne.global.security.model.domain.PermissionCode;
+import com.PickOne.global.security.model.domain.Role;
+import com.PickOne.global.security.model.entity.PermissionEntity;
+import com.PickOne.global.security.model.entity.RoleEntity;
+import com.PickOne.global.security.model.entity.RolePermissionEntity;
+import com.PickOne.global.security.repository.RolePermissionRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,7 +1,8 @@
 package com.PickOne.security.repository;
 
-import com.PickOne.security.model.domain.Role;
-import com.PickOne.security.model.entity.RoleEntity;
+import com.PickOne.global.security.model.domain.Role;
+import com.PickOne.global.security.model.entity.RoleEntity;
+import com.PickOne.global.security.repository.RoleRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

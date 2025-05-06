@@ -1,6 +1,8 @@
 package com.PickOne.security.service;
 
-import com.PickOne.security.repository.TokenBlacklistRepository;
+import com.PickOne.global.security.repository.TokenBlacklistRepository;
+import com.PickOne.global.security.service.CustomUserDetailsService;
+import com.PickOne.global.security.service.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

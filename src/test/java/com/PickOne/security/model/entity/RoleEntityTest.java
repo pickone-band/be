@@ -1,11 +1,11 @@
 package com.PickOne.security.model.entity;
 
-import com.PickOne.security.model.domain.Role;
+import com.PickOne.global.security.model.domain.Role;
+import com.PickOne.global.security.model.entity.RoleEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 class RoleEntityTest {
 

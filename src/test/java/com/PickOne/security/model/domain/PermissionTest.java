@@ -1,10 +1,12 @@
 package com.PickOne.security.model.domain;
 
+import com.PickOne.global.security.model.domain.Category;
+import com.PickOne.global.security.model.domain.Permission;
+import com.PickOne.global.security.model.domain.PermissionCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 class PermissionTest {
 

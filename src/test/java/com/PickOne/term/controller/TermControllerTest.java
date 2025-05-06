@@ -1,10 +1,11 @@
 package com.PickOne.term.controller;
 
+import com.PickOne.domain.term.controller.TermController;
+import com.PickOne.domain.term.model.domain.*;
 import com.PickOne.global.exception.BaseResponse;
 import com.PickOne.global.exception.SuccessCode;
-import com.PickOne.term.dto.TermsRequest;
-import com.PickOne.term.model.domain.*;
-import com.PickOne.term.service.TermService;
+import com.PickOne.domain.term.dto.TermsRequest;
+import com.PickOne.domain.term.service.TermService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

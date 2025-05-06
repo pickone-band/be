@@ -1,5 +1,6 @@
 package com.PickOne.user.model.domain;
 
+import com.PickOne.domain.user.model.domain.Email;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

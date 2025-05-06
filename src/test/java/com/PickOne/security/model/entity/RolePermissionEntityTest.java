@@ -1,16 +1,18 @@
 package com.PickOne.security.model.entity;
 
-import com.PickOne.security.model.domain.Category;
-import com.PickOne.security.model.domain.Permission;
-import com.PickOne.security.model.domain.PermissionCode;
-import com.PickOne.security.model.domain.Role;
+import com.PickOne.global.security.model.domain.Category;
+import com.PickOne.global.security.model.domain.Permission;
+import com.PickOne.global.security.model.domain.PermissionCode;
+import com.PickOne.global.security.model.domain.Role;
+import com.PickOne.global.security.model.entity.PermissionEntity;
+import com.PickOne.global.security.model.entity.RoleEntity;
+import com.PickOne.global.security.model.entity.RolePermissionEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 class RolePermissionEntityTest {
 

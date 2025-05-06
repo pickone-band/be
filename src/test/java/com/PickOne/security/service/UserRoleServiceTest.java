@@ -1,12 +1,13 @@
 package com.PickOne.security.service;
 
-import com.PickOne.security.model.domain.Role;
-import com.PickOne.security.model.entity.RoleEntity;
-import com.PickOne.security.model.entity.UserRoleEntity;
-import com.PickOne.security.repository.RoleRepository;
-import com.PickOne.security.repository.UserRoleRepository;
-import com.PickOne.user.model.entity.UserEntity;
-import com.PickOne.user.repository.UserJpaRepository;
+import com.PickOne.global.security.model.domain.Role;
+import com.PickOne.global.security.model.entity.RoleEntity;
+import com.PickOne.global.security.model.entity.UserRoleEntity;
+import com.PickOne.global.security.repository.RoleRepository;
+import com.PickOne.global.security.repository.UserRoleRepository;
+import com.PickOne.global.security.service.UserRoleService;
+import com.PickOne.domain.user.model.entity.UserEntity;
+import com.PickOne.domain.user.repository.UserJpaRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

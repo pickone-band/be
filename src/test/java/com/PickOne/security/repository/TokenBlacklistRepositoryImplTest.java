@@ -1,5 +1,6 @@
 package com.PickOne.security.repository;
 
+import com.PickOne.global.security.repository.TokenBlacklistRepositoryImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

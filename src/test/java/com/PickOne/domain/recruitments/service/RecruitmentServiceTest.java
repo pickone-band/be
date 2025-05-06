@@ -3,7 +3,6 @@ package com.PickOne.domain.recruitments.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.PickOne.common.config.SecurityConfig;
 import com.PickOne.domain.recruitments.dto.request.InstrumentProficiencyDto;
 import com.PickOne.domain.recruitments.dto.request.GenreRequestDto;
 import com.PickOne.domain.recruitments.dto.request.RecruitmentRequestDto;

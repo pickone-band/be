@@ -1,7 +1,9 @@
 package com.PickOne.term.repository;
 
-import com.PickOne.term.model.domain.Term;
-import com.PickOne.term.model.entity.TermsEntity;
+import com.PickOne.domain.term.model.domain.Term;
+import com.PickOne.domain.term.model.entity.TermsEntity;
+import com.PickOne.domain.term.repository.JpaTermRepository;
+import com.PickOne.domain.term.repository.TermRepositoryImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

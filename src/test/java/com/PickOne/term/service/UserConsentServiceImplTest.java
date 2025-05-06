@@ -1,7 +1,8 @@
 package com.PickOne.term.service;
 
-import com.PickOne.term.model.domain.TermConsent;
-import com.PickOne.term.repository.TermConsentRepository;
+import com.PickOne.domain.term.model.domain.TermConsent;
+import com.PickOne.domain.term.repository.TermConsentRepository;
+import com.PickOne.domain.term.service.UserConsentServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

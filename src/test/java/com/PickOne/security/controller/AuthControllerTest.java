@@ -1,14 +1,13 @@
 package com.PickOne.security.controller;
 
 import com.PickOne.global.exception.BaseResponse;
-import com.PickOne.security.dto.AuthResponse;
-import com.PickOne.security.dto.LoginRequest;
-import com.PickOne.security.dto.RefreshTokenRequest;
-import com.PickOne.security.dto.SignupRequest;
-import com.PickOne.security.service.AuthService;
-import com.PickOne.user.model.domain.Email;
-import com.PickOne.user.model.domain.Password;
-import com.PickOne.user.model.domain.User;
+import com.PickOne.global.security.controller.AuthController;
+import com.PickOne.global.security.dto.AuthResponse;
+import com.PickOne.global.security.dto.LoginRequest;
+import com.PickOne.global.security.dto.RefreshTokenRequest;
+import com.PickOne.global.security.dto.SignupRequest;
+import com.PickOne.global.security.service.AuthService;
+import com.PickOne.domain.user.model.domain.User;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

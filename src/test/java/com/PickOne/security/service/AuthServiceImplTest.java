@@ -2,8 +2,11 @@ package com.PickOne.security.service;
 
 import com.PickOne.global.exception.BusinessException;
 import com.PickOne.global.exception.ErrorCode;
-import com.PickOne.user.model.domain.User;
-import com.PickOne.user.repository.UserRepository;
+import com.PickOne.global.security.service.AuthServiceImpl;
+import com.PickOne.global.security.service.JwtService;
+import com.PickOne.global.security.service.PasswordEncoder;
+import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.domain.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

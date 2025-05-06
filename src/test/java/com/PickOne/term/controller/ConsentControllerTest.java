@@ -1,12 +1,13 @@
 package com.PickOne.term.controller;
 
+import com.PickOne.domain.term.controller.ConsentController;
 import com.PickOne.global.exception.BaseResponse;
 import com.PickOne.global.exception.BusinessException;
 import com.PickOne.global.exception.ErrorCode;
-import com.PickOne.term.dto.ConsentCheckResponse;
-import com.PickOne.term.dto.ConsentRequest;
-import com.PickOne.term.model.domain.TermConsent;
-import com.PickOne.term.service.UserConsentService;
+import com.PickOne.domain.term.dto.ConsentCheckResponse;
+import com.PickOne.domain.term.dto.ConsentRequest;
+import com.PickOne.domain.term.model.domain.TermConsent;
+import com.PickOne.domain.term.service.UserConsentService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

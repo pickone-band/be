@@ -1,8 +1,10 @@
 package com.PickOne.security.repository;
 
-import com.PickOne.security.model.domain.Category;
-import com.PickOne.security.model.domain.PermissionCode;
-import com.PickOne.security.model.entity.PermissionEntity;
+import com.PickOne.global.security.model.domain.Category;
+import com.PickOne.global.security.model.domain.Permission;
+import com.PickOne.global.security.model.domain.PermissionCode;
+import com.PickOne.global.security.model.entity.PermissionEntity;
+import com.PickOne.global.security.repository.PermissionRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,7 +30,7 @@ class PermissionRepositoryTest {
         // given
         PermissionCode code = PermissionCode.POST_CREATE;
         PermissionEntity permissionEntity = PermissionEntity.from(
-                com.PickOne.security.model.domain.Permission.of(1L, code, Category.POST));
+                Permission.of(1L, code, Category.POST));
 
         when(permissionRepository.findByCode(code)).thenReturn(Optional.of(permissionEntity));
 
@@ -48,9 +50,9 @@ class PermissionRepositoryTest {
         Category category = Category.POST;
 
         PermissionEntity permission1 = PermissionEntity.from(
-                com.PickOne.security.model.domain.Permission.of(1L, PermissionCode.POST_CREATE, category));
+                Permission.of(1L, PermissionCode.POST_CREATE, category));
         PermissionEntity permission2 = PermissionEntity.from(
-                com.PickOne.security.model.domain.Permission.of(2L, PermissionCode.POST_READ, category));
+                Permission.of(2L, PermissionCode.POST_READ, category));
 
         List<PermissionEntity> expectedPermissions = Arrays.asList(permission1, permission2);
 

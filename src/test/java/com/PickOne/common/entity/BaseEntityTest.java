@@ -1,5 +1,6 @@
 package com.PickOne.common.entity;
 
+import com.PickOne.global.common.entity.BaseEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
