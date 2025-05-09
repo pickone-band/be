@@ -25,6 +25,26 @@ public class UserEntity extends BaseEntity {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
+    private boolean enabled = true;
+
+    // 패키지 프라이빗 세터 - 같은 패키지의 테스트에서만 접근 가능
+    void setEmail(String email) {
+        this.email = email;
+    }
+
+    void setPassword(String password) {
+        this.password = password;
+    }
+
+    void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    void setId(Long id) {
+        this.id = id;
+    }
+
     public static UserEntity from(User user) {
         UserEntity entity = new UserEntity();
         entity.email = user.getEmailValue();
