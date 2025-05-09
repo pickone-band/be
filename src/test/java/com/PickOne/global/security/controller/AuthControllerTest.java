@@ -35,9 +35,7 @@ class AuthControllerTest {
         // given
         String email = "test@example.com";
         String password = "Password123!";
-        LoginRequest request = new LoginRequest();
-        request.setEmail(email);
-        request.setPassword(password);
+        LoginRequest request = new LoginRequest(email, password);
 
         User mockUser = mock(User.class);
         when(mockUser.getId()).thenReturn(1L);
@@ -60,10 +58,10 @@ class AuthControllerTest {
 
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getResult()).isNotNull();
-        assertThat(response.getBody().getResult().getAccessToken()).isEqualTo(accessToken);
-        assertThat(response.getBody().getResult().getRefreshToken()).isEqualTo(refreshToken);
-        assertThat(response.getBody().getResult().getUserId()).isEqualTo(1L);
-        assertThat(response.getBody().getResult().getEmail()).isEqualTo(email);
+        assertThat(response.getBody().getResult().accessToken()).isEqualTo(accessToken);
+        assertThat(response.getBody().getResult().refreshToken()).isEqualTo(refreshToken);
+        assertThat(response.getBody().getResult().userId()).isEqualTo(1L);
+        assertThat(response.getBody().getResult().email()).isEqualTo(email);
     }
 
     @Test
@@ -72,9 +70,8 @@ class AuthControllerTest {
         // given
         String email = "test@example.com";
         String password = "Password123!";
-        SignupRequest request = new SignupRequest();
-        request.setEmail(email);
-        request.setPassword(password);
+        // 생성자를 사용하여 SignupRequest 객체 생성
+        SignupRequest request = new SignupRequest(email, password);
 
         User mockUser = mock(User.class);
         when(mockUser.getId()).thenReturn(1L);
@@ -97,10 +94,10 @@ class AuthControllerTest {
 
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getResult()).isNotNull();
-        assertThat(response.getBody().getResult().getAccessToken()).isEqualTo(accessToken);
-        assertThat(response.getBody().getResult().getRefreshToken()).isEqualTo(refreshToken);
-        assertThat(response.getBody().getResult().getUserId()).isEqualTo(1L);
-        assertThat(response.getBody().getResult().getEmail()).isEqualTo(email);
+        assertThat(response.getBody().getResult().accessToken()).isEqualTo(accessToken);
+        assertThat(response.getBody().getResult().refreshToken()).isEqualTo(refreshToken);
+        assertThat(response.getBody().getResult().userId()).isEqualTo(1L);
+        assertThat(response.getBody().getResult().email()).isEqualTo(email);
     }
 
     @Test
@@ -108,8 +105,8 @@ class AuthControllerTest {
     void refreshToken_Success() {
         // given
         String refreshToken = "refresh-token";
-        RefreshTokenRequest request = new RefreshTokenRequest();
-        request.setRefreshToken(refreshToken);
+        // 생성자를 사용하여 RefreshTokenRequest 객체 생성
+        RefreshTokenRequest request = new RefreshTokenRequest(refreshToken);
 
         User mockUser = mock(User.class);
         when(mockUser.getId()).thenReturn(1L);
@@ -129,10 +126,10 @@ class AuthControllerTest {
 
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getResult()).isNotNull();
-        assertThat(response.getBody().getResult().getAccessToken()).isEqualTo(newAccessToken);
-        assertThat(response.getBody().getResult().getRefreshToken()).isEqualTo(refreshToken);
-        assertThat(response.getBody().getResult().getUserId()).isEqualTo(1L);
-        assertThat(response.getBody().getResult().getEmail()).isEqualTo("test@example.com");
+        assertThat(response.getBody().getResult().accessToken()).isEqualTo(newAccessToken);
+        assertThat(response.getBody().getResult().refreshToken()).isEqualTo(refreshToken);
+        assertThat(response.getBody().getResult().userId()).isEqualTo(1L);
+        assertThat(response.getBody().getResult().email()).isEqualTo("test@example.com");
     }
 
     @Test
