@@ -24,19 +24,19 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<BaseResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
         // 서비스 호출 - 도메인 객체 반환
-        User user = authService.login(request.getEmail(), request.getPassword());
+        User user = authService.login(request.email(), request.password());
 
         // 토큰 생성
         String accessToken = authService.generateAccessToken(user);
         String refreshToken = authService.generateRefreshToken(user);
 
-        // DTO로 변환하여 응답
-        AuthResponse response = AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .userId(user.getId())
-                .email(user.getEmailValue())
-                .build();
+        // 생성자를 사용하여 응답 객체 생성
+        AuthResponse response = new AuthResponse(
+                accessToken,
+                refreshToken,
+                user.getId(),
+                user.getEmailValue()
+        );
 
         return BaseResponse.success(SuccessCode.OK, response);
     }
@@ -44,19 +44,19 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<BaseResponse<AuthResponse>> signup(@Valid @RequestBody SignupRequest request) {
         // 서비스 호출 - 도메인 객체 반환
-        User user = authService.signup(request.getEmail(), request.getPassword());
+        User user = authService.signup(request.email(), request.password());
 
         // 토큰 생성
         String accessToken = authService.generateAccessToken(user);
         String refreshToken = authService.generateRefreshToken(user);
 
-        // DTO로 변환하여 응답
-        AuthResponse response = AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .userId(user.getId())
-                .email(user.getEmailValue())
-                .build();
+        // 생성자를 사용하여 응답 객체 생성
+        AuthResponse response = new AuthResponse(
+                accessToken,
+                refreshToken,
+                user.getId(),
+                user.getEmailValue()
+        );
 
         return BaseResponse.success(SuccessCode.CREATED, response);
     }
@@ -64,18 +64,18 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<BaseResponse<AuthResponse>> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         // 서비스 호출 - 도메인 객체 반환
-        User user = authService.refreshToken(request.getRefreshToken());
+        User user = authService.refreshToken(request.refreshToken());
 
         // 새로운 액세스 토큰 생성
         String accessToken = authService.generateAccessToken(user);
 
-        // DTO로 변환하여 응답
-        AuthResponse response = AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(request.getRefreshToken())
-                .userId(user.getId())
-                .email(user.getEmailValue())
-                .build();
+        // 생성자를 사용하여 응답 객체 생성
+        AuthResponse response = new AuthResponse(
+                accessToken,
+                request.refreshToken(),
+                user.getId(),
+                user.getEmailValue()
+        );
 
         return BaseResponse.success(SuccessCode.OK, response);
     }
