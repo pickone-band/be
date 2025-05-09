@@ -5,13 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class AuthResponse {
-    private String accessToken;
-    private String refreshToken;
-    private Long userId;
-    private String email;
-}
+public record AuthResponse(
+        String accessToken,
+        String refreshToken,
+        Long userId,
+        String email
+) {}
