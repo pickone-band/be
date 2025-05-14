@@ -11,6 +11,9 @@ import com.PickOne.domain.recruitments.model.entity.RecruitmentInstrument;
 import com.PickOne.domain.recruitments.repository.RecruitmentGenreRepository;
 import com.PickOne.domain.recruitments.repository.RecruitmentInstrumentRepository;
 import com.PickOne.domain.recruitments.repository.RecruitmentRepository;
+import com.PickOne.global.exception.BusinessException;
+import com.PickOne.global.exception.ErrorCode;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +48,6 @@ public class RecruitmentService {
                 .map(genre -> new RecruitmentGenre(recruitment, genre))
                 .collect(Collectors.toList());
 
-        recruitmentGenreRepository.saveAll(recruitmentGenres);
         recruitmentGenreRepository.saveAll(recruitmentGenres);
         recruitmentInstrumentRepository.saveAll(allInstruments);
 
@@ -99,5 +101,33 @@ public class RecruitmentService {
 
             return RecruitmentResponseDto.of(recruitment, instruments, genreDto);
         });
+    }
+
+    @Transactional
+    public Long modifyRecruitment(RecruitmentRequestDto requestDto, Long recruitmentId) {
+        Recruitment recruitment = recruitmentRepository.findById(recruitmentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_RECRUITMENT_ID));
+
+        recruitment.update(requestDto);
+        // 회원이 기존 세션구성을 변경하는 경우.
+        if (requestDto.getInstrumentProficiencyDto()!=null) {
+            recruitmentInstrumentRepository.deleteAllByRecruitmentId(recruitmentId);
+            List<InstrumentProficiencyDto> ipDtoList = requestDto.getInstrumentProficiencyDto();
+            List<RecruitmentInstrument> allInstruments = ipDtoList.stream()
+                    .flatMap(ipDto -> ipDto.toEntityList(recruitment).stream())
+                    .collect(Collectors.toList());
+            recruitmentInstrumentRepository.saveAll(allInstruments);
+        }
+        //장르를 변경하는 경우
+        if (requestDto.getGenreRequestDto()!=null) {
+            recruitmentGenreRepository.deleteAllByRecruitmentId(recruitmentId);
+            List<RecruitmentGenre> recruitmentGenres = requestDto.getGenreRequestDto()
+                    .getRecruitmentGenres().stream()
+                    .map(genre -> new RecruitmentGenre(recruitment, genre))
+                    .collect(Collectors.toList());
+            recruitmentGenreRepository.saveAll(recruitmentGenres);
+        }
+
+        return recruitment.getId();
     }
 }

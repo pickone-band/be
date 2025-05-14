@@ -1,5 +1,6 @@
 package com.PickOne.domain.recruitments.model.entity;
 
+import com.PickOne.domain.recruitments.dto.request.RecruitmentRequestDto;
 import com.PickOne.global.common.entity.BaseEntity;
 import com.PickOne.domain.recruitments.model.Status;
 import com.PickOne.domain.recruitments.model.Type;
@@ -43,4 +44,17 @@ public class Recruitment extends BaseEntity {
     private String region;
     private String thumbnail;
     private String snsLink;
+
+    public void update(RecruitmentRequestDto dto) {
+        if (dto.getTitle() != null) this.title = dto.getTitle();
+        if (dto.getDescription() != null) this.description = dto.getDescription();
+        if (dto.getRegion() != null) this.region = dto.getRegion();
+        if (dto.getType() != null) this.type = dto.getType();
+        if (dto.getStatus() != null) this.status = dto.getStatus();
+        if (dto.getVisibility() != null) this.visibility = dto.getVisibility();
+        if (dto.getThumbnail() != null) this.thumbnail = dto.getThumbnail();
+        if (dto.getSnsLink() != null) this.snsLink = dto.getSnsLink();
+    }
+
+
 }
