@@ -75,7 +75,10 @@ public enum ErrorCode {
 
     // ✅ JWT 블랙리스트 관련 오류 (8000번대)
     BLACKLISTED_TOKEN(HttpStatus.UNAUTHORIZED, 8001, "해당 토큰은 블랙리스트에 등록되어 사용할 수 없습니다."),
-    TOKEN_ALREADY_BLACKLISTED(HttpStatus.BAD_REQUEST, 8002, "해당 토큰은 이미 블랙리스트에 등록되어 있습니다.");
+    TOKEN_ALREADY_BLACKLISTED(HttpStatus.BAD_REQUEST, 8002, "해당 토큰은 이미 블랙리스트에 등록되어 있습니다."),
+
+
+    INVALID_RECRUITMENT_ID(HttpStatus.UNAUTHORIZED,9001,"존재하지 않는 모집글입니다.");
 
     private final HttpStatus status; // HTTP 상태 코드
     private final int code; // 고유 오류 코드

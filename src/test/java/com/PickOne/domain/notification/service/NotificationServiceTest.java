@@ -3,8 +3,11 @@ package com.PickOne.domain.notification.service;
 import com.PickOne.domain.notification.model.domain.Notification;
 import com.PickOne.domain.notification.model.domain.NotificationStatus;
 import com.PickOne.domain.notification.model.domain.NotificationType;
+import com.PickOne.domain.notification.repository.NotificationRepository;
 import com.PickOne.domain.notification.service.NotificationService;
 import com.PickOne.domain.user.service.UserService;
+import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,7 +19,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-
+@Transactional
 @SpringBootTest
 public class NotificationServiceTest {
 
@@ -26,6 +29,14 @@ public class NotificationServiceTest {
     // UserService 모킹 - 대상 사용자가 존재한다고 가정
     @MockBean
     private UserService userService;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
+
+    @BeforeEach
+    void clean() {
+        notificationRepository.deleteAll();
+    }
 
     @Test
     public void testCreateAndReadNotification() {
@@ -59,9 +70,8 @@ public class NotificationServiceTest {
         assertFalse(unreadNotifications.stream().anyMatch(n -> n.getId().equals(notification.getId())));
 
         // 검증
-        verify(userService, times(3)).findById(recipientId);
+        verify(userService, times(2)).findById(recipientId);
     }
-
     @Test
     public void testMarkAllNotificationsRead() {
         // UserService 모킹

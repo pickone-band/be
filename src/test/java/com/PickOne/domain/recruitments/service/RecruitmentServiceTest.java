@@ -77,8 +77,42 @@ class RecruitmentServiceTest {
 
     @Test
     void 모집공고_단건_조회_테스트() {
-        recruitmentService.registerRecruitment(requestDto);
-        RecruitmentResponseDto responseDto = recruitmentService.getRecruitment(1L);
+        Long savedId=recruitmentService.registerRecruitment(requestDto);
+        RecruitmentResponseDto responseDto = recruitmentService.getRecruitment(savedId);
         assertEquals(responseDto.getGenres().getGenre(), List.of(Genre.INDIE_ROCK, Genre.SHOEGAZING));
+    }
+
+    @Test
+    void 모집공고_수정_테스트(){
+        Long savedId = recruitmentService.registerRecruitment(requestDto);
+
+        RecruitmentRequestDto modifyDto = RecruitmentRequestDto.builder()
+                .type(Type.Once)
+                .status(Status.Recruiting)
+                .visibility(Visibility.PUBLIC)
+                .title("수정된 모집공고 제목")
+                .description("수정된 내용")
+                .region("경기도")
+                .instrumentProficiencyDto(List.of(
+                        new InstrumentProficiencyDto(List.of(
+                                InstrumentProficiencyDto.InstrumentDetail.builder()
+                                        .instrument(Instrument.DRUMS)
+                                        .proficiency(Proficiency.INTERMEDIATE)
+                                        .build()
+                        ))
+                ))
+                .genreRequestDto(
+                        new GenreRequestDto(
+                                List.of(
+                                        Genre.POST_ROCK
+                                )
+                        )
+                )
+                .build();
+        recruitmentService.modifyRecruitment(modifyDto,savedId);
+        RecruitmentResponseDto response = recruitmentService.getRecruitment(savedId);
+        assertEquals("수정된 모집공고 제목", response.getTitle());
+        assertEquals(List.of(Genre.POST_ROCK), response.getGenres().getGenre());
+
     }
 }

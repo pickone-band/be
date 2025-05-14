@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,7 +36,6 @@ public class RecruitmentController {
         return BaseResponse.success(recruitmentId);
     }
 
-
     @Operation(summary = "멤버 모집글 단건 조회 기능",
             description = "<a href='https://www.notion.so/1bc9366dcb7d80fcbab2e22b33082108' target='_blank'>👉API 명세서 바로가기</a>")
     @GetMapping("/{id}")
@@ -43,7 +43,6 @@ public class RecruitmentController {
         RecruitmentResponseDto recruitment = recruitmentService.getRecruitment(id);
         return BaseResponse.success(recruitment);
     }
-
 
     @Operation(summary = "멤버 모집글 전체 조회 기능",
             description = "<a href='https://www.notion.so/1ae9366dcb7d818f8f47d05feb301bb8?pvs=4' target='_blank'>👉API 명세서 바로가기</a>")
@@ -55,4 +54,13 @@ public class RecruitmentController {
         return BaseResponse.success(recruitmentService.getRecruitments(pageable));
     }
 
+    @Operation(summary = "멤버 모집글 수정 기능",
+            description = "<a href='https://www.notion.so/1ae9366dcb7d818f8f47d05feb301bb8?pvs=4' target='_blank'>👉API 명세서 바로가기</a>")
+    @PatchMapping("/{id}")
+    public ResponseEntity<BaseResponse<Long>> modifyRecruitment(
+            @PathVariable Long id,
+            @RequestBody RecruitmentRequestDto requestDto) {
+        Long result = recruitmentService.modifyRecruitment(requestDto, id);
+        return BaseResponse.success(result);
+    }
 }
