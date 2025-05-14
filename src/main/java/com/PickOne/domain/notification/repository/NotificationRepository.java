@@ -4,6 +4,7 @@ import com.PickOne.domain.notification.model.domain.Notification;
 import com.PickOne.domain.notification.model.domain.NotificationType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -44,4 +45,6 @@ public interface NotificationRepository {
      * Find notifications by type for a user
      */
     Page<Notification> findByTypeForUser(Long userId, NotificationType type, Pageable pageable);
+
+    void deleteAll();
 }

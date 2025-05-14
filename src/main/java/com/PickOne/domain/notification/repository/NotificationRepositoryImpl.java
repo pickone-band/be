@@ -69,4 +69,9 @@ public class NotificationRepositoryImpl implements NotificationRepository {
                 )
                 .map(NotificationDocument::toDomain);
     }
+
+    @Override
+    public void deleteAll(){
+        notificationMongoRepository.deleteAll();
+    }
 }
