@@ -11,14 +11,24 @@ import com.PickOne.domain.recruitments.model.entity.RecruitmentInstrument;
 import com.PickOne.domain.recruitments.repository.RecruitmentGenreRepository;
 import com.PickOne.domain.recruitments.repository.RecruitmentInstrumentRepository;
 import com.PickOne.domain.recruitments.repository.RecruitmentRepository;
+import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.domain.user.model.entity.UserEntity;
+import com.PickOne.domain.user.repository.JpaUserRepositoryImpl;
+import com.PickOne.domain.user.repository.UserJpaRepository;
+import com.PickOne.domain.user.repository.UserRepository;
+import com.PickOne.domain.user.service.UserService;
+import com.PickOne.domain.user.service.UserServiceImpl;
 import com.PickOne.global.exception.BusinessException;
 import com.PickOne.global.exception.ErrorCode;
+import com.PickOne.global.security.model.entity.SecurityUser;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,13 +40,17 @@ public class RecruitmentService {
     private final RecruitmentRepository recruitmentRepository;
     private final RecruitmentInstrumentRepository recruitmentInstrumentRepository;
     private final RecruitmentGenreRepository recruitmentGenreRepository;
+    private final UserJpaRepository userJpaRepository;
 
     /**
      * 모집공고 등록
      */
     @Transactional
-    public Long registerRecruitment(RecruitmentRequestDto requestDto) {
-        Recruitment recruitment = recruitmentRepository.save(requestDto.toEntity());
+    public Long registerRecruitment(RecruitmentRequestDto requestDto, Long userId) {
+        UserEntity userEntity = userJpaRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
+
+        Recruitment recruitment = recruitmentRepository.save(requestDto.toEntity(userEntity));
 
         List<InstrumentProficiencyDto> ipDtoList = requestDto.getInstrumentProficiencyDto();
         List<RecruitmentInstrument> allInstruments = ipDtoList.stream()
@@ -104,13 +118,17 @@ public class RecruitmentService {
     }
 
     @Transactional
-    public Long modifyRecruitment(RecruitmentRequestDto requestDto, Long recruitmentId) {
+    public Long modifyRecruitment(RecruitmentRequestDto requestDto, Long recruitmentId, Long userId) {
         Recruitment recruitment = recruitmentRepository.findById(recruitmentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_RECRUITMENT_ID));
 
+        if (!recruitment.getUserEntity().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_RECRUITMENT_ACCESS);
+        }
+        System.out.println("userId: " + userId);
         recruitment.update(requestDto);
         // 회원이 기존 세션구성을 변경하는 경우.
-        if (requestDto.getInstrumentProficiencyDto()!=null) {
+        if (requestDto.getInstrumentProficiencyDto() != null) {
             recruitmentInstrumentRepository.deleteAllByRecruitmentId(recruitmentId);
             List<InstrumentProficiencyDto> ipDtoList = requestDto.getInstrumentProficiencyDto();
             List<RecruitmentInstrument> allInstruments = ipDtoList.stream()
@@ -119,7 +137,7 @@ public class RecruitmentService {
             recruitmentInstrumentRepository.saveAll(allInstruments);
         }
         //장르를 변경하는 경우
-        if (requestDto.getGenreRequestDto()!=null) {
+        if (requestDto.getGenreRequestDto() != null) {
             recruitmentGenreRepository.deleteAllByRecruitmentId(recruitmentId);
             List<RecruitmentGenre> recruitmentGenres = requestDto.getGenreRequestDto()
                     .getRecruitmentGenres().stream()
@@ -129,5 +147,17 @@ public class RecruitmentService {
         }
 
         return recruitment.getId();
+    }
+    @Transactional(readOnly = false)
+    public void deleteRecruitment(Long recruitmentId, Long userId) {
+        Recruitment recruitment = recruitmentRepository.findById(recruitmentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_RECRUITMENT_ID));
+
+        if (!recruitment.getUserEntity().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_RECRUITMENT_ACCESS);
+        }
+        recruitmentGenreRepository.deleteAllByRecruitmentId(recruitmentId);
+        recruitmentInstrumentRepository.deleteAllByRecruitmentId(recruitmentId);
+        recruitmentRepository.deleteById(recruitmentId);
     }
 }

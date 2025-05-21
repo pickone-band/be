@@ -6,6 +6,7 @@ import com.PickOne.domain.recruitments.model.Status;
 import com.PickOne.domain.recruitments.model.Type;
 import com.PickOne.domain.recruitments.model.Visibility;
 import com.PickOne.domain.recruitments.model.entity.Recruitment;
+import com.PickOne.domain.user.model.entity.UserEntity;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,7 +31,7 @@ public class RecruitmentRequestDto {
     private List<InstrumentProficiencyDto> instrumentProficiencyDto;
     private GenreRequestDto genreRequestDto;
 
-    public Recruitment toEntity() {
+    public Recruitment toEntity(UserEntity userEntity) {
         return Recruitment.builder()
                 .type(type)
                 .status(status)
@@ -40,6 +41,7 @@ public class RecruitmentRequestDto {
                 .region(region)
                 .thumbnail(thumbnail)
                 .snsLink(snsLink)
+                .userEntity(userEntity)
                 .build();
     }
 }
