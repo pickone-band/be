@@ -12,9 +12,12 @@ import com.PickOne.domain.recruitments.model.Proficiency;
 import com.PickOne.domain.recruitments.model.Status;
 import com.PickOne.domain.recruitments.model.Type;
 import com.PickOne.domain.recruitments.model.Visibility;
-import com.PickOne.domain.recruitments.repository.RecruitmentGenreRepository;
-import com.PickOne.domain.recruitments.repository.RecruitmentInstrumentRepository;
-import com.PickOne.domain.recruitments.repository.RecruitmentRepository;
+import com.PickOne.domain.user.model.domain.Email;
+import com.PickOne.domain.user.model.domain.Password;
+import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.domain.user.repository.UserRepository;
+import com.PickOne.global.exception.BusinessException;
+import com.PickOne.global.exception.ErrorCode;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -27,12 +30,9 @@ class RecruitmentServiceTest {
 
     @Autowired
     private RecruitmentService recruitmentService;
+
     @Autowired
-    private RecruitmentRepository recruitmentRepository;
-    @Autowired
-    private RecruitmentInstrumentRepository recruitmentInstrumentRepository;
-    @Autowired
-    private RecruitmentGenreRepository recruitmentGenreRepository;
+    private UserRepository userRepository;
 
     RecruitmentRequestDto requestDto = RecruitmentRequestDto.builder()
             .type(Type.Once)
@@ -67,9 +67,16 @@ class RecruitmentServiceTest {
 
     @Test
     void 모집공고_등록_성공_테스트() {
-        //when
-        Long savedId = recruitmentService.registerRecruitment(requestDto);
+        // given - 도메인 객체 생성 및 저장
+        User testUser = User.of(
+                null,
+                Email.of("test@example.com"),
+                Password.ofEncoded("encoded-password")
+        );
+        User savedUser = userRepository.save(testUser);
 
+        //when - 저장된 유저 ID를 통해 모집공고 등록
+        Long savedId = recruitmentService.registerRecruitment(requestDto, savedUser.getId());
         // then
         assertNotNull(savedId);
         System.out.println("등록된 ID: " + savedId);
@@ -77,14 +84,26 @@ class RecruitmentServiceTest {
 
     @Test
     void 모집공고_단건_조회_테스트() {
-        Long savedId=recruitmentService.registerRecruitment(requestDto);
+        User testUser = User.of(
+                null,
+                Email.of("test@example.com"),
+                Password.ofEncoded("encoded-password")
+        );
+        User savedUser = userRepository.save(testUser);
+        Long savedId = recruitmentService.registerRecruitment(requestDto, savedUser.getId());
         RecruitmentResponseDto responseDto = recruitmentService.getRecruitment(savedId);
         assertEquals(responseDto.getGenres().getGenre(), List.of(Genre.INDIE_ROCK, Genre.SHOEGAZING));
     }
 
     @Test
-    void 모집공고_수정_테스트(){
-        Long savedId = recruitmentService.registerRecruitment(requestDto);
+    void 모집공고_수정_테스트() {
+        User testUser = User.of(
+                null,
+                Email.of("test@example.com"),
+                Password.ofEncoded("encoded-password")
+        );
+        User savedUser = userRepository.save(testUser);
+        Long savedId = recruitmentService.registerRecruitment(requestDto, savedUser.getId());
 
         RecruitmentRequestDto modifyDto = RecruitmentRequestDto.builder()
                 .type(Type.Once)
@@ -109,10 +128,35 @@ class RecruitmentServiceTest {
                         )
                 )
                 .build();
-        recruitmentService.modifyRecruitment(modifyDto,savedId);
+        recruitmentService.modifyRecruitment(modifyDto, savedId, 1L);
         RecruitmentResponseDto response = recruitmentService.getRecruitment(savedId);
         assertEquals("수정된 모집공고 제목", response.getTitle());
         assertEquals(List.of(Genre.POST_ROCK), response.getGenres().getGenre());
 
     }
+
+    @Test
+    void 모집공고_삭제_테스트() {
+        User testUser = User.of(
+                null,
+                Email.of("test@example.com"),
+                Password.ofEncoded("encoded-password")
+        );
+        User savedUser = userRepository.save(testUser);
+        Long savedId = recruitmentService.registerRecruitment(requestDto, savedUser.getId());
+
+        User testUser2 = User.of(
+                null,
+                Email.of("test2@example.com"),
+                Password.ofEncoded("encoded-password")
+        );
+        User savedUser2 = userRepository.save(testUser2);
+        // when & then
+        BusinessException exception = assertThrows(BusinessException.class, () -> {
+            recruitmentService.deleteRecruitment(savedId, savedUser2.getId());
+        });
+
+        assertEquals(ErrorCode.UNAUTHORIZED_RECRUITMENT_ACCESS, exception.getErrorCode());
+    }
+
 }
