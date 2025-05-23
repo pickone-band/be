@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>이메일 인증</title>
+</head>
+<body>
+<p th:text="'안녕하세요, ' + ${name} + '님.'"></p>
+<p>이메일 인증을 위해 아래 링크를 클릭해주세요:</p>
+<a th:href="${verificationUrl}" th:text="${verificationUrl}"></a>
+<p>유효 시간: <span th:text="${expiryHours}"></span>시간</p>
+</body>
+</html>
