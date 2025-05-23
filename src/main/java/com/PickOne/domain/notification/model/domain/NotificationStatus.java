@@ -1,9 +1,9 @@
 package com.PickOne.domain.notification.model.domain;
 
 /**
- * Enum for Notification Status
+ * 알림 상태를 위한 열거형
  */
 public enum NotificationStatus {
-    UNREAD,     // Notification has not been read
-    READ        // Notification has been read
+    UNREAD,     // 알림이 읽혀지지 않았음
+    READ        // 알림이 읽혀졌음
 }

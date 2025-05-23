@@ -1,4 +1,3 @@
-// Email.java
 package com.PickOne.domain.user.model.domain;
 
 import lombok.AccessLevel;

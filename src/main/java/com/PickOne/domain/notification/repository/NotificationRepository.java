@@ -11,38 +11,38 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Repository interface for Notification domain object
+ * Notification 도메인 객체를 위한 리포지토리 인터페이스
  */
 @Repository
 public interface NotificationRepository {
 
     /**
-     * Save a notification
+     * 알림 저장
      */
     Notification save(Notification notification);
 
     /**
-     * Find a notification by its ID
+     * ID로 알림 찾기
      */
     Optional<Notification> findById(String id);
 
     /**
-     * Find all notifications for a user
+     * 사용자의 모든 알림 찾기
      */
     Page<Notification> findAllForUser(Long userId, Pageable pageable);
 
     /**
-     * Find unread notifications for a user
+     * 사용자의 읽지 않은 알림 찾기
      */
     List<Notification> findUnreadForUser(Long userId);
 
     /**
-     * Count unread notifications for a user
+     * 사용자의 읽지 않은 알림 수 세기
      */
     long countUnreadForUser(Long userId);
 
     /**
-     * Find notifications by type for a user
+     * 사용자의 유형별 알림 찾기
      */
     Page<Notification> findByTypeForUser(Long userId, NotificationType type, Pageable pageable);
 

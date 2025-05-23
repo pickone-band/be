@@ -20,19 +20,19 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        // Enable a simple in-memory message broker
+        // 단순한 인메모리 메시지 브로커 활성화
         config.enableSimpleBroker("/topic", "/queue");
 
-        // Define the prefix for client-to-server messages
+        // 클라이언트에서 서버로 보내는 메시지의 접두사 정의
         config.setApplicationDestinationPrefixes("/app");
 
-        // Define the prefix for user-specific destinations
+        // 사용자별 목적지의 접두사 정의
         config.setUserDestinationPrefix("/user");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // Register the STOMP endpoint that the clients will use to connect to our websocket server
+        // 클라이언트가 웹소켓 서버에 연결할 때 사용할 STOMP 엔드포인트 등록
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
@@ -40,7 +40,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        // Add our interceptor for authentication and authorization
+        // 인증 및 권한 부여를 위한 인터셉터 추가
         registration.interceptors(webSocketAuthInterceptor);
     }
 }

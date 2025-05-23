@@ -9,38 +9,38 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Repository interface for Message domain object
+ * Message 도메인 객체를 위한 리포지토리 인터페이스
  */
 @Repository
 public interface MessageRepository {
 
     /**
-     * Save a message
+     * 메시지 저장
      */
     Message save(Message message);
 
     /**
-     * Find a message by its ID
+     * ID로 메시지 찾기
      */
     Optional<Message> findById(String id);
 
     /**
-     * Find all messages in a conversation between two users
+     * 두 사용자 간의 대화에서 모든 메시지 찾기
      */
     Page<Message> findConversation(Long userId1, Long userId2, Pageable pageable);
 
     /**
-     * Find all unread messages for a user
+     * 사용자의 읽지 않은 메시지 모두 찾기
      */
     List<Message> findUnreadMessagesForUser(Long userId);
 
     /**
-     * Find recent conversations for a user
+     * 사용자의 최근 대화 찾기
      */
     List<Message> findRecentConversations(Long userId);
 
     /**
-     * Count unread messages for a user
+     * 사용자의 읽지 않은 메시지 수 세기
      */
     long countUnreadMessages(Long userId);
 }

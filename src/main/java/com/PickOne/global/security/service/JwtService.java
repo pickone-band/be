@@ -57,10 +57,10 @@ public class JwtService {
 
   public boolean validateRefreshToken(String refreshToken) {
     try {
-      // Verify token signature and expiration date
+      // 토큰 서명 및 만료일 확인
       Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(refreshToken);
 
-      // Check if the token is NOT blacklisted (valid)
+      // 토큰이 블랙리스트에 없는지 확인 (유효한 상태)
       return !isTokenBlacklisted(refreshToken);
     } catch (JwtException e) {
       log.error("Invalid refresh token: {}", e.getMessage());

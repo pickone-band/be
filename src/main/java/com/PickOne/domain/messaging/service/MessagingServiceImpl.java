@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Implementation of MessagingService
+ * MessagingService의 구현
  */
 @Service
 @RequiredArgsConstructor
@@ -35,15 +35,15 @@ public class MessagingServiceImpl implements MessagingService {
 
     @Override
     public Message sendMessage(Long fromUserId, Long toUserId, String content) {
-        // Check if both users exist
+        // 두 사용자가 모두 존재하는지 확인
         userService.findById(fromUserId);
         userService.findById(toUserId);
 
-        // Create and save message
+        // 메시지 생성 및 저장
         Message message = Message.create(fromUserId, toUserId, content);
         Message savedMessage = messageRepository.save(message);
 
-        // Create notification for the recipient
+        // 수신자를 위한 알림 생성
         notificationService.createNotification(
                 toUserId,
                 NotificationType.NEW_MESSAGE,
@@ -52,7 +52,7 @@ public class MessagingServiceImpl implements MessagingService {
                 fromUserId
         );
 
-        // Publish message to Redis for real-time delivery
+        // 실시간 전달을 위해 Redis에 메시지 게시
         MessageDto messageDto = MessageDto.fromDomain(savedMessage);
         redisTemplate.convertAndSend(messageTopic.getTopic(), messageDto);
 
@@ -85,7 +85,7 @@ public class MessagingServiceImpl implements MessagingService {
 
     @Override
     public Page<Message> getConversation(Long userId1, Long userId2, Pageable pageable) {
-        // Verify both users exist
+        // 두 사용자가 모두 존재하는지 확인
         userService.findById(userId1);
         userService.findById(userId2);
 
@@ -94,7 +94,7 @@ public class MessagingServiceImpl implements MessagingService {
 
     @Override
     public List<Message> getUnreadMessages(Long userId) {
-        // Verify user exists
+        // 사용자가 존재하는지 확인
         userService.findById(userId);
 
         return messageRepository.findUnreadMessagesForUser(userId);
@@ -102,7 +102,7 @@ public class MessagingServiceImpl implements MessagingService {
 
     @Override
     public long countUnreadMessages(Long userId) {
-        // Verify user exists
+        // 사용자가 존재하는지 확인
         userService.findById(userId);
 
         return messageRepository.countUnreadMessages(userId);
@@ -110,7 +110,7 @@ public class MessagingServiceImpl implements MessagingService {
 
     @Override
     public List<Message> getRecentConversations(Long userId) {
-        // Verify user exists
+        // 사용자가 존재하는지 확인
         userService.findById(userId);
 
         return messageRepository.findRecentConversations(userId);

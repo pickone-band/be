@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Implementation of NotificationRepository using MongoDB
+ * MongoDB를 사용하는 NotificationRepository 구현
  */
 @Component
 @RequiredArgsConstructor

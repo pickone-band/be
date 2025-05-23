@@ -5,4 +5,5 @@ import com.PickOne.domain.user.model.domain.User;
 public interface UserService {
     User findById(Long id);
     User findByEmail(String email);
+    void updatePassword(Long userId, String newPassword);
 }

@@ -79,7 +79,13 @@ public enum ErrorCode {
 
 
     INVALID_RECRUITMENT_ID(HttpStatus.UNAUTHORIZED,9001,"존재하지 않는 모집글입니다."),
+
+    ALREADY_VERIFIED(HttpStatus.BAD_REQUEST, 4101, "이미 인증된 사용자입니다."),
+    EMAIL_NOT_VERIFIED(HttpStatus.UNAUTHORIZED, 4102, "이메일 인증이 필요합니다."),
+    PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, 4103, "비밀번호가 일치하지 않습니다.");
+
     UNAUTHORIZED_RECRUITMENT_ACCESS(HttpStatus.FORBIDDEN,9002, "해당 모집글에 대한 권한이 없습니다.");
+
 
     private final HttpStatus status; // HTTP 상태 코드
     private final int code; // 고유 오류 코드

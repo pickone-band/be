@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
 
@@ -12,16 +14,17 @@ import java.util.Optional;
 @EnableJpaAuditing
 public class AuditConfig {
 
-    @Bean
-    @Profile("test")
-    public AuditorAware<String> testAuditorProvider() {
-        return () -> Optional.of("TEST_USER");
-    }
-
-    @Bean
-    @Profile("!test")
-    public AuditorAware<String> productionAuditorProvider() {
-        return () -> Optional.of("SYSTEM_USER");
-    }
-
+  public AuditorAware<String> productionAuditorProvider() {
+    // 운영 환경에서는 현재 인증된 사용자 반환
+    return () -> {
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+      if (authentication != null
+          && authentication.isAuthenticated()
+          && authentication.getPrincipal() instanceof String) {
+        return Optional.of((String) authentication.getPrincipal());
+      }
+      // 인증되지 않은 경우 시스템 사용자로 설정
+      return Optional.of("SYSTEM_USER");
+    };
+  }
 }

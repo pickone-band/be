@@ -5,9 +5,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-/**
- * Value object for Recipient ID
- */
 @Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @EqualsAndHashCode

@@ -8,7 +8,6 @@ import java.util.Optional;
 
 /**
  * UserConsent 도메인을 위한 기본 리포지토리 인터페이스
- * 구현 기술에 독립적인 메서드 정의
  */
 @Repository
 public interface TermConsentRepository {
