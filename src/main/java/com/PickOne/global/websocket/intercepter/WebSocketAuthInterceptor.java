@@ -37,24 +37,24 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                     String token = authHeader.substring(7);
 
                     try {
-                        if (jwtService.isTokenBlacklisted(token)) {
+                        if (!jwtService.isTokenBlacklisted(token)) {
                             Authentication auth = jwtService.getAuthentication(token);
                             accessor.setUser(auth);
                             SecurityContextHolder.getContext().setAuthentication(auth);
-                            log.debug("WebSocket connection authenticated: {}", auth.getName());
+                            log.debug("웹소켓 연결이 인증되었습니다: {}", auth.getName());
                         } else {
-                            log.warn("WebSocket connection with blacklisted token rejected");
-                            return null; // Reject the message
+                            log.warn("블랙리스트에 등록된 토큰으로 웹소켓 연결 요청이 거부되었습니다");
+                            return null; // 메시지 거부
                         }
                     } catch (Exception e) {
-                        log.error("WebSocket authentication failed: {}", e.getMessage());
-                        return null; // Reject the message
+                        log.error("웹소켓 인증에 실패했습니다: {}", e.getMessage());
+                        return null; // 메시지 거부
                     }
                 } else {
-                    log.warn("WebSocket connection without proper Authorization header");
+                    log.warn("적절한 Authorization 헤더가 없는 웹소켓 연결 요청입니다");
                 }
             } else {
-                log.warn("WebSocket connection without Authorization headers");
+                log.warn("Authorization 헤더가 없는 웹소켓 연결 요청입니다");
             }
         }
 

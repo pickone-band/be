@@ -1,10 +1,10 @@
 package com.PickOne.domain.messaging.model.domain;
 
 /**
- * Enum for Message Status
+ * 메시지 상태를 위한 열거형
  */
 public enum MessageStatus {
-    SENT,       // Message has been sent by the sender
-    DELIVERED,  // Message has been delivered to the recipient
-    READ        // Message has been read by the recipient
+    SENT,       // 발신자에 의해 메시지가 전송됨
+    DELIVERED,  // 수신자에게 메시지가 전송됨
+    READ        // 수신자에 의해 메시지가 읽힘
 }

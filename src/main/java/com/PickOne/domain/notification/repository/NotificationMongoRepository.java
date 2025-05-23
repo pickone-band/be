@@ -12,22 +12,22 @@ import java.util.List;
 public interface NotificationMongoRepository extends MongoRepository<NotificationDocument, String> {
 
     /**
-     * Find all notifications for a user
+     * 사용자의 모든 알림 찾기
      */
     Page<NotificationDocument> findByRecipientIdOrderByCreatedAtDesc(Long recipientId, Pageable pageable);
 
     /**
-     * Find unread notifications for a user
+     * 사용자의 읽지 않은 알림 찾기
      */
     List<NotificationDocument> findByRecipientIdAndStatusOrderByCreatedAtDesc(Long recipientId, String status);
 
     /**
-     * Count unread notifications for a user
+     * 사용자의 읽지 않은 알림 수 세기
      */
     long countByRecipientIdAndStatus(Long recipientId, String status);
 
     /**
-     * Find notifications by type for a user
+     * 사용자의 유형별 알림 찾기
      */
     Page<NotificationDocument> findByRecipientIdAndTypeOrderByCreatedAtDesc(Long recipientId, String type, Pageable pageable);
 }

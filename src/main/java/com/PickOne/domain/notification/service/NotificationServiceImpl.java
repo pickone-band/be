@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Implementation of NotificationService
+ * NotificationService의 구현
  */
 @Service
 @RequiredArgsConstructor
@@ -35,14 +35,14 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public Notification createNotification(Long recipientId, NotificationType type, String content,
                                            String refEntityType, Long refEntityId) {
-        // Check if recipient exists
+        // 수신자가 존재하는지 확인
         userService.findById(recipientId);
 
-        // Create and save notification
+        // 알림 생성 및 저장
         Notification notification = Notification.create(recipientId, type, content, refEntityType, refEntityId);
         Notification savedNotification = notificationRepository.save(notification);
 
-        // Publish notification to Redis for real-time delivery
+        // 실시간 전달을 위해 Redis에 알림 게시
         NotificationDto notificationDto = NotificationDto.fromDomain(savedNotification);
         redisTemplate.convertAndSend(notificationTopic.getTopic(), notificationDto);
 
@@ -65,13 +65,13 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void markAllNotificationsReadForUser(Long userId) {
-        // Verify user exists
+        // 사용자가 존재하는지 확인
         userService.findById(userId);
 
-        // Get all unread notifications
+        // 모든 읽지 않은 알림 가져오기
         List<Notification> unreadNotifications = notificationRepository.findUnreadForUser(userId);
 
-        // Mark each as read and save
+        // 각각을 읽음으로 표시하고 저장
         unreadNotifications.forEach(notification -> {
             Notification readNotification = notification.markRead();
             notificationRepository.save(readNotification);
@@ -87,7 +87,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public Page<Notification> getAllNotificationsForUser(Long userId, Pageable pageable) {
-        // Verify user exists
+        // 사용자가 존재하는지 확인
         userService.findById(userId);
 
         return notificationRepository.findAllForUser(userId, pageable);
@@ -95,7 +95,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<Notification> getUnreadNotificationsForUser(Long userId) {
-        // Verify user exists
+        // 사용자가 존재하는지 확인
         userService.findById(userId);
 
         return notificationRepository.findUnreadForUser(userId);
@@ -103,7 +103,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public long countUnreadNotificationsForUser(Long userId) {
-        // Verify user exists
+        // 사용자가 존재하는지 확인
         userService.findById(userId);
 
         return notificationRepository.countUnreadForUser(userId);
@@ -111,7 +111,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public Page<Notification> getNotificationsByTypeForUser(Long userId, NotificationType type, Pageable pageable) {
-        // Verify user exists
+        // 사용자가 존재하는지 확인
         userService.findById(userId);
 
         return notificationRepository.findByTypeForUser(userId, type, pageable);

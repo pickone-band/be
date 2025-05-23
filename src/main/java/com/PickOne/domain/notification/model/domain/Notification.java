@@ -10,8 +10,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Represents a notification in the system.
- * Notifications are first-class objects following domain-driven design principles.
+ * 시스템의 알림
  */
 @Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -40,7 +39,7 @@ public class Notification {
     }
 
     /**
-     * Create a new notification
+     * 새 알림 생성
      */
     public static Notification create(Long recipientId, NotificationType type,
                                       String content, String refEntityType, Long refEntityId) {
@@ -57,7 +56,7 @@ public class Notification {
     }
 
     /**
-     * Recreate a notification from persistence
+     * 지속성에서 알림을 재생성
      */
     public static Notification from(String id, Long recipientId, NotificationType type,
                                     String content, NotificationStatus status,
@@ -76,7 +75,7 @@ public class Notification {
     }
 
     /**
-     * Mark the notification as read
+     * 알림을 읽음으로 표시
      */
     public Notification markRead() {
         if (this.status == NotificationStatus.UNREAD) {

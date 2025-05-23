@@ -14,7 +14,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import java.time.LocalDateTime;
 
 /**
- * MongoDB document for storing messages
+ * 메시지 저장을 위한 MongoDB 문서
  */
 @Document(collection = "messages")
 @Data
@@ -43,7 +43,7 @@ public class MessageDocument {
     private LocalDateTime readAt;
 
     /**
-     * Convert from domain model to document
+     * 도메인 모델을 문서로 변환
      */
     public static MessageDocument fromDomain(Message message) {
         return MessageDocument.builder()
@@ -59,7 +59,7 @@ public class MessageDocument {
     }
 
     /**
-     * Convert to domain model
+     * 도메인 모델로 변환
      */
     public Message toDomain() {
         return Message.from(

@@ -5,9 +5,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-/**
- * Value object for Message content
- */
 @Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @EqualsAndHashCode

@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Implementation of MessageRepository using MongoDB
+ * MongoDB를 사용하는 MessageRepository 구현
  */
 @Component
 @RequiredArgsConstructor

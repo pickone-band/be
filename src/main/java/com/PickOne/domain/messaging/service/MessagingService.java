@@ -13,47 +13,47 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Service interface for messaging functionality
+ * 메시징 기능을 위한 서비스 인터페이스
  */
 public interface MessagingService {
 
     /**
-     * Send a message from one user to another
+     * 한 사용자에서 다른 사용자로 메시지 전송
      */
     Message sendMessage(Long fromUserId, Long toUserId, String content);
 
     /**
-     * Mark a message as delivered
+     * 메시지를 전송됨으로 표시
      */
     Message markMessageDelivered(String messageId);
 
     /**
-     * Mark a message as read
+     * 메시지를 읽음으로 표시
      */
     Message markMessageRead(String messageId);
 
     /**
-     * Get a message by its ID
+     * ID로 메시지 가져오기
      */
     Optional<Message> getMessage(String messageId);
 
     /**
-     * Get a conversation between two users
+     * 두 사용자 간의 대화 가져오기
      */
     Page<Message> getConversation(Long userId1, Long userId2, Pageable pageable);
 
     /**
-     * Get all unread messages for a user
+     * 사용자의 읽지 않은 메시지 모두 가져오기
      */
     List<Message> getUnreadMessages(Long userId);
 
     /**
-     * Count unread messages for a user
+     * 사용자의 읽지 않은 메시지 수 세기
      */
     long countUnreadMessages(Long userId);
 
     /**
-     * Get recent conversations for a user
+     * 사용자의 최근 대화 가져오기
      */
     List<Message> getRecentConversations(Long userId);
 }

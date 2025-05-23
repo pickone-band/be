@@ -1,4 +1,3 @@
-// UserEntity.java
 package com.PickOne.domain.user.model.entity;
 
 import com.PickOne.global.common.entity.BaseEntity;
@@ -15,6 +14,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserEntity extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,7 +28,9 @@ public class UserEntity extends BaseEntity {
     @Column(nullable = false)
     private boolean enabled = true;
 
-    // 패키지 프라이빗 세터 - 같은 패키지의 테스트에서만 접근 가능
+    @Column(nullable = false)
+    private boolean verified = false;
+
     void setEmail(String email) {
         this.email = email;
     }
@@ -41,14 +43,20 @@ public class UserEntity extends BaseEntity {
         this.enabled = enabled;
     }
 
+    void setVerified(boolean verified) {
+        this.verified = verified;
+    }
+
     void setId(Long id) {
         this.id = id;
     }
 
     public static UserEntity from(User user) {
         UserEntity entity = new UserEntity();
+        entity.id = user.getId();
         entity.email = user.getEmailValue();
         entity.password = user.getPasswordValue();
+        entity.verified = user.isVerified();
         return entity;
     }
 
@@ -56,7 +64,8 @@ public class UserEntity extends BaseEntity {
         return User.of(
                 this.id,
                 Email.of(this.email),
-                Password.ofEncoded(this.password)
+                Password.ofEncoded(this.password),
+                this.verified
         );
     }
 }

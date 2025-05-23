@@ -9,13 +9,13 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Represents a chat message in the system.
- * Messages are first-class objects following domain-driven design principles.
+ * 채팅 메시지
  */
 @Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @EqualsAndHashCode(of = "id")
 public class Message {
+
     private String id;
     private SenderId senderId;
     private RecipientId recipientId;
@@ -39,7 +39,7 @@ public class Message {
     }
 
     /**
-     * Create a new message that has just been sent
+     * 방금 전송된 새 메시지를 생성
      */
     public static Message create(Long senderId, Long recipientId, String content) {
         return new Message(
@@ -54,9 +54,6 @@ public class Message {
         );
     }
 
-    /**
-     * Recreate a message from persistence
-     */
     public static Message from(String id, Long senderId, Long recipientId, String content,
                                MessageStatus status, LocalDateTime sentAt,
                                LocalDateTime deliveredAt, LocalDateTime readAt) {
@@ -73,7 +70,7 @@ public class Message {
     }
 
     /**
-     * Mark the message as delivered
+     * 메시지를 전송됨으로 표시
      */
     public Message markDelivered() {
         if (this.status.ordinal() < MessageStatus.DELIVERED.ordinal()) {
@@ -92,7 +89,7 @@ public class Message {
     }
 
     /**
-     * Mark the message as read
+     * 메시지를 읽음으로 표시
      */
     public Message markRead() {
         if (this.status.ordinal() < MessageStatus.READ.ordinal()) {

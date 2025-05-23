@@ -19,15 +19,17 @@ public class RedisListenerConfig {
 
     @Bean
     public MessageListenerAdapter messageListenerAdapter() {
+        // Redis 메시지 구독자를 위한 어댑터 생성
         return new MessageListenerAdapter(redisMessageSubscriber);
     }
 
     @Bean
     public RedisMessageListenerContainer redisContainer(RedisConnectionFactory connectionFactory) {
+        // Redis 메시지 리스너 컨테이너 설정
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
 
-        // Register listeners for both topics
+        // 두 토픽에 대한 리스너 등록
         container.addMessageListener(messageListenerAdapter(), messageTopic);
         container.addMessageListener(messageListenerAdapter(), notificationTopic);
 

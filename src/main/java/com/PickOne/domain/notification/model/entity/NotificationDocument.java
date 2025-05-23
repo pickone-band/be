@@ -1,4 +1,3 @@
-
 package com.PickOne.domain.notification.model.entity;
 
 import com.PickOne.domain.notification.model.domain.Notification;
@@ -15,7 +14,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import java.time.LocalDateTime;
 
 /**
- * MongoDB document for storing notifications
+ * 알림 저장을 위한 MongoDB 문서
  */
 @Document(collection = "notifications")
 @Data
@@ -45,7 +44,7 @@ public class NotificationDocument {
     private LocalDateTime readAt;
 
     /**
-     * Convert from domain model to document
+     * 도메인 모델을 문서로 변환
      */
     public static NotificationDocument fromDomain(Notification notification) {
         return NotificationDocument.builder()
@@ -62,7 +61,7 @@ public class NotificationDocument {
     }
 
     /**
-     * Convert to domain model
+     * 도메인 모델로 변환
      */
     public Notification toDomain() {
         return Notification.from(

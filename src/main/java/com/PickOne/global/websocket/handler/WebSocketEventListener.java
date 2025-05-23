@@ -12,7 +12,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import java.security.Principal;
 
 /**
- * Handler for WebSocket connection events
+ * 웹소켓 연결 이벤트 핸들러
  */
 @Component
 @RequiredArgsConstructor
@@ -27,10 +27,10 @@ public class WebSocketEventListener {
         Principal user = headerAccessor.getUser();
 
         if (user != null) {
-            log.info("User connected: {}", user.getName());
+            log.info("사용자가 연결되었습니다: {}", user.getName());
 
-            // You could notify friends/team members that user is online
-            // Or update an online status in Redis/DB
+            // 친구나 팀 멤버에게 사용자가 온라인 상태임을 알리거나
+            // Redis/DB에서 온라인 상태를 업데이트할 수 있습니다
         }
     }
 
@@ -40,9 +40,9 @@ public class WebSocketEventListener {
         Principal user = headerAccessor.getUser();
 
         if (user != null) {
-            log.info("User disconnected: {}", user.getName());
+            log.info("사용자가 연결을 해제했습니다: {}", user.getName());
 
-            // Update offline status or notify others
+            // 오프라인 상태로 업데이트하거나 다른 사용자들에게 알림
         }
     }
 }

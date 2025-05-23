@@ -13,25 +13,25 @@ import java.util.List;
 public interface MessageMongoRepository extends MongoRepository<MessageDocument, String> {
 
     /**
-     * Find all messages between two users
+     * 두 사용자 간의 모든 메시지 찾기
      */
     @Query("{ $or: [ { 'senderId': ?0, 'recipientId': ?1 }, { 'senderId': ?1, 'recipientId': ?0 } ] }")
     Page<MessageDocument> findConversation(Long userId1, Long userId2, Pageable pageable);
 
     /**
-     * Find messages sent to a user with status = SENT (unread)
+     * 상태가 SENT(읽지 않음)인 사용자에게 전송된 메시지 찾기
      */
     List<MessageDocument> findByRecipientIdAndStatus(Long recipientId, String status);
 
     /**
-     * Find recent conversations for a user
+     * 사용자의 최근 대화 찾기
      */
     @Query(value = "{ $or: [ { 'senderId': ?0 }, { 'recipientId': ?0 } ] }",
             sort = "{ 'sentAt': -1 }")
     List<MessageDocument> findRecentConversations(Long userId);
 
     /**
-     * Count unread messages for a user
+     * 사용자의 읽지 않은 메시지 수 세기
      */
     long countByRecipientIdAndStatus(Long recipientId, String status);
 }
