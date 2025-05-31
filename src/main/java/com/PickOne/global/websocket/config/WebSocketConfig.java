@@ -1,4 +1,4 @@
-package com.PickOne.global.common.config;
+package com.PickOne.global.websocket.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
