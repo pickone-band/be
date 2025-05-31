@@ -1,5 +1,5 @@
 // BCryptEncoder.java
-package com.PickOne.global.security.service;
+package com.PickOne.global.security.config;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
