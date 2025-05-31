@@ -17,43 +17,15 @@ import java.util.Optional;
  */
 public interface MessagingService {
 
-    /**
-     * 한 사용자에서 다른 사용자로 메시지 전송
-     */
-    Message sendMessage(Long fromUserId, Long toUserId, String content);
+    Message sendMessage(Long senderId, Long recipientId, String content);
 
-    /**
-     * 메시지를 전송됨으로 표시
-     */
-    Message markMessageDelivered(String messageId);
+    List<Message> getConversation(Long userId, Long otherUserId);
 
-    /**
-     * 메시지를 읽음으로 표시
-     */
-    Message markMessageRead(String messageId);
-
-    /**
-     * ID로 메시지 가져오기
-     */
-    Optional<Message> getMessage(String messageId);
-
-    /**
-     * 두 사용자 간의 대화 가져오기
-     */
-    Page<Message> getConversation(Long userId1, Long userId2, Pageable pageable);
-
-    /**
-     * 사용자의 읽지 않은 메시지 모두 가져오기
-     */
     List<Message> getUnreadMessages(Long userId);
 
-    /**
-     * 사용자의 읽지 않은 메시지 수 세기
-     */
-    long countUnreadMessages(Long userId);
+    List<Message> getRecentMessages(Long userId);
 
-    /**
-     * 사용자의 최근 대화 가져오기
-     */
-    List<Message> getRecentConversations(Long userId);
+    Message markAsRead(String messageId);
+
+    void deleteMessage(String messageId);
 }

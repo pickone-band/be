@@ -15,36 +15,10 @@ import java.util.Optional;
  */
 @Repository
 public interface NotificationRepository {
-
-    /**
-     * 알림 저장
-     */
     Notification save(Notification notification);
-
-    /**
-     * ID로 알림 찾기
-     */
     Optional<Notification> findById(String id);
-
-    /**
-     * 사용자의 모든 알림 찾기
-     */
-    Page<Notification> findAllForUser(Long userId, Pageable pageable);
-
-    /**
-     * 사용자의 읽지 않은 알림 찾기
-     */
-    List<Notification> findUnreadForUser(Long userId);
-
-    /**
-     * 사용자의 읽지 않은 알림 수 세기
-     */
-    long countUnreadForUser(Long userId);
-
-    /**
-     * 사용자의 유형별 알림 찾기
-     */
-    Page<Notification> findByTypeForUser(Long userId, NotificationType type, Pageable pageable);
-
-    void deleteAll();
+    List<Notification> findByRecipientId(Long recipientId);
+    List<Notification> findUnreadByRecipientId(Long recipientId);
+    void deleteById(String id);
+    void deleteAllByRecipientId(Long recipientId);
 }

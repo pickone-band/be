@@ -1,11 +1,16 @@
 package com.PickOne.domain.messaging.controller;
 
 import com.PickOne.domain.messaging.dto.MessageDto;
+import com.PickOne.domain.messaging.dto.SendMessageRequest;
+import com.PickOne.domain.messaging.mapper.MessageMapper;
 import com.PickOne.domain.messaging.model.domain.Message;
 import com.PickOne.domain.messaging.service.MessagingService;
 import com.PickOne.global.exception.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,123 +35,54 @@ public class MessageController {
 
     private final MessagingService messagingService;
 
-    /**
-     * 메시지 전송을 위한 REST 엔드포인트
-     */
     @Operation(summary = "메시지 전송", description = "특정 사용자에게 메시지를 전송합니다.")
-    @PostMapping("/send/{recipientId}")
-    public ResponseEntity<BaseResponse<MessageDto>> sendMessage(
-            @PathVariable Long recipientId,
-            @RequestBody String content) {
-
-        Long currentUserId = getCurrentUserId();
-        Message message = messagingService.sendMessage(currentUserId, recipientId, content);
-
-        return BaseResponse.success(MessageDto.fromDomain(message));
+    @PostMapping("/send")
+    public ResponseEntity<MessageDto> sendMessage(@RequestBody @Valid SendMessageRequest request) {
+        Message message = messagingService.sendMessage(request.senderId(), request.recipientId(), request.content());
+        return ResponseEntity.ok(MessageMapper.toDto(message));
     }
 
-    /**
-     * 다른 사용자와의 대화를 조회하는 REST 엔드포인트
-     */
     @Operation(summary = "대화 내용 조회", description = "특정 사용자와의 대화 내용을 조회합니다.")
-    @GetMapping("/conversation/{userId}")
-    public ResponseEntity<BaseResponse<Page<MessageDto>>> getConversation(
-            @PathVariable Long userId,
-            @PageableDefault(size = 20, sort = "sentAt", direction = Sort.Direction.DESC) Pageable pageable) {
-
-        Long currentUserId = getCurrentUserId();
-        Page<Message> conversation = messagingService.getConversation(currentUserId, userId, pageable);
-
-        Page<MessageDto> messageDtos = conversation.map(MessageDto::fromDomain);
-        return BaseResponse.success(messageDtos);
+    @GetMapping("/conversation")
+    public ResponseEntity<List<MessageDto>> getConversation(
+            @RequestParam Long userId,
+            @RequestParam Long otherUserId
+    ) {
+        List<MessageDto> conversation = messagingService.getConversation(userId, otherUserId).stream()
+                .map(MessageMapper::toDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(conversation);
     }
 
-    /**
-     * 메시지를 읽음 상태로 표시하는 REST 엔드포인트
-     */
-    @Operation(summary = "메시지 읽음 표시", description = "메시지를 읽음 상태로 표시합니다.")
-    @PostMapping("/{messageId}/read")
-    public ResponseEntity<BaseResponse<MessageDto>> markMessageRead(
-            @PathVariable String messageId) {
-
-        Message message = messagingService.markMessageRead(messageId);
-        return BaseResponse.success(MessageDto.fromDomain(message));
-    }
-
-    /**
-     * 읽지 않은 메시지를 조회하는 REST 엔드포인트
-     */
     @Operation(summary = "읽지 않은 메시지 조회", description = "읽지 않은 메시지를 조회합니다.")
     @GetMapping("/unread")
-    public ResponseEntity<BaseResponse<List<MessageDto>>> getUnreadMessages() {
-        Long currentUserId = getCurrentUserId();
-        List<Message> unreadMessages = messagingService.getUnreadMessages(currentUserId);
-
-        List<MessageDto> messageDtos = unreadMessages.stream()
-                .map(MessageDto::fromDomain)
+    public ResponseEntity<List<MessageDto>> getUnreadMessages(@RequestParam Long userId) {
+        List<MessageDto> messages = messagingService.getUnreadMessages(userId).stream()
+                .map(MessageMapper::toDto)
                 .collect(Collectors.toList());
-
-        return BaseResponse.success(messageDtos);
+        return ResponseEntity.ok(messages);
     }
 
-    /**
-     * 읽지 않은 메시지 수를 조회하는 REST 엔드포인트
-     */
-    @Operation(summary = "읽지 않은 메시지 수 조회", description = "읽지 않은 메시지의 수를 조회합니다.")
-    @GetMapping("/unread/count")
-    public ResponseEntity<BaseResponse<Long>> getUnreadMessageCount() {
-        Long currentUserId = getCurrentUserId();
-        long count = messagingService.countUnreadMessages(currentUserId);
-
-        return BaseResponse.success(count);
-    }
-
-    /**
-     * 최근 대화 목록을 조회하는 REST 엔드포인트
-     */
-    @Operation(summary = "최근 대화 목록 조회", description = "최근 대화 목록을 조회합니다.")
+    @Operation(summary = "최근 메시지 조회", description = "최근 대화 목록을 조회합니다.")
     @GetMapping("/recent")
-    public ResponseEntity<BaseResponse<List<MessageDto>>> getRecentConversations() {
-        Long currentUserId = getCurrentUserId();
-        List<Message> recentConversations = messagingService.getRecentConversations(currentUserId);
-
-        List<MessageDto> messageDtos = recentConversations.stream()
-                .map(MessageDto::fromDomain)
+    public ResponseEntity<List<MessageDto>> getRecentMessages(@RequestParam Long userId) {
+        List<MessageDto> messages = messagingService.getRecentMessages(userId).stream()
+                .map(MessageMapper::toDto)
                 .collect(Collectors.toList());
-
-        return BaseResponse.success(messageDtos);
+        return ResponseEntity.ok(messages);
     }
 
-    /**
-     * 메시지 전송을 위한 WebSocket 엔드포인트
-     */
-    @MessageMapping("/message.send")
-    public void handleSendMessage(@Payload MessageDto messageDto, Principal principal) {
-        Long senderId = Long.valueOf(principal.getName());
-        messagingService.sendMessage(senderId, messageDto.recipientId(), messageDto.content());
+    @Operation(summary = "메시지 읽음 표시", description = "메시지를 읽음 상태로 표시합니다.")
+    @PostMapping("/{messageId}/read")
+    public ResponseEntity<MessageDto> markAsRead(@PathVariable String messageId) {
+        Message updated = messagingService.markAsRead(messageId);
+        return ResponseEntity.ok(MessageMapper.toDto(updated));
     }
 
-    /**
-     * 메시지를 전달됨으로 표시하는 WebSocket 엔드포인트
-     */
-    @MessageMapping("/message.delivered")
-    public void handleMessageDelivered(@Payload String messageId) {
-        messagingService.markMessageDelivered(messageId);
-    }
-
-    /**
-     * 메시지를 읽음으로 표시하는 WebSocket 엔드포인트
-     */
-    @MessageMapping("/message.read")
-    public void handleMessageRead(@Payload String messageId) {
-        messagingService.markMessageRead(messageId);
-    }
-
-    /**
-     * 현재 인증된 사용자의 ID를 가져옴
-     */
-    private Long getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return Long.valueOf(authentication.getName());
+    @Operation(summary = "메시지 삭제", description = "메시지를 삭제합니다.")
+    @DeleteMapping("/{messageId}")
+    public ResponseEntity<Void> deleteMessage(@PathVariable String messageId) {
+        messagingService.deleteMessage(messageId);
+        return ResponseEntity.noContent().build();
     }
 }

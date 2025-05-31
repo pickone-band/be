@@ -1,25 +1,16 @@
 package com.PickOne.domain.notification.controller;
 
 import com.PickOne.domain.notification.dto.NotificationDto;
+import com.PickOne.domain.notification.mapper.NotificationMapper;
 import com.PickOne.domain.notification.model.domain.Notification;
 import com.PickOne.domain.notification.model.domain.NotificationType;
 import com.PickOne.domain.notification.service.NotificationService;
-import com.PickOne.global.exception.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,105 +22,55 @@ public class NotificationController {
 
     private final NotificationService notificationService;
 
-    /**
-     * 현재 사용자의 모든 알림을 조회하는 REST 엔드포인트
-     */
+    @Operation(summary = "알림 생성", description = "알림을 수동으로 생성합니다.")
+    @PostMapping("/send")
+    public ResponseEntity<NotificationDto> sendNotification(
+            @RequestParam Long recipientId,
+            @RequestParam NotificationType type,
+            @RequestParam String content,
+            @RequestParam String refEntityType,
+            @RequestParam String refEntityId
+    ) {
+        Notification notification = notificationService.createNotification(recipientId, type, content, refEntityType, refEntityId);
+        return ResponseEntity.ok(NotificationMapper.toDto(notification));
+    }
+
     @Operation(summary = "알림 목록 조회", description = "사용자의 알림 목록을 조회합니다.")
     @GetMapping
-    public ResponseEntity<BaseResponse<Page<NotificationDto>>> getAllNotifications(
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-
-        Long currentUserId = getCurrentUserId();
-        Page<Notification> notifications = notificationService.getAllNotificationsForUser(currentUserId, pageable);
-
-        Page<NotificationDto> notificationDtos = notifications.map(NotificationDto::fromDomain);
-        return BaseResponse.success(notificationDtos);
-    }
-
-    /**
-     * 현재 사용자의 읽지 않은 알림을 조회하는 REST 엔드포인트
-     */
-    @Operation(summary = "읽지 않은 알림 목록 조회", description = "읽지 않은 알림 목록을 조회합니다.")
-    @GetMapping("/unread")
-    public ResponseEntity<BaseResponse<List<NotificationDto>>> getUnreadNotifications() {
-        Long currentUserId = getCurrentUserId();
-        List<Notification> unreadNotifications = notificationService.getUnreadNotificationsForUser(currentUserId);
-
-        List<NotificationDto> notificationDtos = unreadNotifications.stream()
-                .map(NotificationDto::fromDomain)
+    public ResponseEntity<List<NotificationDto>> getNotifications(@RequestParam Long recipientId) {
+        List<NotificationDto> notifications = notificationService.getNotifications(recipientId).stream()
+                .map(NotificationMapper::toDto)
                 .collect(Collectors.toList());
-
-        return BaseResponse.success(notificationDtos);
+        return ResponseEntity.ok(notifications);
     }
 
-    /**
-     * 읽지 않은 알림 수를 조회하는 REST 엔드포인트
-     */
-    @Operation(summary = "읽지 않은 알림 수 조회", description = "읽지 않은 알림의 수를 조회합니다.")
-    @GetMapping("/unread/count")
-    public ResponseEntity<BaseResponse<Long>> getUnreadNotificationCount() {
-        Long currentUserId = getCurrentUserId();
-        long count = notificationService.countUnreadNotificationsForUser(currentUserId);
-
-        return BaseResponse.success(count);
+    @Operation(summary = "읽지 않은 알림 조회", description = "사용자의 읽지 않은 알림을 조회합니다.")
+    @GetMapping("/unread")
+    public ResponseEntity<List<NotificationDto>> getUnread(@RequestParam Long recipientId) {
+        List<NotificationDto> unread = notificationService.getUnreadNotifications(recipientId).stream()
+                .map(NotificationMapper::toDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(unread);
     }
 
-    /**
-     * 알림을 읽음 상태로 표시하는 REST 엔드포인트
-     */
-    @Operation(summary = "알림 읽음 표시", description = "알림을 읽음 상태로 표시합니다.")
-    @PostMapping("/{notificationId}/read")
-    public ResponseEntity<BaseResponse<NotificationDto>> markNotificationRead(
-            @PathVariable String notificationId) {
-
-        Notification notification = notificationService.markNotificationRead(notificationId);
-        return BaseResponse.success(NotificationDto.fromDomain(notification));
+    @Operation(summary = "알림 읽음 처리", description = "특정 알림을 읽음 처리합니다.")
+    @PostMapping("/{id}/read")
+    public ResponseEntity<NotificationDto> markAsRead(@PathVariable String id) {
+        Notification updated = notificationService.markAsRead(id);
+        return ResponseEntity.ok(NotificationMapper.toDto(updated));
     }
 
-    /**
-     * 모든 알림을 읽음 상태로 표시하는 REST 엔드포인트
-     */
-    @Operation(summary = "모든 알림 읽음 표시", description = "모든 알림을 읽음 상태로 표시합니다.")
-    @PostMapping("/read-all")
-    public ResponseEntity<BaseResponse<Void>> markAllNotificationsRead() {
-        Long currentUserId = getCurrentUserId();
-        notificationService.markAllNotificationsReadForUser(currentUserId);
-
-        return BaseResponse.success();
+    @Operation(summary = "알림 삭제", description = "특정 알림을 삭제합니다.")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable String id) {
+        notificationService.deleteNotification(id);
+        return ResponseEntity.noContent().build();
     }
 
-    /**
-     * 유형별 알림을 조회하는 REST 엔드포인트
-     */
-    @Operation(summary = "유형별 알림 목록 조회", description = "특정 유형의 알림 목록을 조회합니다.")
-    @GetMapping("/type/{type}")
-    public ResponseEntity<BaseResponse<Page<NotificationDto>>> getNotificationsByType(
-            @PathVariable String type,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-
-        Long currentUserId = getCurrentUserId();
-        NotificationType notificationType = NotificationType.valueOf(type);
-
-        Page<Notification> notifications = notificationService.getNotificationsByTypeForUser(
-                currentUserId, notificationType, pageable);
-
-        Page<NotificationDto> notificationDtos = notifications.map(NotificationDto::fromDomain);
-        return BaseResponse.success(notificationDtos);
-    }
-
-    /**
-     * 알림을 읽음으로 표시하는 WebSocket 엔드포인트
-     */
-    @MessageMapping("/notification.read")
-    public void handleNotificationRead(@Payload String notificationId) {
-        notificationService.markNotificationRead(notificationId);
-    }
-
-    /**
-     * 현재 인증된 사용자의 ID를 가져옴
-     */
-    private Long getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return Long.valueOf(authentication.getName());
+    @Operation(summary = "사용자 알림 전체 삭제", description = "특정 사용자의 모든 알림을 삭제합니다.")
+    @DeleteMapping("/user/{recipientId}")
+    public ResponseEntity<Void> deleteAll(@PathVariable Long recipientId) {
+        notificationService.deleteAllNotifications(recipientId);
+        return ResponseEntity.noContent().build();
     }
 }
