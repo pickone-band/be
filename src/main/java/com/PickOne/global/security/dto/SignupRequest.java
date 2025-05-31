@@ -11,5 +11,8 @@ public record SignupRequest(
 
         @NotBlank(message = "비밀번호는 필수입니다")
         @Size(min = 6, message = "비밀번호는 최소 6자 이상이어야 합니다")
-        String password
+        String password,
+
+        @NotBlank(message = "닉네임은 필수입니다")
+        String nickname
 ) {}

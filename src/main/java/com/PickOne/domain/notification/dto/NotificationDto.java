@@ -14,7 +14,7 @@ public record NotificationDto(
         String content,
         String status,
         String refEntityType,
-        Long refEntityId,
+        String refEntityId,
         LocalDateTime createdAt,
         LocalDateTime readAt
 ) {
@@ -24,12 +24,12 @@ public record NotificationDto(
     public static NotificationDto fromDomain(Notification notification) {
         return new NotificationDto(
                 notification.getId(),
-                notification.getRecipientIdValue(),
+                notification.getRecipientId(),
                 notification.getType().name(),
-                notification.getContentValue(),
+                notification.getContent(),
                 notification.getStatus().name(),
                 notification.getRefEntityType(),
-                notification.getRefEntityIdValue(),
+                notification.getRefEntityId(),
                 notification.getCreatedAt(),
                 notification.getReadAt()
         );
