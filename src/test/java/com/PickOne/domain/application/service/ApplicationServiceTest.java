@@ -8,6 +8,7 @@ import com.PickOne.domain.recruitments.model.Mbti;
 import com.PickOne.domain.recruitments.model.Proficiency;
 import com.PickOne.domain.recruitments.model.entity.Recruitment;
 import com.PickOne.domain.recruitments.repository.RecruitmentRepository;
+import com.PickOne.domain.user.mapper.UserMapper;
 import com.PickOne.domain.user.model.domain.Email;
 import com.PickOne.domain.user.model.domain.Password;
 import com.PickOne.domain.user.model.domain.User;
@@ -16,9 +17,20 @@ import com.PickOne.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 
 @SpringBootTest
 public class ApplicationServiceTest {
+
+    @MockBean
+    private ClientRegistrationRepository clientRegistrationRepository;
+
+    @MockBean
+    private OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
+
+
     @Autowired
     private ApplicationService applicationService;
     @Autowired
@@ -32,13 +44,15 @@ public class ApplicationServiceTest {
         User testUser = User.of(
                 null,
                 Email.of("test@example.com"),
-                Password.ofEncoded("encoded-password")
+                Password.ofEncoded("encoded-password"),
+                "테스트유저", // ✅ nickname 추가
+                true         // ✅ isPublic 추가
         );
         User savedUser = userRepository.save(testUser);
 
         Recruitment recruitment = Recruitment.builder()
                 .title("테스트 모집글")
-                .userEntity(UserEntity.from(savedUser))
+                .userEntity(UserMapper.toEntity(savedUser))
                 .build();
         recruitmentRepository.save(recruitment);
 

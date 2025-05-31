@@ -3,7 +3,7 @@ package com.PickOne.domain.application.controller;
 import com.PickOne.domain.application.dto.request.ApplicationRequestDto;
 import com.PickOne.domain.application.service.ApplicationService;
 import com.PickOne.global.exception.BaseResponse;
-import com.PickOne.global.security.model.entity.SecurityUser;
+import com.PickOne.global.security.model.entity.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -30,7 +30,7 @@ public class ApplicationController {
     @PostMapping("/apply/{recruitmentId}")
     public ResponseEntity<BaseResponse<Long>> applyToRecruitment(
             @PathVariable Long recruitmentId,
-            @AuthenticationPrincipal SecurityUser user,
+            @AuthenticationPrincipal UserPrincipal user,
             @RequestBody @Valid ApplicationRequestDto requestDto) {
 
         Long applyId=applicationService.applyToRecruitment(user.getUserId(), recruitmentId, requestDto);
