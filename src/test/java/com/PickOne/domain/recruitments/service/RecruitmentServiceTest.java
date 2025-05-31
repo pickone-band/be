@@ -25,12 +25,23 @@ import java.util.List;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 
 @Disabled("Disabled temporarily due to H2-related tests.")
 @SpringBootTest
 @Transactional
 class RecruitmentServiceTest {
+
+    @MockBean
+    private ClientRegistrationRepository clientRegistrationRepository;
+
+    @MockBean
+    private OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
 
     @Autowired
     private RecruitmentService recruitmentService;
@@ -75,7 +86,9 @@ class RecruitmentServiceTest {
         User testUser = User.of(
                 null,
                 Email.of("test@example.com"),
-                Password.ofEncoded("encoded-password")
+                Password.ofEncoded("encoded-password"),
+                "테스트유저",
+                true
         );
         User savedUser = userRepository.save(testUser);
 
@@ -91,7 +104,9 @@ class RecruitmentServiceTest {
         User testUser = User.of(
                 null,
                 Email.of("test@example.com"),
-                Password.ofEncoded("encoded-password")
+                Password.ofEncoded("encoded-password"),
+                "테스트유저",
+                true
         );
         User savedUser = userRepository.save(testUser);
         Long savedId = recruitmentService.registerRecruitment(requestDto, savedUser.getId());
@@ -104,7 +119,9 @@ class RecruitmentServiceTest {
         User testUser = User.of(
                 null,
                 Email.of("test@example.com"),
-                Password.ofEncoded("encoded-password")
+                Password.ofEncoded("encoded-password"),
+                "테스트유저",
+                true
         );
         User savedUser = userRepository.save(testUser);
         Long savedId = recruitmentService.registerRecruitment(requestDto, savedUser.getId());
@@ -144,7 +161,9 @@ class RecruitmentServiceTest {
         User testUser = User.of(
                 null,
                 Email.of("test@example.com"),
-                Password.ofEncoded("encoded-password")
+                Password.ofEncoded("encoded-password"),
+                "테스트유저",
+                true
         );
         User savedUser = userRepository.save(testUser);
         Long savedId = recruitmentService.registerRecruitment(requestDto, savedUser.getId());
@@ -152,7 +171,9 @@ class RecruitmentServiceTest {
         User testUser2 = User.of(
                 null,
                 Email.of("test2@example.com"),
-                Password.ofEncoded("encoded-password")
+                Password.ofEncoded("encoded-password"),
+                "다른유저",
+                true
         );
         User savedUser2 = userRepository.save(testUser2);
         // when & then

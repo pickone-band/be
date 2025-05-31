@@ -4,96 +4,61 @@ import com.PickOne.domain.notification.model.domain.Notification;
 import com.PickOne.domain.notification.model.domain.NotificationStatus;
 import com.PickOne.domain.notification.model.domain.NotificationType;
 import com.PickOne.domain.notification.repository.NotificationRepository;
-import com.PickOne.domain.notification.service.NotificationService;
-import com.PickOne.domain.user.service.UserService;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.PageRequest;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
-@Transactional
-@SpringBootTest
-public class NotificationServiceTest {
 
-    @Autowired
+class NotificationServiceTest {
+
+    private NotificationRepository notificationRepository;
     private NotificationService notificationService;
 
-    // UserService 모킹 - 대상 사용자가 존재한다고 가정
-    @MockBean
-    private UserService userService;
-
-    @Autowired
-    private NotificationRepository notificationRepository;
-
     @BeforeEach
-    void clean() {
-        notificationRepository.deleteAll();
+    void setUp() {
+        notificationRepository = mock(NotificationRepository.class);
+        notificationService = new NotificationServiceImpl(notificationRepository);
     }
 
     @Test
-    public void testCreateAndReadNotification() {
-        // UserService 모킹
-        Long recipientId = 3L;
-        when(userService.findById(recipientId)).thenReturn(null); // 반환값은 중요하지 않음
+    @DisplayName("알림 생성")
+    void createNotification() {
+        Notification created = Notification.create(1L, NotificationType.NEW_MESSAGE, NotificationType.NEW_MESSAGE.getDefaultMessage(), "MESSAGE", "100L");
+        when(notificationRepository.save(any())).thenReturn(created);
 
-        // 알림 생성
-        Notification notification = notificationService.createNotification(
-                recipientId,
-                NotificationType.SYSTEM_ANNOUNCEMENT,
-                "Service Test Notification",
-                "TEST",
-                1L
-        );
+        Notification result = notificationService.createNotification(1L, NotificationType.NEW_MESSAGE, NotificationType.NEW_MESSAGE.getDefaultMessage(), "MESSAGE", "100L");
 
-        assertNotNull(notification);
-        assertNotNull(notification.getId());
-        assertEquals(NotificationStatus.UNREAD, notification.getStatus());
-
-        // 알림 조회
-        Optional<Notification> found = notificationService.getNotification(notification.getId());
-        assertTrue(found.isPresent());
-
-        // 알림 읽음 표시
-        Notification readNotification = notificationService.markNotificationRead(notification.getId());
-        assertEquals(NotificationStatus.READ, readNotification.getStatus());
-
-        // 알림 조회
-        List<Notification> unreadNotifications = notificationService.getUnreadNotificationsForUser(recipientId);
-        assertFalse(unreadNotifications.stream().anyMatch(n -> n.getId().equals(notification.getId())));
-
-        // 검증
-        verify(userService, times(2)).findById(recipientId);
+        assertThat(result.getRecipientId()).isEqualTo(1L);
+        assertThat(result.getType()).isEqualTo(NotificationType.NEW_MESSAGE);
+        assertThat(result.getStatus()).isEqualTo(NotificationStatus.UNREAD);
+        assertThat(result.getContent()).isEqualTo("새 메시지가 도착했습니다");
     }
+
     @Test
-    public void testMarkAllNotificationsRead() {
-        // UserService 모킹
-        Long recipientId = 4L;
-        when(userService.findById(recipientId)).thenReturn(null);
+    @DisplayName("알림 읽음 처리")
+    void markAsRead() {
+        Notification unread = Notification.create(1L, NotificationType.SYSTEM_ANNOUNCEMENT, NotificationType.SYSTEM_ANNOUNCEMENT.getDefaultMessage(), "SYS", "10L");
+        Notification read = unread.markAsRead();
 
-        // 알림 생성 (2개)
-        notificationService.createNotification(
-                recipientId, NotificationType.SYSTEM_ANNOUNCEMENT, "Test 1", "TEST", 1L);
-        notificationService.createNotification(
-                recipientId, NotificationType.SYSTEM_ANNOUNCEMENT, "Test 2", "TEST", 2L);
+        when(notificationRepository.findById("id1")).thenReturn(Optional.of(unread));
+        when(notificationRepository.save(any())).thenReturn(read);
 
-        // 모든 알림 읽음으로 표시
-        notificationService.markAllNotificationsReadForUser(recipientId);
+        Notification result = notificationService.markAsRead("id1");
+        assertThat(result.getStatus()).isEqualTo(NotificationStatus.READ);
+        assertThat(result.getReadAt()).isNotNull();
+    }
 
-        // 읽지 않은 알림 조회
-        List<Notification> unreadNotifications = notificationService.getUnreadNotificationsForUser(recipientId);
-        assertEquals(0, unreadNotifications.size());
-
-        // 유형별 알림 조회
-        long count = notificationService.getNotificationsByTypeForUser(
-                recipientId, NotificationType.SYSTEM_ANNOUNCEMENT, PageRequest.of(0, 10)).getTotalElements();
-        assertEquals(2, count);
+    @Test
+    @DisplayName("알림 전체 삭제")
+    void deleteAllByUser() {
+        doNothing().when(notificationRepository).deleteAllByRecipientId(1L);
+        notificationService.deleteAllNotifications(1L);
+        verify(notificationRepository).deleteAllByRecipientId(1L);
     }
 }

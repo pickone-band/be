@@ -1,72 +1,93 @@
 package com.PickOne.domain.user.controller;
 
-import com.PickOne.domain.user.controller.UserController;
-import com.PickOne.domain.user.dto.UserResponse;
+import com.PickOne.domain.user.dto.UserUpdateRequest;
 import com.PickOne.domain.user.model.domain.Email;
 import com.PickOne.domain.user.model.domain.Password;
 import com.PickOne.domain.user.model.domain.User;
 import com.PickOne.domain.user.service.UserService;
-import org.junit.jupiter.api.BeforeEach;
+import com.PickOne.global.security.filter.JwtAuthenticationFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
+@WithMockUser
+@WebMvcTest(
+        controllers = UserController.class,
+        excludeFilters = @ComponentScan.Filter(
+                type = FilterType.ASSIGNABLE_TYPE,
+                classes = JwtAuthenticationFilter.class
+        )
+)
 class UserControllerTest {
 
-    @Mock
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
     private UserService userService;
 
-    @InjectMocks
-    private UserController userController;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    private User testUser;
-    private final Long userId = 1L;
-    private final String userEmail = "test@example.com";
-    private final String userPassword = "encodedPassword";
+    @Test
+    @DisplayName("회원 정보 조회 API - 성공")
+    void getUserById_success() throws Exception {
+        Long userId = 1L;
+        Email email = Email.of("test@example.com");
+        Password password = Password.ofEncoded("hashedPass");
+        User user = User.of(userId, email, password, "nickname", true);
+        when(userService.findById(userId)).thenReturn(user);
 
-    @BeforeEach
-    void setUp() {
-        testUser = User.of(userId, Email.of(userEmail), Password.ofEncoded(userPassword));
+        mockMvc.perform(get("/api/users/{id}", userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(userId))
+                .andExpect(jsonPath("$.email").value("test@example.com"))
+                .andExpect(jsonPath("$.nickname").value("nickname"))
+                .andExpect(jsonPath("$.isPublic").value(true));
     }
 
     @Test
-    @DisplayName("ID로 사용자 조회 성공 테스트")
-    void getUserById_Success() {
-        // given
-        when(userService.findById(userId)).thenReturn(testUser);
+    @DisplayName("회원 정보 수정 API - 성공")
+    void updateUser_success() throws Exception {
+        Long userId = 1L;
+        UserUpdateRequest request = new UserUpdateRequest("new@example.com", "newnick", true);
+        Email newEmail = Email.of(request.email());
+        Password password = Password.ofEncoded("existingPass");
+        User updated = User.of(userId, newEmail, password, request.nickname(), request.isPublic());
 
-        // when
-        ResponseEntity<UserResponse> response = userController.getUserById(userId);
+        when(userService.updateUser(eq(userId), any())).thenReturn(updated);
 
-        // then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().id()).isEqualTo(userId);
-        assertThat(response.getBody().email()).isEqualTo(userEmail);
+        mockMvc.perform(put("/api/users/{id}", userId)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("new@example.com"))
+                .andExpect(jsonPath("$.nickname").value("newnick"))
+                .andExpect(jsonPath("$.isPublic").value(true));
     }
 
     @Test
-    @DisplayName("이메일로 사용자 조회 성공 테스트")
-    void getUserByEmail_Success() {
-        // given
-        when(userService.findByEmail(userEmail)).thenReturn(testUser);
+    @DisplayName("회원 탈퇴 API - 성공")
+    void deleteUser_success() throws Exception {
+        Long userId = 1L;
+        doNothing().when(userService).deleteUser(userId);
 
-        // when
-        ResponseEntity<UserResponse> response = userController.getUserByEmail(userEmail);
-
-        // then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().id()).isEqualTo(userId);
-        assertThat(response.getBody().email()).isEqualTo(userEmail);
+        mockMvc.perform(delete("/api/users/{id}", userId)
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
     }
 }

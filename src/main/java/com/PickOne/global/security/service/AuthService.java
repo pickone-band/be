@@ -1,14 +1,12 @@
 package com.PickOne.global.security.service;
 
-import com.PickOne.domain.user.model.domain.User;
-import jakarta.servlet.http.HttpServletRequest;
+import com.PickOne.global.security.dto.AuthResult;
+import com.PickOne.global.security.dto.LoginRequest;
+import com.PickOne.global.security.dto.SignupRequest;
 
 public interface AuthService {
-
-    User signup(String email, String password);
-    User login(String email, String password);
-    User refreshToken(String refreshToken);
-    void logout(HttpServletRequest request);
-    String generateAccessToken(User user);
-    String generateRefreshToken(User user);
+    AuthResult signup(SignupRequest request);
+    AuthResult login(LoginRequest request);
+    AuthResult refresh(String refreshToken);
+    void logout(String accessToken);
 }

@@ -1,10 +1,7 @@
 
 package com.PickOne.domain.notification.model.domain;
 
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -13,99 +10,45 @@ import java.util.UUID;
  * 시스템의 알림
  */
 @Getter
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-@EqualsAndHashCode(of = "id")
+@EqualsAndHashCode
+@RequiredArgsConstructor
 public class Notification {
-    private String id;
-    private RecipientId recipientId;
-    private NotificationType type;
-    private NotificationContent content;
-    private NotificationStatus status;
-    private RefEntityId refEntityId;
-    private LocalDateTime createdAt;
-    private LocalDateTime readAt;
 
-    private Notification(String id, RecipientId recipientId, NotificationType type,
-                         NotificationContent content, NotificationStatus status,
-                         RefEntityId refEntityId, LocalDateTime createdAt, LocalDateTime readAt) {
-        this.id = id;
-        this.recipientId = recipientId;
-        this.type = type;
-        this.content = content;
-        this.status = status;
-        this.refEntityId = refEntityId;
-        this.createdAt = createdAt;
-        this.readAt = readAt;
-    }
+    private final String id;
+    private final Long recipientId;
+    private final NotificationType type;
+    private final String content;
+    private final NotificationStatus status;
+    private final String refEntityType;
+    private final String refEntityId;
+    private final LocalDateTime createdAt;
+    private final LocalDateTime readAt;
 
-    /**
-     * 새 알림 생성
-     */
-    public static Notification create(Long recipientId, NotificationType type,
-                                      String content, String refEntityType, Long refEntityId) {
+    public static Notification create(Long recipientId, NotificationType type, String content, String refEntityType, String refEntityId) {
         return new Notification(
-                UUID.randomUUID().toString(),
-                new RecipientId(recipientId),
+                null,
+                recipientId,
                 type,
-                new NotificationContent(content),
+                content,
                 NotificationStatus.UNREAD,
-                new RefEntityId(refEntityType, refEntityId),
+                refEntityType,
+                refEntityId,
                 LocalDateTime.now(),
                 null
         );
     }
 
-    /**
-     * 지속성에서 알림을 재생성
-     */
-    public static Notification from(String id, Long recipientId, NotificationType type,
-                                    String content, NotificationStatus status,
-                                    String refEntityType, Long refEntityId,
-                                    LocalDateTime createdAt, LocalDateTime readAt) {
+    public Notification markAsRead() {
         return new Notification(
                 id,
-                new RecipientId(recipientId),
+                recipientId,
                 type,
-                new NotificationContent(content),
-                status,
-                new RefEntityId(refEntityType, refEntityId),
+                content,
+                NotificationStatus.READ,
+                refEntityType,
+                refEntityId,
                 createdAt,
-                readAt
+                LocalDateTime.now()
         );
-    }
-
-    /**
-     * 알림을 읽음으로 표시
-     */
-    public Notification markRead() {
-        if (this.status == NotificationStatus.UNREAD) {
-            return new Notification(
-                    this.id,
-                    this.recipientId,
-                    this.type,
-                    this.content,
-                    NotificationStatus.READ,
-                    this.refEntityId,
-                    this.createdAt,
-                    LocalDateTime.now()
-            );
-        }
-        return this;
-    }
-
-    public Long getRecipientIdValue() {
-        return this.recipientId.getValue();
-    }
-
-    public String getContentValue() {
-        return this.content.getValue();
-    }
-
-    public String getRefEntityType() {
-        return this.refEntityId.getType();
-    }
-
-    public Long getRefEntityIdValue() {
-        return this.refEntityId.getValue();
     }
 }

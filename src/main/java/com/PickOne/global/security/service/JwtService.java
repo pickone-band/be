@@ -1,6 +1,7 @@
 package com.PickOne.global.security.service;
 
-import com.PickOne.global.security.model.entity.SecurityUser;
+
+import com.PickOne.global.security.model.entity.UserPrincipal;
 import com.PickOne.global.security.repository.TokenBlacklistRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -14,7 +15,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -42,12 +42,12 @@ public class JwtService {
   private final TokenBlacklistRepository tokenBlacklistRepository;
   private final CustomUserDetailsService userDetailsService;
 
-  public String generateAccessToken(SecurityUser userDetails) {
+  public String generateAccessToken(UserPrincipal userDetails) {
     return generateToken(
-        createClaims(userDetails), userDetails.getUsername(), accessTokenExpiration);
+            createClaims(userDetails), userDetails.getUsername(), accessTokenExpiration);
   }
 
-  public String generateRefreshToken(SecurityUser userDetails) {
+  public String generateRefreshToken(UserPrincipal userDetails) {
     return generateToken(new HashMap<>(), userDetails.getUsername(), refreshTokenExpiration);
   }
 
@@ -57,10 +57,7 @@ public class JwtService {
 
   public boolean validateRefreshToken(String refreshToken) {
     try {
-      // 토큰 서명 및 만료일 확인
       Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(refreshToken);
-
-      // 토큰이 블랙리스트에 없는지 확인 (유효한 상태)
       return !isTokenBlacklisted(refreshToken);
     } catch (JwtException e) {
       log.error("Invalid refresh token: {}", e.getMessage());
@@ -85,26 +82,22 @@ public class JwtService {
 
   public Authentication getAuthentication(String token) {
     Claims claims = extractAllClaims(token);
-    Long userId = claims.get("userId", Long.class);
+    String email = claims.getSubject();
 
     try {
-      // UserDetailsService를 통해 사용자 정보 조회
-      SecurityUser securityUser = userDetailsService.loadUserById(userId);
-
-      // SecurityUser의 권한 정보를 사용하여 인증 객체 생성
+      UserPrincipal userPrincipal = (UserPrincipal) userDetailsService.loadUserByUsername(email);
       return new UsernamePasswordAuthenticationToken(
-          securityUser, null, securityUser.getAuthorities());
-    } catch (UsernameNotFoundException e) {
-      log.error("인증 정보 생성 중 오류: 사용자를 찾을 수 없습니다. ID: {}", userId);
+              userPrincipal, null, userPrincipal.getAuthorities());
+    } catch (Exception e) {
+      log.error("인증 정보 생성 중 오류: {}", e.getMessage());
 
-      // 사용자를 찾을 수 없는 경우 토큰의 기본 정보로 인증 객체 생성
       List<String> authorities = claims.get("authorities", List.class);
       List<GrantedAuthority> grantedAuthorities =
-          authorities != null
-              ? authorities.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList())
-              : new ArrayList<>();
+              authorities != null
+                      ? authorities.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList())
+                      : new ArrayList<>();
 
-      return new UsernamePasswordAuthenticationToken(claims.getSubject(), null, grantedAuthorities);
+      return new UsernamePasswordAuthenticationToken(email, null, grantedAuthorities);
     }
   }
 
@@ -116,28 +109,21 @@ public class JwtService {
     return null;
   }
 
-  private Map<String, Object> createClaims(SecurityUser userDetails) {
+  private Map<String, Object> createClaims(UserPrincipal userDetails) {
     Map<String, Object> claims = new HashMap<>();
-    claims.put("userId", userDetails.getUserId());
-
-    // 권한 정보 추가
-    List<String> authorities =
-        userDetails.getAuthorities().stream()
-            .map(GrantedAuthority::getAuthority)
-            .collect(Collectors.toList());
-    claims.put("authorities", authorities);
-
+    claims.put("userId", userDetails.getUser().getId());
+    claims.put("authorities", Collections.emptyList());
     return claims;
   }
 
   public String generateToken(Map<String, Object> extraClaims, String subject, long expiration) {
     return Jwts.builder()
-        .setClaims(extraClaims)
-        .setSubject(subject)
-        .setIssuedAt(new Date(System.currentTimeMillis()))
-        .setExpiration(new Date(System.currentTimeMillis() + expiration))
-        .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-        .compact();
+            .setClaims(extraClaims)
+            .setSubject(subject)
+            .setIssuedAt(new Date(System.currentTimeMillis()))
+            .setExpiration(new Date(System.currentTimeMillis() + expiration))
+            .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+            .compact();
   }
 
   private boolean isTokenExpired(String token) {
@@ -156,19 +142,27 @@ public class JwtService {
   private Claims extractAllClaims(String token) {
     try {
       return Jwts.parserBuilder()
-          .setSigningKey(getSigningKey())
-          .build()
-          .parseClaimsJws(token)
-          .getBody();
+              .setSigningKey(getSigningKey())
+              .build()
+              .parseClaimsJws(token)
+              .getBody();
     } catch (ExpiredJwtException e) {
-      // 만료된 토큰의 경우에도 클레임 정보는 필요할 수 있음
       return e.getClaims();
     }
   }
 
   private Key getSigningKey() {
-    byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+    byte[] keyBytes = hexStringToByteArray(secretKey); // 기존 BASE64 디코딩 → Hex 디코딩
     return Keys.hmacShaKeyFor(keyBytes);
   }
-}
 
+  private byte[] hexStringToByteArray(String hex) {
+    int len = hex.length();
+    byte[] data = new byte[len / 2];
+    for (int i = 0; i < len; i += 2) {
+      data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
+              + Character.digit(hex.charAt(i + 1), 16));
+    }
+    return data;
+  }
+}

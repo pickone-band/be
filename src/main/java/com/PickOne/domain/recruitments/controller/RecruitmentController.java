@@ -4,7 +4,7 @@ import com.PickOne.domain.recruitments.dto.request.RecruitmentRequestDto;
 import com.PickOne.domain.recruitments.dto.response.RecruitmentResponseDto;
 import com.PickOne.domain.recruitments.service.RecruitmentService;
 import com.PickOne.global.exception.BaseResponse;
-import com.PickOne.global.security.model.entity.SecurityUser;
+import com.PickOne.global.security.model.entity.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ public class RecruitmentController {
     @Operation(summary = "멤버 모집글 등록 기능",
             description = "<a href='https://www.notion.so/1ae9366dcb7d812a8485e5b04db6adc6' target='_blank'>👉API 명세서 바로가기</a>")
     @PostMapping
-    public ResponseEntity<BaseResponse<Long>> createRecruitment(@AuthenticationPrincipal SecurityUser user,
+    public ResponseEntity<BaseResponse<Long>> createRecruitment(@AuthenticationPrincipal UserPrincipal user,
                                                                 @RequestBody RecruitmentRequestDto requestDto) {
 
         Long recruitmentId = recruitmentService.registerRecruitment(requestDto, user.getUserId());
@@ -63,7 +63,7 @@ public class RecruitmentController {
             description = "<a href='https://www.notion.so/1ae9366dcb7d815eb344e698996bc823' target='_blank'>👉API 명세서 바로가기</a>")
     @PatchMapping("/{id}")
     public ResponseEntity<BaseResponse<Long>> modifyRecruitment(
-            @AuthenticationPrincipal SecurityUser user,
+            @AuthenticationPrincipal UserPrincipal user,
             @PathVariable Long id,
             @RequestBody RecruitmentRequestDto requestDto) {
         Long result = recruitmentService.modifyRecruitment(requestDto, id, user.getUserId());
@@ -73,7 +73,7 @@ public class RecruitmentController {
             description = "<a href='https://www.notion.so/1ae9366dcb7d81dea606ed6afa0cb688' target='_blank'>👉API 명세서 바로가기</a>")
     @DeleteMapping("/{id}")
     public ResponseEntity<BaseResponse<Void>> deleteRecruitment(
-            @AuthenticationPrincipal SecurityUser user,
+            @AuthenticationPrincipal UserPrincipal user,
             @PathVariable Long id) {
         recruitmentService.deleteRecruitment(id, user.getUserId());
         return BaseResponse.success();

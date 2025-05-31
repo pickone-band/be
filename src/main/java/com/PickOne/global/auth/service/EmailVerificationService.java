@@ -46,7 +46,7 @@ public class EmailVerificationService {
 
         // 이메일 생성 및 발송
         EmailMessage emailMessage = emailTemplateService.createVerificationEmail(
-                user.getEmailValue(), token.getToken());
+                user.getEmail().getValue(), token.getToken());
         emailSenderService.sendEmail(emailMessage);
 
         log.info("사용자 {}에게 인증 이메일을 발송했습니다", user.getId());
@@ -68,7 +68,7 @@ public class EmailVerificationService {
 
         // 이메일 생성 및 발송
         EmailMessage emailMessage = emailTemplateService.createPasswordResetEmail(
-                user.getEmailValue(), token.getToken());
+                user.getEmail().getValue(), token.getToken());
         emailSenderService.sendEmail(emailMessage);
 
         log.info("사용자 {}에게 비밀번호 재설정 이메일을 발송했습니다", user.getId());
@@ -95,14 +95,14 @@ public class EmailVerificationService {
         User user = userRepository.findById(verificationToken.getUserId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
 
-        user.setVerified(true);
+        user.verify();
         userRepository.save(user);
 
         // 토큰 삭제
         tokenRepository.deleteByToken(token);
 
         // 환영 이메일 발송
-        EmailMessage welcomeEmail = emailTemplateService.createWelcomeEmail(user.getEmailValue());
+        EmailMessage welcomeEmail = emailTemplateService.createWelcomeEmail(user.getEmail().getValue());
         emailSenderService.sendEmail(welcomeEmail);
 
         log.info("사용자 {}의 이메일 인증이 완료되었습니다", user.getId());

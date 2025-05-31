@@ -1,150 +1,110 @@
 package com.PickOne.global.security.controller;
 
-import com.PickOne.global.exception.BaseResponse;
-import com.PickOne.global.security.controller.AuthController;
-import com.PickOne.global.security.dto.AuthResponse;
+import com.PickOne.domain.user.model.domain.Email;
+import com.PickOne.domain.user.model.domain.Password;
+import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.global.security.dto.AuthResult;
 import com.PickOne.global.security.dto.LoginRequest;
 import com.PickOne.global.security.dto.RefreshTokenRequest;
 import com.PickOne.global.security.dto.SignupRequest;
+import com.PickOne.global.security.filter.JwtAuthenticationFilter;
 import com.PickOne.global.security.service.AuthService;
-import com.PickOne.domain.user.model.domain.User;
-import jakarta.servlet.http.HttpServletRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.ResponseEntity;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
+@WithMockUser
+@WebMvcTest(
+        controllers = AuthController.class,
+        excludeFilters = @ComponentScan.Filter(
+                type = FilterType.ASSIGNABLE_TYPE,
+                classes = JwtAuthenticationFilter.class
+        )
+)
 class AuthControllerTest {
 
-    @Mock
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
     private AuthService authService;
 
-    @InjectMocks
-    private AuthController authController;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Test
-    @DisplayName("로그인 성공 테스트")
-    void login_Success() {
-        // given
-        String email = "test@example.com";
-        String password = "Password123!";
-        LoginRequest request = new LoginRequest(email, password);
+    @DisplayName("회원가입 API - 성공")
+    void signup_success() throws Exception {
+        SignupRequest request = new SignupRequest("user@example.com", "pass123", "닉네임");
+        User dummyUser = new User(1L, Email.of(request.email()), Password.ofEncoded("encoded"), request.nickname(), true);
+        AuthResult result = new AuthResult("access-token", "refresh-token", dummyUser);
 
-        User mockUser = mock(User.class);
-        when(mockUser.getId()).thenReturn(1L);
-        when(mockUser.getEmailValue()).thenReturn(email);
+        Mockito.when(authService.signup(any())).thenReturn(result);
 
-        String accessToken = "access-token";
-        String refreshToken = "refresh-token";
-
-        when(authService.login(email, password)).thenReturn(mockUser);
-        when(authService.generateAccessToken(mockUser)).thenReturn(accessToken);
-        when(authService.generateRefreshToken(mockUser)).thenReturn(refreshToken);
-
-        // when
-        ResponseEntity<BaseResponse<AuthResponse>> response = authController.login(request);
-
-        // then
-        verify(authService).login(email, password);
-        verify(authService).generateAccessToken(mockUser);
-        verify(authService).generateRefreshToken(mockUser);
-
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getResult()).isNotNull();
-        assertThat(response.getBody().getResult().accessToken()).isEqualTo(accessToken);
-        assertThat(response.getBody().getResult().refreshToken()).isEqualTo(refreshToken);
-        assertThat(response.getBody().getResult().userId()).isEqualTo(1L);
-        assertThat(response.getBody().getResult().email()).isEqualTo(email);
+        mockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf())
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value("access-token"));
     }
 
     @Test
-    @DisplayName("회원가입 성공 테스트")
-    void signup_Success() {
-        // given
-        String email = "test@example.com";
-        String password = "Password123!";
-        // 생성자를 사용하여 SignupRequest 객체 생성
-        SignupRequest request = new SignupRequest(email, password);
+    @DisplayName("로그인 API - 성공")
+    void login_success() throws Exception {
+        LoginRequest request = new LoginRequest("user@example.com", "pass123");
+        User dummyUser = new User(1L, Email.of(request.email()), Password.ofEncoded("encoded"), "닉네임", true);
+        AuthResult result = new AuthResult("access-token", "refresh-token", dummyUser);
 
-        User mockUser = mock(User.class);
-        when(mockUser.getId()).thenReturn(1L);
-        when(mockUser.getEmailValue()).thenReturn(email);
+        Mockito.when(authService.login(any())).thenReturn(result);
 
-        String accessToken = "access-token";
-        String refreshToken = "refresh-token";
-
-        when(authService.signup(email, password)).thenReturn(mockUser);
-        when(authService.generateAccessToken(mockUser)).thenReturn(accessToken);
-        when(authService.generateRefreshToken(mockUser)).thenReturn(refreshToken);
-
-        // when
-        ResponseEntity<BaseResponse<AuthResponse>> response = authController.signup(request);
-
-        // then
-        verify(authService).signup(email, password);
-        verify(authService).generateAccessToken(mockUser);
-        verify(authService).generateRefreshToken(mockUser);
-
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getResult()).isNotNull();
-        assertThat(response.getBody().getResult().accessToken()).isEqualTo(accessToken);
-        assertThat(response.getBody().getResult().refreshToken()).isEqualTo(refreshToken);
-        assertThat(response.getBody().getResult().userId()).isEqualTo(1L);
-        assertThat(response.getBody().getResult().email()).isEqualTo(email);
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf())
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value("access-token"));
     }
 
     @Test
-    @DisplayName("토큰 갱신 성공 테스트")
-    void refreshToken_Success() {
-        // given
-        String refreshToken = "refresh-token";
-        // 생성자를 사용하여 RefreshTokenRequest 객체 생성
-        RefreshTokenRequest request = new RefreshTokenRequest(refreshToken);
+    @DisplayName("리프레시 토큰 API - 성공")
+    void refresh_success() throws Exception {
+        RefreshTokenRequest request = new RefreshTokenRequest("refresh-token-value");
+        User dummyUser = new User(2L, Email.of("refresh@example.com"), Password.ofEncoded("pw"), "닉", true);
+        AuthResult result = new AuthResult("access-token", "new-refresh-token", dummyUser);
 
-        User mockUser = mock(User.class);
-        when(mockUser.getId()).thenReturn(1L);
-        when(mockUser.getEmailValue()).thenReturn("test@example.com");
+        Mockito.when(authService.refresh("refresh-token-value")).thenReturn(result);
 
-        String newAccessToken = "new-access-token";
-
-        when(authService.refreshToken(refreshToken)).thenReturn(mockUser);
-        when(authService.generateAccessToken(mockUser)).thenReturn(newAccessToken);
-
-        // when
-        ResponseEntity<BaseResponse<AuthResponse>> response = authController.refreshToken(request);
-
-        // then
-        verify(authService).refreshToken(refreshToken);
-        verify(authService).generateAccessToken(mockUser);
-
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getResult()).isNotNull();
-        assertThat(response.getBody().getResult().accessToken()).isEqualTo(newAccessToken);
-        assertThat(response.getBody().getResult().refreshToken()).isEqualTo(refreshToken);
-        assertThat(response.getBody().getResult().userId()).isEqualTo(1L);
-        assertThat(response.getBody().getResult().email()).isEqualTo("test@example.com");
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf())
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value("access-token"));
     }
 
     @Test
-    @DisplayName("로그아웃 성공 테스트")
-    void logout_Success() {
-        // given
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        doNothing().when(authService).logout(request);
+    @DisplayName("로그아웃 API - 성공")
+    void logout_success() throws Exception {
+        mockMvc.perform(post("/api/auth/logout")
+                        .with(csrf())
+                        .header("Authorization", "Bearer test-access-token"))
+                .andExpect(status().isNoContent());
 
-        // when
-        ResponseEntity<BaseResponse<Void>> response = authController.logout(request);
-
-        // then
-        verify(authService).logout(request);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getIsSuccess()).isTrue();
+        Mockito.verify(authService).logout("test-access-token");
     }
 }

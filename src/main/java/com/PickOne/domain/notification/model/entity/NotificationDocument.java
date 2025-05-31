@@ -37,43 +37,10 @@ public class NotificationDocument {
 
     private String refEntityType;
 
-    private Long refEntityId;
+    private String refEntityId;
 
     private LocalDateTime createdAt;
 
     private LocalDateTime readAt;
 
-    /**
-     * 도메인 모델을 문서로 변환
-     */
-    public static NotificationDocument fromDomain(Notification notification) {
-        return NotificationDocument.builder()
-                .id(notification.getId())
-                .recipientId(notification.getRecipientIdValue())
-                .type(notification.getType().name())
-                .content(notification.getContentValue())
-                .status(notification.getStatus().name())
-                .refEntityType(notification.getRefEntityType())
-                .refEntityId(notification.getRefEntityIdValue())
-                .createdAt(notification.getCreatedAt())
-                .readAt(notification.getReadAt())
-                .build();
-    }
-
-    /**
-     * 도메인 모델로 변환
-     */
-    public Notification toDomain() {
-        return Notification.from(
-                id,
-                recipientId,
-                NotificationType.valueOf(type),
-                content,
-                NotificationStatus.valueOf(status),
-                refEntityType,
-                refEntityId,
-                createdAt,
-                readAt
-        );
-    }
 }

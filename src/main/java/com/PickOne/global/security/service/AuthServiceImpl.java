@@ -1,21 +1,21 @@
-// AuthServiceImpl.java
 package com.PickOne.global.security.service;
 
-import com.PickOne.global.exception.BusinessException;
-import com.PickOne.global.exception.ErrorCode;
+import com.PickOne.domain.user.mapper.UserMapper;
 import com.PickOne.domain.user.model.domain.Email;
 import com.PickOne.domain.user.model.domain.Password;
 import com.PickOne.domain.user.model.domain.User;
 import com.PickOne.domain.user.repository.UserRepository;
-import jakarta.servlet.http.HttpServletRequest;
+import com.PickOne.global.security.config.PasswordEncoder;
+import com.PickOne.global.security.dto.LoginRequest;
+import com.PickOne.global.security.dto.SignupRequest;
+import com.PickOne.global.security.dto.AuthResponseDto;
+import com.PickOne.global.security.dto.AuthResult;
+
+import com.PickOne.global.security.model.entity.UserPrincipal;
+import com.PickOne.global.security.repository.RefreshTokenRepository;
+import com.PickOne.global.security.repository.TokenBlacklistRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -24,95 +24,59 @@ public class AuthServiceImpl implements AuthService {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtService jwtService;
+  private final RefreshTokenRepository refreshTokenRepository;
+  private final TokenBlacklistRepository tokenBlacklistRepository;
 
   @Override
-  @Transactional
-  public User signup(String emailValue, String passwordValue) {
-    // 이메일 객체 생성
-    Email email = Email.of(emailValue);
-
-    // 이메일 중복 확인
-    userRepository
-        .findByEmail(emailValue)
-        .ifPresent(
-            user -> {
-              throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
-            });
-
-    // 비밀번호 암호화
-    String encodedPassword = passwordEncoder.encode(passwordValue);
-    Password password = Password.ofEncoded(encodedPassword);
-
-    // 사용자 생성
-    User user = User.create(email, password);
-    return userRepository.save(user);
-  }
-
-  @Override
-  @Transactional(readOnly = true)
-  public User login(String emailValue, String passwordValue) {
-    // 사용자 조회
-    User user =
-        userRepository
-            .findByEmail(emailValue)
-            .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PASSWORD));
-
-    // 비밀번호 검증
-    if (!passwordEncoder.matches(passwordValue, user.getPasswordValue())) {
-      throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+  public AuthResult signup(SignupRequest request) {
+    String email = request.email();
+    if (userRepository.findByEmail(email).isPresent()) {
+      throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
     }
 
-    return user;
+    Password password = Password.ofRaw(request.password(), passwordEncoder);
+    String nickname = request.nickname();
+    User user = new User(null, Email.of(email), password, nickname, true);
+    userRepository.save(user);
+
+    return issueTokens(user);
   }
 
   @Override
-  @Transactional(readOnly = true)
-  public User refreshToken(String refreshToken) {
-    // 리프레시 토큰 검증
+  public AuthResult login(LoginRequest request) {
+    User user = userRepository.findByEmail(request.email())
+            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이메일입니다."));
+
+    if (!user.getPassword().matches(request.password(), passwordEncoder)) {
+      throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+    }
+
+    return issueTokens(user);
+  }
+
+  @Override
+  public AuthResult refresh(String refreshToken) {
     if (!jwtService.validateRefreshToken(refreshToken)) {
-      throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
+      throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.");
     }
 
-    // 사용자 정보 추출
-    Long userId = jwtService.getUserIdFromToken(refreshToken);
-    return userRepository
-        .findById(userId)
-        .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
+    String email = jwtService.extractUsername(refreshToken);
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+    return issueTokens(user);
   }
 
   @Override
-  @Transactional
-  public void logout(HttpServletRequest request) {
-    String token = jwtService.resolveToken(request);
-    if (token != null) {
-      jwtService.blacklistToken(token);
-    }
+  public void logout(String accessToken) {
+    jwtService.blacklistToken(accessToken);
   }
 
-  @Override
-  public String generateAccessToken(User user) {
-    Map<String, Object> claims = new HashMap<>();
-    claims.put("userId", user.getId());
+  private AuthResult issueTokens(User user) {
+    String accessToken = jwtService.generateAccessToken(UserPrincipal.from(user));
+    String refreshToken = jwtService.generateRefreshToken(UserPrincipal.from(user));
+    refreshTokenRepository.save(user.getEmail().getValue(), refreshToken, jwtService.getRefreshTokenExpiration());
 
-    // Add minimal authorities needed for token
-    List<String> authorities = getAuthoritiesFromUser(user);
-    claims.put("authorities", authorities);
-
-    return jwtService.generateToken(claims, user.getEmailValue(), jwtService.getAccessTokenExpiration());
+    return new AuthResult(accessToken, refreshToken, user);
   }
-
-  @Override
-  public String generateRefreshToken(User user) {
-    Map<String, Object> claims = new HashMap<>();
-    claims.put("userId", user.getId());
-
-    return jwtService.generateToken(claims, user.getEmailValue(), jwtService.getRefreshTokenExpiration());
-  }
-
-    private List<String> getAuthoritiesFromUser(User user) {
-        // Since we don't want to directly use CustomUserDetailsService here (to avoid circular dependency),
-        // we provide a minimal implementation for token generation purposes.
-        // This can be extended if you need to include specific authorities in the token.
-        return Collections.emptyList();
-    }
 }

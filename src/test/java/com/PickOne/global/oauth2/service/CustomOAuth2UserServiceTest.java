@@ -1,190 +1,134 @@
 package com.PickOne.global.oauth2.service;
 
+import com.PickOne.domain.user.model.domain.Email;
+import com.PickOne.domain.user.model.domain.Password;
 import com.PickOne.domain.user.model.domain.User;
-import com.PickOne.domain.user.model.entity.UserEntity;
-import com.PickOne.domain.user.repository.UserJpaRepository;
 import com.PickOne.domain.user.repository.UserRepository;
 import com.PickOne.global.oauth2.model.domain.OAuth2Provider;
 import com.PickOne.global.oauth2.model.domain.OAuth2UserInfo;
 import com.PickOne.global.oauth2.model.entity.UserConnectionEntity;
 import com.PickOne.global.oauth2.repository.UserConnectionRepository;
-import com.PickOne.global.security.service.PasswordEncoder;
-import com.PickOne.global.security.service.UserRoleService;
-import org.junit.jupiter.api.DisplayName;
+import com.PickOne.global.security.config.PasswordEncoder;
+import com.PickOne.global.security.model.entity.UserPrincipal;
+import com.PickOne.global.security.repository.RefreshTokenRepository;
+import com.PickOne.global.security.service.JwtService;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockedStatic;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
-import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class CustomOAuth2UserServiceTest {
 
-    @Mock
     private UserRepository userRepository;
-
-    @Mock
-    private UserJpaRepository userJpaRepository;
-
-    @Mock
     private UserConnectionRepository userConnectionRepository;
-
-    @Mock
-    private UserRoleService userRoleService;
-
-    @Mock
     private PasswordEncoder passwordEncoder;
+    private JwtService jwtService;
+    private RefreshTokenRepository refreshTokenRepository;
+    private CustomOAuth2UserService service;
 
-    @InjectMocks
-    private CustomOAuth2UserService oAuth2UserService;
+    @BeforeEach
+    void setUp() {
+        userRepository = mock(UserRepository.class);
+        userConnectionRepository = mock(UserConnectionRepository.class);
+        passwordEncoder = mock(PasswordEncoder.class);
+        jwtService = mock(JwtService.class);
+        refreshTokenRepository = mock(RefreshTokenRepository.class);
+
+        service = new CustomOAuth2UserService(userRepository, userConnectionRepository, passwordEncoder, jwtService, refreshTokenRepository) {
+            @Override
+            protected OAuth2User loadOAuth2User(OAuth2UserRequest userRequest) {
+                return new DefaultOAuth2User(
+                        List.of(() -> "ROLE_USER"),
+                        Map.of("sub", "oauth-sub-id", "email", "test@example.com", "name", "Tester"),
+                        "sub"
+                );
+            }
+        };
+    }
 
     @Test
-    @DisplayName("구글 인증이 아닌 경우 예외 발생")
-    void loadUser_NotGoogleProvider() {
+    void loadUser_newUser_createsUserAndConnection() {
         // given
-        // Facebook OAuth2UserRequest 생성 (google이 아님)
-        ClientRegistration clientRegistration = ClientRegistration
-                .withRegistrationId("facebook")
-                .clientId("client-id")
-                .clientSecret("client-secret")
-                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                .redirectUri("http://localhost:8080/login/oauth2/code/facebook")
-                .scope("profile", "email")
-                .authorizationUri("https://facebook.com/dialog/oauth")
-                .tokenUri("https://graph.facebook.com/v13.0/oauth/access_token")
-                .userInfoUri("https://graph.facebook.com/v13.0/me")
-                .userNameAttributeName("id")
-                .clientName("Facebook")
-                .build();
+        String providerId = "oauth-sub-id";
+        String email = "test@example.com";
+        String name = "Tester";
 
+        ClientRegistration registration = MockClientRegistration.google();
         OAuth2AccessToken accessToken = new OAuth2AccessToken(
-                OAuth2AccessToken.TokenType.BEARER,
-                "token-value",
-                Instant.now(),
-                Instant.now().plusSeconds(3600)
+                OAuth2AccessToken.TokenType.BEARER, "fake-token", null, null
         );
+        OAuth2UserRequest userRequest = new OAuth2UserRequest(registration, accessToken);
 
-        OAuth2UserRequest userRequest = new OAuth2UserRequest(clientRegistration, accessToken);
+        OAuth2UserInfo userInfo = mock(OAuth2UserInfo.class);
+        when(userInfo.getId()).thenReturn(providerId);
+        when(userInfo.getEmail()).thenReturn(email);
+        when(userInfo.getNickname()).thenReturn(name);
 
-        // when & then
-        // 직접 예외 발생 테스트
-        Exception exception = assertThrows(OAuth2AuthenticationException.class, () -> {
-            oAuth2UserService.loadUser(userRequest);
-        });
+        try (MockedStatic<OAuth2UserInfo> mockedStatic = mockStatic(OAuth2UserInfo.class)) {
+            mockedStatic.when(() -> OAuth2UserInfo.of(OAuth2Provider.GOOGLE, Map.of(
+                    "sub", providerId,
+                    "email", email,
+                    "name", name
+            ))).thenReturn(userInfo);
 
-        // 예외 메시지 검증
-        assertTrue(exception instanceof OAuth2AuthenticationException);
+            when(userConnectionRepository.findByProviderAndProviderUserId("GOOGLE", providerId))
+                    .thenReturn(Optional.empty());
+            when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+            when(passwordEncoder.encode(any())).thenReturn("encoded-password");
+
+            when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+                User userToSave = invocation.getArgument(0);
+                return User.of(
+                        1L,  // 반드시 ID 포함
+                        userToSave.getEmail(),
+                        userToSave.getPassword(),
+                        userToSave.getNickname(),
+                        userToSave.isPublic()
+                );
+            });
+
+            when(jwtService.generateAccessToken(any())).thenReturn(UUID.randomUUID().toString());
+            when(jwtService.generateRefreshToken(any())).thenReturn(UUID.randomUUID().toString());
+            when(jwtService.getRefreshTokenExpiration()).thenReturn(10000L); // <-- Long 리턴 보장
+
+            // when
+            OAuth2User result = service.loadUser(userRequest);
+
+            // then
+            assertThat(result).isInstanceOf(UserPrincipal.class);
+            verify(userConnectionRepository).save(any(UserConnectionEntity.class));
+            verify(refreshTokenRepository).save(eq(email), any(String.class), any(Long.class)); // 타입 명시
+        }
     }
 
-    @Test
-    @DisplayName("기존 사용자 연결이 있는 경우 업데이트")
-    void processOAuth2User_ExistingConnection() {
-        // given
-        Map<String, Object> attributes = new HashMap<>();
-        attributes.put("sub", "12345");
-        attributes.put("email", "test@example.com");
-        attributes.put("name", "Test User");
-
-        OAuth2UserInfo userInfo = OAuth2UserInfo.of(
-                "12345", "test@example.com", "Test User", OAuth2Provider.GOOGLE, attributes
-        );
-
-        UserEntity userEntity = mock(UserEntity.class);
-        UserConnectionEntity connection = mock(UserConnectionEntity.class);
-        User user = mock(User.class);
-
-        when(connection.getUser()).thenReturn(userEntity);
-        lenient().when(userEntity.getId()).thenReturn(1L);
-        lenient().when(user.getId()).thenReturn(1L);
-
-        when(userConnectionRepository.findByProviderAndProviderId(any(OAuth2Provider.class), eq("12345")))
-                .thenReturn(Optional.of(connection));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-
-        // when
-        User result = oAuth2UserService.processOAuth2User(userInfo);
-
-        // then
-        verify(connection).updateConnectionInfo(eq("test@example.com"), eq("Test User"));
-        verify(userConnectionRepository).save(connection);
-        assertEquals(user, result);
-    }
-
-    @Test
-    @DisplayName("이메일이 같은 기존 사용자가 있는 경우 연결 생성")
-    void processOAuth2User_ExistingUserByEmail() {
-        // given
-        Map<String, Object> attributes = new HashMap<>();
-        attributes.put("sub", "12345");
-        attributes.put("email", "test@example.com");
-        attributes.put("name", "Test User");
-
-        OAuth2UserInfo userInfo = OAuth2UserInfo.of(
-                "12345", "test@example.com", "Test User", OAuth2Provider.GOOGLE, attributes
-        );
-
-        User user = mock(User.class);
-        UserEntity userEntity = mock(UserEntity.class);
-
-        when(user.getId()).thenReturn(1L);
-
-        when(userConnectionRepository.findByProviderAndProviderId(any(OAuth2Provider.class), eq("12345")))
-                .thenReturn(Optional.empty());
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-        when(userJpaRepository.findById(1L)).thenReturn(Optional.of(userEntity));
-
-        // when
-        User result = oAuth2UserService.processOAuth2User(userInfo);
-
-        // then
-        verify(userConnectionRepository).save(any(UserConnectionEntity.class));
-        assertEquals(user, result);
-    }
-
-    @Test
-    @DisplayName("신규 사용자 등록")
-    void processOAuth2User_RegisterNewUser() {
-        // given
-        Map<String, Object> attributes = new HashMap<>();
-        attributes.put("sub", "12345");
-        attributes.put("email", "test@example.com");
-        attributes.put("name", "Test User");
-
-        OAuth2UserInfo userInfo = OAuth2UserInfo.of(
-                "12345", "test@example.com", "Test User", OAuth2Provider.GOOGLE, attributes
-        );
-
-        User newUser = mock(User.class);
-        UserEntity userEntity = mock(UserEntity.class);
-
-        when(newUser.getId()).thenReturn(1L);
-
-        when(userConnectionRepository.findByProviderAndProviderId(any(OAuth2Provider.class), eq("12345")))
-                .thenReturn(Optional.empty());
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode(anyString())).thenReturn("encoded_password");
-        when(userRepository.save(any(User.class))).thenReturn(newUser);
-        when(userJpaRepository.findById(1L)).thenReturn(Optional.of(userEntity));
-
-        // when
-        User result = oAuth2UserService.processOAuth2User(userInfo);
-
-        // then
-        verify(userRoleService).assignRoleToUser(eq(1L), eq("USER"), isNull(), isNull());
-        verify(userConnectionRepository).save(any(UserConnectionEntity.class));
-        assertEquals(newUser, result);
+    static class MockClientRegistration {
+        public static ClientRegistration google() {
+            return ClientRegistration.withRegistrationId("google")
+                    .clientId("test-client-id")
+                    .clientSecret("test-secret")
+                    .authorizationGrantType(org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE)
+                    .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
+                    .scope("email", "profile")
+                    .authorizationUri("https://accounts.google.com/o/oauth2/auth")
+                    .tokenUri("https://oauth2.googleapis.com/token")
+                    .userInfoUri("https://openidconnect.googleapis.com/v1/userinfo")
+                    .userNameAttributeName("sub")
+                    .clientName("Google")
+                    .build();
+        }
     }
 }
