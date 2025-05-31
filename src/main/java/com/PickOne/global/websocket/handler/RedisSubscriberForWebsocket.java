@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class RedisMessageSubscriber implements MessageListener {
+public class RedisSubscriberForWebsocket implements MessageListener {
 
     private final ObjectMapper objectMapper;
     private final SimpMessagingTemplate messagingTemplate;

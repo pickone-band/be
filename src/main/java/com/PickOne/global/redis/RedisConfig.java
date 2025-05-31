@@ -1,4 +1,4 @@
-package com.PickOne.global.common.config;
+package com.PickOne.global.redis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
