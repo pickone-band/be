@@ -2,13 +2,10 @@ package com.PickOne.global.oauth2.model.domain;
 
 import lombok.Getter;
 
-@Getter
 public enum OAuth2Provider {
-    GOOGLE("Google");
+    GOOGLE, SPOTIFY, SOUNDCLOUD, INSTAGRAM;
 
-    private final String value;
-
-    OAuth2Provider(String value) {
-        this.value = value;
+    public static OAuth2Provider from(String providerName) {
+        return OAuth2Provider.valueOf(providerName.toUpperCase());
     }
 }

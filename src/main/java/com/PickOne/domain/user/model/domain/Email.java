@@ -1,24 +1,30 @@
 package com.PickOne.domain.user.model.domain;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @EqualsAndHashCode
 public class Email {
-    private String value;
 
-    private Email(String email) {
-        this.value = email;
+    private final String value;
+
+    private Email(String value) {
+        if (!value.matches("^[\\w.%+-]+@[\\w.-]+\\.[a-zA-Z]{2,6}$")) {
+            throw new IllegalArgumentException("유효하지 않은 이메일 형식입니다.");
+        }
+        this.value = value;
     }
 
-    public static Email of(String email) {
-        if (email == null || email.trim().isEmpty()) {
-            throw new IllegalArgumentException("이메일은 빈 값일 수 없습니다.");
-        }
-        return new Email(email);
+    public static Email of(String value) {
+        return new Email(value);
+    }
+
+    @JsonValue
+    public String getValue() {
+        return value;
     }
 }

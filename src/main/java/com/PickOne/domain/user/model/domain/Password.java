@@ -1,31 +1,38 @@
 package com.PickOne.domain.user.model.domain;
 
-import lombok.AccessLevel;
+import com.PickOne.global.security.config.PasswordEncoder;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @EqualsAndHashCode
 public class Password {
-    private String value;
 
-    private Password(String password) {
-        this.value = password;
+    private final String value;
+
+    private Password(String value) {
+        this.value = value;
     }
 
-    public static Password of(String password) {
-        if (password == null || password.trim().isEmpty()) {
-            throw new IllegalArgumentException("비밀번호는 빈 값일 수 없습니다.");
+    public static Password ofRaw(String rawPassword, PasswordEncoder encoder) {
+        if (rawPassword.length() < 8) {
+            throw new IllegalArgumentException("비밀번호는 8자 이상이어야 합니다.");
         }
-        return new Password(password);
+        // 해싱은 AuthService에서 처리
+        return new Password(encoder.encode(rawPassword));
     }
 
     public static Password ofEncoded(String encodedPassword) {
-        if (encodedPassword == null || encodedPassword.trim().isEmpty()) {
-            throw new IllegalArgumentException("인코딩된 비밀번호는 빈 값일 수 없습니다.");
-        }
         return new Password(encodedPassword);
+    }
+
+    public boolean matches(String raw, PasswordEncoder encoder) {
+        return encoder.matches(raw, value);
+    }
+
+    @JsonValue
+    public String getValue() {
+        return value;
     }
 }
