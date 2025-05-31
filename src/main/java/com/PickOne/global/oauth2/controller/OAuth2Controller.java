@@ -1,10 +1,10 @@
 package com.PickOne.global.oauth2.controller;
 
+import com.PickOne.global.oauth2.dto.TokenResponse;
 import com.PickOne.global.oauth2.model.domain.OAuth2Provider;
 import com.PickOne.global.oauth2.service.CustomOAuth2UserService;
-import com.PickOne.global.security.dto.TokenResponse;
-import com.PickOne.global.security.model.entity.SecurityUser;
 
+import com.PickOne.global.security.model.entity.UserPrincipal;
 import com.PickOne.global.security.service.JwtService;
 
 import lombok.RequiredArgsConstructor;
@@ -56,7 +56,7 @@ public class OAuth2Controller {
     @GetMapping("/login/{provider}")
     public RedirectView redirectToOAuth2Login(@PathVariable String provider) {
         try {
-            // Spring Security의 OAuth2 로그인 URL로 리다이렉트
+            OAuth2Provider.valueOf(provider.toUpperCase()); // 실제로 지원 여부 검증
             String authorizationUrl = "/oauth2/authorize/" + provider.toLowerCase();
             return new RedirectView(authorizationUrl);
         } catch (IllegalArgumentException e) {
@@ -65,18 +65,19 @@ public class OAuth2Controller {
         }
     }
 
+
     /**
      * 현재 인증된 사용자 정보 조회
      */
     @GetMapping("/user")
-    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal SecurityUser securityUser) {
-        if (securityUser == null) {
+    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        if (userPrincipal == null) {
             return ResponseEntity.status(401).build();
         }
 
         TokenResponse tokenResponse = new TokenResponse(
-                jwtService.generateAccessToken(securityUser),
-                jwtService.generateRefreshToken(securityUser),
+                jwtService.generateAccessToken(userPrincipal),
+                jwtService.generateRefreshToken(userPrincipal),
                 "Bearer",
                 jwtService.getAccessTokenExpiration()
         );
