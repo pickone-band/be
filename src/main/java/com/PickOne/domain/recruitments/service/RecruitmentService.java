@@ -11,24 +11,16 @@ import com.PickOne.domain.recruitments.model.entity.RecruitmentInstrument;
 import com.PickOne.domain.recruitments.repository.RecruitmentGenreRepository;
 import com.PickOne.domain.recruitments.repository.RecruitmentInstrumentRepository;
 import com.PickOne.domain.recruitments.repository.RecruitmentRepository;
-import com.PickOne.domain.user.model.domain.User;
 import com.PickOne.domain.user.model.entity.UserEntity;
-import com.PickOne.domain.user.repository.JpaUserRepositoryImpl;
 import com.PickOne.domain.user.repository.UserJpaRepository;
-import com.PickOne.domain.user.repository.UserRepository;
-import com.PickOne.domain.user.service.UserService;
-import com.PickOne.domain.user.service.UserServiceImpl;
 import com.PickOne.global.exception.BusinessException;
 import com.PickOne.global.exception.ErrorCode;
-import com.PickOne.global.security.model.entity.SecurityUser;
-import jakarta.validation.constraints.NotNull;
+
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
