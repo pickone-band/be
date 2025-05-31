@@ -1,24 +1,29 @@
 package com.PickOne.global.security.service;
 
+import com.PickOne.domain.user.model.domain.Email;
+import com.PickOne.domain.user.model.domain.Password;
+import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.global.security.model.entity.UserPrincipal;
 import com.PickOne.global.security.repository.TokenBlacklistRepository;
-import com.PickOne.global.security.service.CustomUserDetailsService;
-import com.PickOne.global.security.service.JwtService;
-import jakarta.servlet.http.HttpServletRequest;
+import io.jsonwebtoken.Claims;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.quality.Strictness;
-import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.security.Key;
+import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT) // 불필요한 스텁 경고 제거
 class JwtServiceTest {
+
+    @InjectMocks
+    private JwtService jwtService;
 
     @Mock
     private TokenBlacklistRepository tokenBlacklistRepository;
@@ -26,91 +31,69 @@ class JwtServiceTest {
     @Mock
     private CustomUserDetailsService userDetailsService;
 
-    @InjectMocks
-    private JwtService jwtService;
+    private Key signingKey;
 
-    @Test
-    @DisplayName("HTTP 요청에서 토큰 추출 테스트 - 성공")
-    void resolveToken_Success() {
-        // given
-        String token = "example-token";
-        String authHeader = "Bearer " + token;
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
 
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        when(request.getHeader("Authorization")).thenReturn(authHeader);
+        String secret = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
+        ReflectionTestUtils.setField(jwtService, "secretKey", secret);
+        ReflectionTestUtils.setField(jwtService, "accessTokenExpiration", 1000L * 60 * 60);       // 1 hour
+        ReflectionTestUtils.setField(jwtService, "refreshTokenExpiration", 1000L * 60 * 60 * 24); // 1 day
 
-        // when
-        String resolvedToken = jwtService.resolveToken(request);
-
-        // then
-        assertThat(resolvedToken).isEqualTo(token);
+        this.signingKey = (Key) ReflectionTestUtils.invokeMethod(jwtService, "getSigningKey");
     }
 
     @Test
-    @DisplayName("HTTP 요청에서 토큰 추출 테스트 - 실패 (헤더 없음)")
-    void resolveToken_NoHeader() {
-        // given
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        when(request.getHeader("Authorization")).thenReturn(null);
+    @DisplayName("Refresh Token 유효성 검증 성공")
+    void validateRefreshToken_success() {
+        User user = new User(1L, Email.of("refresh@example.com"), Password.ofEncoded("pw"), "닉", true);
+        UserPrincipal principal = UserPrincipal.from(user);
 
-        // when
-        String resolvedToken = jwtService.resolveToken(request);
+        String refreshToken = jwtService.generateRefreshToken(principal);
 
-        // then
-        assertThat(resolvedToken).isNull();
-    }
+        when(tokenBlacklistRepository.isBlacklisted(refreshToken)).thenReturn(true);
 
-    @Test
-    @DisplayName("HTTP 요청에서 토큰 추출 테스트 - 실패 (잘못된 형식)")
-    void resolveToken_InvalidFormat() {
-        // given
-        String authHeader = "InvalidPrefix token";
+        boolean result = jwtService.validateRefreshToken(refreshToken);
 
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        when(request.getHeader("Authorization")).thenReturn(authHeader);
-
-        // when
-        String resolvedToken = jwtService.resolveToken(request);
-
-        // then
-        assertThat(resolvedToken).isNull();
-    }
-
-    @Test
-    @DisplayName("토큰 블랙리스트 확인 테스트 - 블랙리스트에 있는 경우")
-    void isTokenBlacklisted_InBlacklist() {
-        // given
-        String token = "test-token";
-        // tokenBlacklistRepository.isBlacklisted가 true를 반환하면
-        // JwtService.isTokenBlacklisted는 !true = false를 반환
-        when(tokenBlacklistRepository.isBlacklisted(token)).thenReturn(true);
-
-        // when
-        boolean result = jwtService.isTokenBlacklisted(token);
-
-        // then
-        verify(tokenBlacklistRepository).isBlacklisted(token);
-        // JwtService.isTokenBlacklisted는 !tokenBlacklistRepository.isBlacklisted 이므로
-        // false를 기대해야 함
-        assertThat(result).isFalse();
-    }
-
-    @Test
-    @DisplayName("토큰 블랙리스트 확인 테스트 - 블랙리스트에 없는 경우")
-    void isTokenBlacklisted_NotInBlacklist() {
-        // given
-        String token = "test-token";
-        // tokenBlacklistRepository.isBlacklisted가 false를 반환하면
-        // JwtService.isTokenBlacklisted는 !false = true를 반환
-        when(tokenBlacklistRepository.isBlacklisted(token)).thenReturn(false);
-
-        // when
-        boolean result = jwtService.isTokenBlacklisted(token);
-
-        // then
-        verify(tokenBlacklistRepository).isBlacklisted(token);
-        // JwtService.isTokenBlacklisted는 !tokenBlacklistRepository.isBlacklisted 이므로
-        // true를 기대해야 함
         assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("Access Token 생성 및 userId/email 추출")
+    void generateAndExtractToken() {
+        User user = new User(2L, Email.of("user@example.com"), Password.ofEncoded("pw"), "유저", true);
+        UserPrincipal principal = UserPrincipal.from(user);
+
+        String accessToken = jwtService.generateAccessToken(principal);
+
+        Long userId = jwtService.getUserIdFromToken(accessToken);
+        String email = jwtService.extractUsername(accessToken);
+
+        assertThat(userId).isEqualTo(user.getId());
+        assertThat(email).isEqualTo(user.getEmail().getValue());
+    }
+
+    @Test
+    @DisplayName("블랙리스트 토큰 처리 성공")
+    void blacklistToken_success() {
+        User user = new User(3L, Email.of("bl@example.com"), Password.ofEncoded("pw"), "닉", true);
+        UserPrincipal principal = UserPrincipal.from(user);
+
+        String token = jwtService.generateAccessToken(principal);
+
+        Claims claims = io.jsonwebtoken.Jwts.parserBuilder()
+                .setSigningKey(signingKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        Date exp = claims.getExpiration();
+        long ttl = exp.getTime() - System.currentTimeMillis();
+
+        jwtService.blacklistToken(token);
+
+        verify(tokenBlacklistRepository).addToBlacklist(eq(token), anyLong());
     }
 }
