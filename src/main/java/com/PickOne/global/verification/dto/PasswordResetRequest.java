@@ -1,4 +1,4 @@
-package com.PickOne.global.auth.dto;
+package com.PickOne.global.verification.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

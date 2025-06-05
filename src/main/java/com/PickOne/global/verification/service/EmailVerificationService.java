@@ -1,10 +1,10 @@
-package com.PickOne.global.auth.service;
+package com.PickOne.global.verification.service;
 
 import com.PickOne.domain.user.model.domain.User;
 import com.PickOne.domain.user.repository.UserRepository;
-import com.PickOne.global.auth.model.domain.EmailMessage;
-import com.PickOne.global.auth.model.domain.VerificationToken;
-import com.PickOne.global.auth.repository.VerificationTokenRepository;
+import com.PickOne.global.verification.model.domain.EmailMessage;
+import com.PickOne.global.verification.model.domain.VerificationToken;
+import com.PickOne.global.verification.repository.VerificationTokenRepository;
 import com.PickOne.global.exception.BusinessException;
 import com.PickOne.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;

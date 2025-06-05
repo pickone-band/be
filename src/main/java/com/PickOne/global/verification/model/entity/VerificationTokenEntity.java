@@ -1,6 +1,6 @@
-package com.PickOne.global.auth.model.entity;
+package com.PickOne.global.verification.model.entity;
 
-import com.PickOne.global.auth.model.domain.VerificationToken;
+import com.PickOne.global.verification.model.domain.VerificationToken;
 import com.PickOne.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

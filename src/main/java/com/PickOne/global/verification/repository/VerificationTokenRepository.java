@@ -1,6 +1,6 @@
-package com.PickOne.global.auth.repository;
+package com.PickOne.global.verification.repository;
 
-import com.PickOne.global.auth.model.domain.VerificationToken;
+import com.PickOne.global.verification.model.domain.VerificationToken;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;

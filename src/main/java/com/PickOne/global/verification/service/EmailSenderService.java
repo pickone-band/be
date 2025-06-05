@@ -1,9 +1,6 @@
-package com.PickOne.global.auth.service;
+package com.PickOne.global.verification.service;
 
-import com.PickOne.global.auth.model.domain.EmailMessage;
-import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
-import com.amazonaws.services.simpleemail.model.*;
-import lombok.RequiredArgsConstructor;
+import com.PickOne.global.verification.model.domain.EmailMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
