@@ -1,9 +1,12 @@
-package com.PickOne.global.auth.dto;
+package com.PickOne.global.verification.dto;
 
+import com.PickOne.global.exception.BusinessException;
+import com.PickOne.global.exception.ErrorCode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 public record PasswordResetRequest(
+
         @NotBlank(message = "새 비밀번호는 필수입니다.")
         @Pattern(
                 regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
@@ -12,9 +15,15 @@ public record PasswordResetRequest(
         String newPassword,
 
         @NotBlank(message = "비밀번호 확인은 필수입니다.")
-        String confirmPassword
+        String confirmPassword,
+
+        @NotBlank(message = "토큰은 필수입니다.")
+        String token
+
 ) {
-    public boolean isPasswordMatching() {
-        return newPassword.equals(confirmPassword);
+    public void validate() {
+        if (!newPassword.equals(confirmPassword)) {
+            throw new BusinessException(ErrorCode.PASSWORD_CONFIRM_NOT_MATCHED);
+        }
     }
 }

@@ -1,7 +1,7 @@
-package com.PickOne.global.auth.repository;
+package com.PickOne.global.verification.repository;
 
-import com.PickOne.global.auth.model.domain.VerificationToken;
-import com.PickOne.global.auth.model.entity.VerificationTokenEntity;
+import com.PickOne.global.verification.model.domain.VerificationToken;
+import com.PickOne.global.verification.model.entity.VerificationTokenEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

@@ -65,6 +65,7 @@ public enum ErrorCode {
     ALREADY_LOGGED_OUT(HttpStatus.UNAUTHORIZED, 4006, "이미 로그아웃된 사용자입니다."),
     JWT_SIGNATURE_MISMATCH(HttpStatus.UNAUTHORIZED, 4007, "JWT 서명이 유효하지 않습니다."),
     JWT_MALFORMED(HttpStatus.UNAUTHORIZED, 4008, "잘못된 형식의 JWT 토큰입니다."),
+    PASSWORD_CONFIRM_NOT_MATCHED(HttpStatus.BAD_REQUEST, 4104, "비밀번호와 비밀번호 확인이 일치하지 않습니다."),
 
     // ✅ Refresh Token 관련 오류 (7000번대)
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, 7001, "유효하지 않은 리프레시 토큰입니다."),

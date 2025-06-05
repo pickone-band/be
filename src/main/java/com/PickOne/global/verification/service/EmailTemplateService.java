@@ -1,14 +1,12 @@
-package com.PickOne.global.auth.service;
+package com.PickOne.global.verification.service;
 
 
-import com.PickOne.global.auth.model.domain.EmailMessage;
+import com.PickOne.global.verification.model.domain.EmailMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
-
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor

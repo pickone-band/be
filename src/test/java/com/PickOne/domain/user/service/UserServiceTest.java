@@ -4,6 +4,7 @@ import com.PickOne.domain.user.model.domain.Email;
 import com.PickOne.domain.user.model.domain.Password;
 import com.PickOne.domain.user.model.domain.User;
 import com.PickOne.domain.user.repository.UserRepository;
+import com.PickOne.global.security.config.PasswordEncoder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,11 +18,13 @@ class UserServiceTest {
 
     private UserRepository userRepository;
     private UserService userService;
+    private PasswordEncoder passwordEncoder;
 
     @BeforeEach
     void setUp() {
         userRepository = mock(UserRepository.class);
-        userService = new UserService(userRepository);
+        PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
+        userService = new UserService(userRepository, passwordEncoder);
     }
 
     @Test
@@ -82,5 +85,25 @@ class UserServiceTest {
 
         // then
         verify(userRepository, times(1)).deleteById(userId);
+    }
+
+    @Test
+    @DisplayName("비밀번호를 업데이트하면 인코딩된 비밀번호로 저장된다")
+    void updatePassword_success() {
+        // given
+        Long userId = 1L;
+        String newRawPassword = "NewPassword123!";
+        String encodedPassword = "encoded123";
+        User user = new User(userId, Email.of("user@example.com"), Password.ofEncoded("old"), "nick", true);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode(newRawPassword)).thenReturn(encodedPassword);
+
+        // when
+        userService.updatePassword(userId, newRawPassword);
+
+        // then
+        assertThat(user.getPassword().getValue()).isEqualTo(encodedPassword);
+        verify(userRepository).save(user);
     }
 }

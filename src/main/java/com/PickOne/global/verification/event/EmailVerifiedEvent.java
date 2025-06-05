@@ -1,4 +1,4 @@
-package com.PickOne.global.auth.event;
+package com.PickOne.global.verification.event;
 
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;

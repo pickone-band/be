@@ -35,6 +35,9 @@ public class User {
         return new User(id, email, password, nickname, isPublic, isVerified);
     }
 
+    public User changePassword(Password newPassword) {
+        return new User(id, email, newPassword, nickname, isPublic, isVerified);
+    }
     public void verify() {
         this.isVerified = true;
     }

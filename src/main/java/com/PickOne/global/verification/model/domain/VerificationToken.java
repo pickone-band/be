@@ -1,4 +1,4 @@
-package com.PickOne.global.auth.model.domain;
+package com.PickOne.global.verification.model.domain;
 
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;

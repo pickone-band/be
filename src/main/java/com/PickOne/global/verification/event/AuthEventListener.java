@@ -1,8 +1,8 @@
-package com.PickOne.global.auth.event;
+package com.PickOne.global.verification.event;
 
 import com.PickOne.domain.user.model.domain.User;
 import com.PickOne.domain.user.service.UserService;
-import com.PickOne.global.auth.service.EmailVerificationService;
+import com.PickOne.global.verification.service.EmailVerificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
