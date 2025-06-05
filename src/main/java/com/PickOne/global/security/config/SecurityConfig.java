@@ -6,7 +6,6 @@ import com.PickOne.global.security.handler.CustomAuthenticationEntryPoint;
 import com.PickOne.global.oauth2.handler.OAuth2AuthenticationFailureHandler;
 import com.PickOne.global.oauth2.handler.OAuth2AuthenticationSuccessHandler;
 import com.PickOne.global.oauth2.service.CustomOAuth2UserService;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,7 +48,15 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/oauth2/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
