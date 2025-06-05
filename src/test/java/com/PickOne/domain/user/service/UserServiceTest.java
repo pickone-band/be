@@ -23,7 +23,7 @@ class UserServiceTest {
     @BeforeEach
     void setUp() {
         userRepository = mock(UserRepository.class);
-        PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
+        passwordEncoder = mock(PasswordEncoder.class); // 여기 수정
         userService = new UserService(userRepository, passwordEncoder);
     }
 
@@ -94,7 +94,7 @@ class UserServiceTest {
         Long userId = 1L;
         String newRawPassword = "NewPassword123!";
         String encodedPassword = "encoded123";
-        User user = new User(userId, Email.of("user@example.com"), Password.ofEncoded("old"), "nick", true);
+        User user = new User(userId, Email.of("user@example.com"), Password.ofEncoded("oldPass"), "nick", true);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(passwordEncoder.encode(newRawPassword)).thenReturn(encodedPassword);
@@ -103,7 +103,8 @@ class UserServiceTest {
         userService.updatePassword(userId, newRawPassword);
 
         // then
-        assertThat(user.getPassword().getValue()).isEqualTo(encodedPassword);
-        verify(userRepository).save(user);
+        verify(userRepository).save(argThat(updated ->
+                updated.getPassword().getValue().equals(encodedPassword)
+        ));
     }
 }
