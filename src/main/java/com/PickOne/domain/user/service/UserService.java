@@ -1,7 +1,9 @@
 package com.PickOne.domain.user.service;
 
+import com.PickOne.domain.user.model.domain.Password;
 import com.PickOne.domain.user.model.domain.User;
 import com.PickOne.domain.user.repository.UserRepository;
+import com.PickOne.global.security.config.PasswordEncoder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public User findById(Long id) {
@@ -35,6 +38,14 @@ public class UserService {
                 updateData.isPublic()
         );
         return userRepository.save(updatedUser);
+    }
+
+    @Transactional
+    public void updatePassword(Long userId, String rawPassword) {
+        User user = findById(userId);
+        Password encodedPassword = Password.ofRaw(rawPassword, passwordEncoder);
+        User updated = user.changePassword(encodedPassword);
+        userRepository.save(updated);
     }
 
     @Transactional
