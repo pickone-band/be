@@ -1,46 +1,48 @@
 package com.PickOne.domain.user.model.domain;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-/**
- * 도메인 User 객체는 Email, Password VO를 포함하며, nickname과 isPublic은 사용자 프로필 설정을 반영한다.
- */
+import java.util.List;
+
 @Getter
-@EqualsAndHashCode
 @RequiredArgsConstructor
 public class User {
+
     private final Long id;
     private final Email email;
     private final Password password;
-    private final String nickname;
-    private boolean isVerified = false;
+    private final Nickname nickname;
+    private final ProfileImage profileImage;
     private final boolean isPublic;
+    private final boolean isVerified;
+    private final boolean isOauth;
+    private final Role role;
+    private final List<Instrument> instruments;
+    private final List<Genre> genres;
 
-    private User(Long id, Email email, Password password, String nickname, boolean isPublic, boolean isVerified) {
-        this.id = id;
-        this.email = email;
-        this.password = password;
-        this.nickname = nickname;
-        this.isPublic = isPublic;
-        this.isVerified = isVerified;
-    }
-
-    public static User of(Long id, Email email, Password password, String nickname, boolean isPublic) {
-        return new User(id, email, password, nickname, isPublic, false);
-    }
-
-    public static User of(Long id, Email email, Password password, String nickname, boolean isPublic, boolean isVerified) {
-        return new User(id, email, password, nickname, isPublic, isVerified);
+    public User verify() {
+        if (this.isVerified) throw new IllegalStateException("이미 인증된 사용자입니다.");
+        return new User(id, email, password, nickname, profileImage, isPublic, true, isOauth, role, instruments, genres);
     }
 
     public User changePassword(Password newPassword) {
-        return new User(id, email, newPassword, nickname, isPublic, isVerified);
+        return new User(id, email, newPassword, nickname, profileImage, isPublic, isVerified, isOauth, role, instruments, genres);
     }
-    public void verify() {
-        this.isVerified = true;
+
+    public User changeNickname(Nickname newNickname) {
+        return new User(id, email, password, newNickname, profileImage, isPublic, isVerified, isOauth, role, instruments, genres);
+    }
+
+    public User changeProfileImage(ProfileImage newImage) {
+        return new User(id, email, password, nickname, newImage, isPublic, isVerified, isOauth, role, instruments, genres);
+    }
+
+    public User changeInstruments(List<Instrument> newInstruments) {
+        return new User(id, email, password, nickname, profileImage, isPublic, isVerified, isOauth, role, List.copyOf(newInstruments), genres);
+    }
+
+    public User changeGenres(List<Genre> newGenres) {
+        return new User(id, email, password, nickname, profileImage, isPublic, isVerified, isOauth, role, instruments, List.copyOf(newGenres));
     }
 }
-
-
