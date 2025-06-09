@@ -35,31 +35,17 @@ public class UserService {
     }
 
     @Transactional
-    public User updateUser(Long id, User updateData) {
+    public void updateUser(Long id, User updateData) {
         User current = findById(id);
-
-        User updated = new User(
-                current.getId(),
-                Optional.ofNullable(updateData.getEmail()).orElse(current.getEmail()),
-                current.getPassword(),
-                Optional.ofNullable(updateData.getNickname()).orElse(current.getNickname()),
-                Optional.ofNullable(updateData.getProfileImage()).orElse(current.getProfileImage()),
-                updateData.isPublic(),
-                current.isVerified(),
-                current.isOauth(),
-                current.getRole(),
-                Optional.ofNullable(updateData.getInstruments()).orElse(current.getInstruments()),
-                Optional.ofNullable(updateData.getGenres()).orElse(current.getGenres())
-        );
-
-        return userRepository.save(updated);
+        User updated = current.updateWith(updateData);
+        userRepository.update(updated);
     }
 
     @Transactional
     public void updatePassword(Long id, String rawPassword) {
         User user = findById(id);
         Password newPassword = Password.ofRaw(rawPassword, passwordEncoder);
-        userRepository.save(user.changePassword(newPassword));
+        userRepository.update(user.changePassword(newPassword));
     }
 
     @Transactional
@@ -85,4 +71,3 @@ public class UserService {
         return userRepository.findAllByGenre(genre, pageable);
     }
 }
-

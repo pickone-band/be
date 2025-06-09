@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Optional;
 
 @Getter
 @RequiredArgsConstructor
@@ -45,4 +46,21 @@ public class User {
     public User changeGenres(List<Genre> newGenres) {
         return new User(id, email, password, nickname, profileImage, isPublic, isVerified, isOauth, role, instruments, List.copyOf(newGenres));
     }
+
+    public User updateWith(User updateData) {
+        return new User(
+                this.id,
+                Optional.ofNullable(updateData.getEmail()).orElse(this.email),
+                Optional.ofNullable(updateData.getPassword()).orElse(this.password),
+                Optional.ofNullable(updateData.getNickname()).orElse(this.nickname),
+                Optional.ofNullable(updateData.getProfileImage()).orElse(this.profileImage),
+                updateData.isPublic(),
+                this.isVerified,
+                this.isOauth,
+                this.role,
+                Optional.ofNullable(updateData.getInstruments()).orElse(this.instruments),
+                Optional.ofNullable(updateData.getGenres()).orElse(this.genres)
+        );
+    }
+
 }

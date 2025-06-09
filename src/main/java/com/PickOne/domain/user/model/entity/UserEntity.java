@@ -75,4 +75,17 @@ public class UserEntity {
         this.instruments = instruments;
         this.genres = genres;
     }
+
+    public void updateFromDomain(User user) {
+        this.email = user.getEmail();
+        this.password = user.getPassword();
+        this.nickname = user.getNickname();
+        this.profileImage = user.getProfileImage();
+        this.isPublic = user.isPublic();
+        this.isVerified = user.isVerified();
+        this.isOauth = user.isOauth();
+        this.role = user.getRole();
+        this.instruments = user.getInstruments();
+        this.genres = user.getGenres();
+    }
 }

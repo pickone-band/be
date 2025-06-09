@@ -6,12 +6,13 @@ import com.PickOne.domain.user.model.entity.UserEntity;
 import com.PickOne.domain.user.repository.UserJpaRepository;
 import com.PickOne.domain.user.repository.UserQueryDslRepository;
 import com.PickOne.domain.user.repository.UserRepository;
+import com.PickOne.global.exception.BusinessException;
+import com.PickOne.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -42,11 +43,12 @@ public class JpaUserRepositoryImpl implements UserRepository {
     public Page<User> search(String keyword, boolean onlyPublic, Pageable pageable) {
         return userQueryDslRepository.search(keyword, onlyPublic, pageable).map(UserMapper::toDomain);
     }
-
     @Override
-    public User save(User user) {
-        UserEntity saved = userJpaRepository.save(UserMapper.toEntity(user));
-        return UserMapper.toDomain(saved);
+    public void update(User user) {
+        UserEntity entity = userJpaRepository.findById(user.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
+
+        entity.updateFromDomain(user);
     }
 
     @Override
