@@ -1,15 +1,16 @@
 package com.PickOne.domain.application.controller;
 
 import com.PickOne.domain.application.dto.request.ApplicationRequestDto;
+import com.PickOne.domain.application.dto.request.ApplicationResponseDto;
 import com.PickOne.domain.application.service.ApplicationService;
 import com.PickOne.global.exception.BaseResponse;
 import com.PickOne.global.security.model.entity.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,9 +32,20 @@ public class ApplicationController {
     public ResponseEntity<BaseResponse<Long>> applyToRecruitment(
             @PathVariable Long recruitmentId,
             @AuthenticationPrincipal UserPrincipal user,
-            @RequestBody @Valid ApplicationRequestDto requestDto) {
+            @RequestBody ApplicationRequestDto requestDto) {
 
         Long applyId=applicationService.applyToRecruitment(user.getUserId(), recruitmentId, requestDto);
         return BaseResponse.success(applyId);
     }
+
+    @Operation(summary = "멤버 모집글 신청 조회",
+            description = "<a href='https://www.notion.so/1bc9366dcb7d80b495bce914722b5380' target='_blank'>👉API 명세서 바로가기</a>")
+    @GetMapping("/apply/{recruitmentId}")
+    public ResponseEntity<BaseResponse<ApplicationResponseDto>> getMyApplications(
+            @PathVariable Long recruitmentId,
+            @AuthenticationPrincipal UserPrincipal user){
+        ApplicationResponseDto applicationResponseDto= applicationService.getMyApplication(user.getUserId(),recruitmentId);
+        return BaseResponse.success(applicationResponseDto);
+    }
+
 }
