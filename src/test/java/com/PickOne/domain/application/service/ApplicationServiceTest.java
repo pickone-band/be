@@ -1,8 +1,10 @@
 package com.PickOne.domain.application.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.PickOne.domain.application.dto.request.ApplicationRequestDto;
+import com.PickOne.domain.application.dto.request.ApplicationResponseDto;
 import com.PickOne.domain.recruitments.model.Instrument;
 import com.PickOne.domain.recruitments.model.Mbti;
 import com.PickOne.domain.recruitments.model.Proficiency;
@@ -79,5 +81,46 @@ public class ApplicationServiceTest {
         // then
         assertNotNull(applicationId);
         System.out.println("지원 ID: " + applicationId);
+    }
+
+    @Test
+    void 멤버_지원_조회_테스트() {
+        // given
+        User testUser = User.of(
+                null,
+                Email.of("test2@example.com"),
+                Password.ofEncoded("encoded-password"),
+                "테스트유저2",
+                true
+        );
+        User savedUser = userRepository.save(testUser);
+
+        // 모집글 등록
+        Recruitment recruitment = Recruitment.builder()
+                .title("조회용 모집글")
+                .userEntity(UserMapper.toEntity(savedUser))
+                .build();
+        recruitmentRepository.save(recruitment);
+
+        // 지원 요청
+        ApplicationRequestDto requestDto = ApplicationRequestDto.builder()
+                .message("조회 테스트 지원")
+                .portfolioUrl("https://portfolio.com")
+                .thumbnail("https://img.com/test.jpg")
+                .mbti(Mbti.INFP)
+                .instrument(Instrument.DRUMS)
+                .proficiency(Proficiency.INTERMEDIATE)
+                .build();
+
+        // when - 지원
+        Long applicationId = applicationService.applyToRecruitment(savedUser.getId(), recruitment.getId(), requestDto);
+        assertNotNull(applicationId);
+
+        // when - 조회
+        ApplicationResponseDto application = applicationService.getMyApplication(savedUser.getId(), recruitment.getId());
+
+        // then
+        assertNotNull(application);
+       assertEquals(application.getPortfolioUrl(),requestDto.getPortfolioUrl());
     }
 }
