@@ -1,5 +1,6 @@
-package com.PickOne.global.security.repository;
+package com.PickOne.global.security.repository.impl;
 
+import com.PickOne.global.security.repository.TokenBlacklistRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;

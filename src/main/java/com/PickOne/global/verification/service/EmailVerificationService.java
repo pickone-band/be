@@ -2,6 +2,7 @@ package com.PickOne.global.verification.service;
 
 import com.PickOne.domain.user.model.domain.User;
 import com.PickOne.domain.user.repository.UserRepository;
+import com.PickOne.global.security.repository.AuthRepository;
 import com.PickOne.global.verification.model.domain.EmailMessage;
 import com.PickOne.global.verification.model.domain.VerificationToken;
 import com.PickOne.global.verification.repository.VerificationTokenRepository;
@@ -26,6 +27,7 @@ public class EmailVerificationService {
     private final EmailSenderService emailSenderService;
     private final VerificationTokenRepository tokenRepository;
     private final UserRepository userRepository;
+    private final AuthRepository authRepository;
 
     @Value("${app.email.verification-required:true}")
     private boolean verificationRequired;
@@ -95,8 +97,8 @@ public class EmailVerificationService {
         User user = userRepository.findById(verificationToken.getUserId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
 
-        user.verify();
-        userRepository.save(user);
+        user = user.verify();
+        authRepository.save(user);
 
         // 토큰 삭제
         tokenRepository.deleteByToken(token);

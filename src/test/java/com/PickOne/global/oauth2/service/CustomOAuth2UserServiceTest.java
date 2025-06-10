@@ -1,21 +1,20 @@
 package com.PickOne.global.oauth2.service;
 
-import com.PickOne.domain.user.model.domain.Email;
-import com.PickOne.domain.user.model.domain.Password;
-import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.domain.user.model.domain.*;
 import com.PickOne.domain.user.repository.UserRepository;
 import com.PickOne.global.oauth2.model.domain.OAuth2Provider;
 import com.PickOne.global.oauth2.model.domain.OAuth2UserInfo;
 import com.PickOne.global.oauth2.model.entity.UserConnectionEntity;
 import com.PickOne.global.oauth2.repository.UserConnectionRepository;
-import com.PickOne.global.security.config.PasswordEncoder;
 import com.PickOne.global.security.model.entity.UserPrincipal;
+import com.PickOne.global.security.repository.AuthRepository;
 import com.PickOne.global.security.repository.RefreshTokenRepository;
 import com.PickOne.global.security.service.JwtService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
@@ -33,6 +32,7 @@ import static org.mockito.Mockito.*;
 
 class CustomOAuth2UserServiceTest {
 
+    private AuthRepository authRepository;
     private UserRepository userRepository;
     private UserConnectionRepository userConnectionRepository;
     private PasswordEncoder passwordEncoder;
@@ -48,7 +48,7 @@ class CustomOAuth2UserServiceTest {
         jwtService = mock(JwtService.class);
         refreshTokenRepository = mock(RefreshTokenRepository.class);
 
-        service = new CustomOAuth2UserService(userRepository, userConnectionRepository, passwordEncoder, jwtService, refreshTokenRepository) {
+        service = new CustomOAuth2UserService(userRepository, authRepository,userConnectionRepository, passwordEncoder, jwtService, refreshTokenRepository) {
             @Override
             protected OAuth2User loadOAuth2User(OAuth2UserRequest userRequest) {
                 return new DefaultOAuth2User(
@@ -90,14 +90,20 @@ class CustomOAuth2UserServiceTest {
             when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
             when(passwordEncoder.encode(any())).thenReturn("encoded-password");
 
-            when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            when(authRepository.save(any(User.class))).thenAnswer(invocation -> {
                 User userToSave = invocation.getArgument(0);
-                return User.of(
-                        1L,  // 반드시 ID 포함
+                return new User(
+                        1L,
                         userToSave.getEmail(),
                         userToSave.getPassword(),
-                        userToSave.getNickname(),
-                        userToSave.isPublic()
+                        new Nickname(name),
+                        new ProfileImage("https://img.example.com"),
+                        true,
+                        false,
+                        false,
+                        Role.USER,
+                        List.of(new Instrument("ELECTRIC_GUITAR")),
+                        List.of(new Genre("ROCK"))
                 );
             });
 

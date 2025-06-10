@@ -1,26 +1,30 @@
 package com.PickOne.global.security.service;
 
 import com.PickOne.domain.user.mapper.UserMapper;
-import com.PickOne.domain.user.model.domain.Email;
-import com.PickOne.domain.user.model.domain.Password;
-import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.domain.user.model.domain.*;
 import com.PickOne.domain.user.repository.UserRepository;
-import com.PickOne.global.security.config.PasswordEncoder;
+
 import com.PickOne.global.security.dto.LoginRequest;
 import com.PickOne.global.security.dto.SignupRequest;
 import com.PickOne.global.security.dto.AuthResponseDto;
 import com.PickOne.global.security.dto.AuthResult;
 
 import com.PickOne.global.security.model.entity.UserPrincipal;
+import com.PickOne.global.security.repository.AuthRepository;
 import com.PickOne.global.security.repository.RefreshTokenRepository;
 import com.PickOne.global.security.repository.TokenBlacklistRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
+  private final AuthRepository authRepository;
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtService jwtService;
@@ -33,12 +37,22 @@ public class AuthServiceImpl implements AuthService {
     if (userRepository.findByEmail(email).isPresent()) {
       throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
     }
-
     Password password = Password.ofRaw(request.password(), passwordEncoder);
-    String nickname = request.nickname();
-    User user = new User(null, Email.of(email), password, nickname, true);
-    userRepository.save(user);
 
+    User user = new User(
+            null,
+            Email.of(email),
+            password,
+            null,
+            null,
+            true,
+            false,
+            false,
+            Role.USER,
+            List.of(),
+            List.of()
+    );
+    user = authRepository.save(user);
     return issueTokens(user);
   }
 

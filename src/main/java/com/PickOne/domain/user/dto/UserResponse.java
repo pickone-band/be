@@ -7,5 +7,7 @@ public record UserResponse(
         Long id,
         String email,
         String nickname,
-        boolean isPublic
+        String profileImageUrl,
+        boolean isPublic,
+        String role
 ) {}

@@ -1,26 +1,29 @@
 package com.PickOne.domain.user.model.domain;
 
-import com.PickOne.global.security.config.PasswordEncoder;
-import com.fasterxml.jackson.annotation.JsonValue;
+import jakarta.persistence.Embeddable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Getter
 @EqualsAndHashCode
+@Embeddable
 public class Password {
 
-    private final String value;
+    private String value;
 
-    private Password(String value) {
+    protected Password() {}
+
+    public Password(String value) {
         this.value = value;
     }
 
-    public static Password ofRaw(String rawPassword, PasswordEncoder encoder) {
-        if (rawPassword.length() < 8) {
+    public static Password ofRaw(String raw, PasswordEncoder encoder) {
+        if (raw == null || raw.length() < 8) {
             throw new IllegalArgumentException("비밀번호는 8자 이상이어야 합니다.");
         }
-        // 해싱은 AuthService에서 처리
-        return new Password(encoder.encode(rawPassword));
+
+        return new Password(encoder.encode(raw));
     }
 
     public static Password ofEncoded(String encodedPassword) {
@@ -31,8 +34,4 @@ public class Password {
         return encoder.matches(raw, value);
     }
 
-    @JsonValue
-    public String getValue() {
-        return value;
-    }
 }

@@ -1,8 +1,6 @@
 package com.PickOne.global.oauth2.controller;
 
-import com.PickOne.domain.user.model.domain.Email;
-import com.PickOne.domain.user.model.domain.Password;
-import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.domain.user.model.domain.*;
 import com.PickOne.global.oauth2.service.CustomOAuth2UserService;
 import com.PickOne.global.security.filter.JwtAuthenticationFilter;
 import com.PickOne.global.security.model.entity.UserPrincipal;
@@ -20,6 +18,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import java.util.List;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -83,8 +83,14 @@ class OAuth2ControllerTest {
                         1L,
                         Email.of("test@example.com"),
                         Password.ofEncoded("encoded"),
-                        "nickname",
-                        true
+                        new Nickname("nickname"),
+                        new ProfileImage("https://example.com/image.png"),
+                        true,    // isPublic
+                        true,    // isVerified
+                        false,   // isOauth
+                        Role.USER,
+                        List.of(new Instrument("ELECTRIC_GUITAR")),
+                        List.of(new Genre("ROCK"))
                 )
         );
 
