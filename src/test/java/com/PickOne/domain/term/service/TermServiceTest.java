@@ -3,8 +3,11 @@ package com.PickOne.domain.term.service;
 import com.PickOne.domain.term.model.entity.TermEntity;
 import com.PickOne.domain.term.repository.TermJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,6 +16,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
+@DisplayName("TermService 단위 테스트")
 class TermServiceTest {
 
     @Mock private TermJpaRepository termJpaRepository;
@@ -27,14 +32,11 @@ class TermServiceTest {
             LocalDateTime.now()
     );
 
-    @BeforeEach
-    void setup() {
-        MockitoAnnotations.openMocks(this);
-    }
-
     @Test
-    void 약관_등록_성공() {
+    @DisplayName("약관 등록에 성공한다")
+    void createTerm_success() {
         when(termJpaRepository.save(any(TermEntity.class))).thenReturn(mockTerm);
+
         TermEntity result = termService.create(mockTerm);
 
         assertThat(result).isNotNull();
@@ -43,7 +45,8 @@ class TermServiceTest {
     }
 
     @Test
-    void 약관_단건_조회_성공() {
+    @DisplayName("약관 단건 조회에 성공한다")
+    void getTermById_success() {
         when(termJpaRepository.findById(1L)).thenReturn(Optional.of(mockTerm));
 
         TermEntity result = termService.getById(1L);
@@ -54,8 +57,10 @@ class TermServiceTest {
     }
 
     @Test
-    void 약관_전체_조회_성공() {
+    @DisplayName("약관 전체 조회에 성공한다")
+    void getAllTerms_success() {
         when(termJpaRepository.findAll()).thenReturn(List.of(mockTerm));
+
         List<TermEntity> terms = termService.getAll();
 
         assertThat(terms).hasSize(1);
@@ -63,7 +68,8 @@ class TermServiceTest {
     }
 
     @Test
-    void 약관_삭제_성공() {
+    @DisplayName("약관 삭제에 성공한다")
+    void deleteTerm_success() {
         termService.delete(1L);
         verify(termJpaRepository).deleteById(1L);
     }

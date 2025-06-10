@@ -1,21 +1,21 @@
 package com.PickOne.domain.consent.dto;
 
-import com.PickOne.domain.consent.model.domain.Consent;
+import com.PickOne.domain.consent.model.entity.ConsentEntity;
+import com.PickOne.domain.term.model.entity.TermEntity;
+import com.PickOne.domain.user.model.entity.UserEntity;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
-/**
- * 사용자 약관 동의 요청 DTO
- */
 public record ConsentRequestDto(
         @NotNull Long termsId,
         @NotNull Boolean consented
 ) {
-    public Consent toDomain(Long userId) {
-        return new Consent(
-                userId,
-                termsId,
+    public ConsentEntity toEntity(UserEntity user, TermEntity term) {
+        return new ConsentEntity(
+                null,
+                user,
+                term,
                 consented,
                 LocalDateTime.now()
         );
