@@ -9,17 +9,18 @@ import com.PickOne.domain.recruitments.model.Proficiency;
 import com.PickOne.domain.recruitments.model.entity.Recruitment;
 import com.PickOne.domain.recruitments.repository.RecruitmentRepository;
 import com.PickOne.domain.user.mapper.UserMapper;
-import com.PickOne.domain.user.model.domain.Email;
-import com.PickOne.domain.user.model.domain.Password;
-import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.domain.user.model.domain.*;
 import com.PickOne.domain.user.model.entity.UserEntity;
 import com.PickOne.domain.user.repository.UserRepository;
+import com.PickOne.global.security.repository.AuthRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+
+import java.util.List;
 
 @SpringBootTest
 public class ApplicationServiceTest {
@@ -34,21 +35,28 @@ public class ApplicationServiceTest {
     @Autowired
     private ApplicationService applicationService;
     @Autowired
-    private UserRepository userRepository;
+    private AuthRepository authRepository;
     @Autowired
     private RecruitmentRepository recruitmentRepository;
 
     @Test
     void 멤버_지원_테스트() {
         // given
-        User testUser = User.of(
+        User testUser = new User(
                 null,
                 Email.of("test@example.com"),
                 Password.ofEncoded("encoded-password"),
-                "테스트유저", // ✅ nickname 추가
-                true         // ✅ isPublic 추가
+                new Nickname("테스트유저"),
+                new ProfileImage("https://example.com/profile.jpg"),
+                true,   // isPublic
+                false,  // isVerified
+                false,  // isOauth
+                Role.USER,
+                List.of(new com.PickOne.domain.user.model.domain.Instrument("Guitar")),
+                List.of(new com.PickOne.domain.user.model.domain.Genre("Rock"))
         );
-        User savedUser = userRepository.save(testUser);
+
+        User savedUser = authRepository.save(testUser);
 
         Recruitment recruitment = Recruitment.builder()
                 .title("테스트 모집글")

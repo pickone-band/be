@@ -1,8 +1,6 @@
 package com.PickOne.global.security.service;
 
-import com.PickOne.domain.user.model.domain.Email;
-import com.PickOne.domain.user.model.domain.Password;
-import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.domain.user.model.domain.*;
 import com.PickOne.global.security.model.entity.UserPrincipal;
 import com.PickOne.global.security.repository.TokenBlacklistRepository;
 import io.jsonwebtoken.Claims;
@@ -16,6 +14,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -48,7 +47,15 @@ class JwtServiceTest {
     @Test
     @DisplayName("Refresh Token 유효성 검증 성공")
     void validateRefreshToken_success() {
-        User user = new User(1L, Email.of("refresh@example.com"), Password.ofEncoded("pw"), "닉", true);
+        User user = new User(1L, Email.of("refresh@example.com"), Password.ofEncoded("pw"),  new Nickname("닉네임"),
+                new ProfileImage("https://img.example.com"),
+                true,
+                false,
+                false,
+                Role.USER,
+                List.of(new Instrument("ELECTRIC_GUITAR")),
+                List.of(new Genre("ROCK"))
+        );
         UserPrincipal principal = UserPrincipal.from(user);
 
         String refreshToken = jwtService.generateRefreshToken(principal);
@@ -63,7 +70,15 @@ class JwtServiceTest {
     @Test
     @DisplayName("Access Token 생성 및 userId/email 추출")
     void generateAndExtractToken() {
-        User user = new User(2L, Email.of("user@example.com"), Password.ofEncoded("pw"), "유저", true);
+        User user = new User(2L, Email.of("user@example.com"), Password.ofEncoded("pw"),  new Nickname("닉네임"),
+                new ProfileImage("https://img.example.com"),
+                true,
+                false,
+                false,
+                Role.USER,
+                List.of(new Instrument("ELECTRIC_GUITAR")),
+                List.of(new Genre("ROCK"))
+        );
         UserPrincipal principal = UserPrincipal.from(user);
 
         String accessToken = jwtService.generateAccessToken(principal);
@@ -78,7 +93,15 @@ class JwtServiceTest {
     @Test
     @DisplayName("블랙리스트 토큰 처리 성공")
     void blacklistToken_success() {
-        User user = new User(3L, Email.of("bl@example.com"), Password.ofEncoded("pw"), "닉", true);
+        User user = new User(3L, Email.of("bl@example.com"), Password.ofEncoded("pw"), new Nickname("닉네임"),
+                new ProfileImage("https://img.example.com"),
+                true,
+                false,
+                false,
+                Role.USER,
+                List.of(new Instrument("ELECTRIC_GUITAR")),
+                List.of(new Genre("ROCK"))
+        );
         UserPrincipal principal = UserPrincipal.from(user);
 
         String token = jwtService.generateAccessToken(principal);

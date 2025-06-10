@@ -2,26 +2,31 @@ package com.PickOne.global.oauth2.service;
 
 import com.PickOne.domain.user.model.domain.Email;
 import com.PickOne.domain.user.model.domain.Password;
+import com.PickOne.domain.user.model.domain.Role;
 import com.PickOne.domain.user.model.domain.User;
 import com.PickOne.domain.user.repository.UserRepository;
 import com.PickOne.global.oauth2.model.domain.OAuth2Provider;
 import com.PickOne.global.oauth2.model.domain.OAuth2UserInfo;
 import com.PickOne.global.oauth2.model.entity.UserConnectionEntity;
 import com.PickOne.global.oauth2.repository.UserConnectionRepository;
-import com.PickOne.global.security.config.PasswordEncoder;
+
 import com.PickOne.global.security.model.entity.UserPrincipal;
+import com.PickOne.global.security.repository.AuthRepository;
 import com.PickOne.global.security.repository.RefreshTokenRepository;
 import com.PickOne.global.security.service.JwtService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -31,6 +36,7 @@ import java.util.Optional;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
+    private final AuthRepository authRepository;
     private final UserConnectionRepository userConnectionRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -67,8 +73,21 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             if (maybeUser.isPresent()) {
                 user = maybeUser.get();
             } else {
-                Password password = Password.ofRaw("oauth2TempPass" + email, passwordEncoder);
-                user = userRepository.save(new User(null, Email.of(email), password, userInfo.getNickname(), true));
+                Password tempPassword = Password.ofRaw("oauth2TempPass" + userInfo.getEmail(), passwordEncoder);
+                user = new User(
+                        null,
+                        Email.of(userInfo.getEmail()),
+                        tempPassword,
+                        null,
+                        null,
+                        true,
+                        false,
+                        true,
+                        Role.USER,
+                        List.of(),
+                        List.of()
+                );
+                user = authRepository.save(user); // ✅ 저장 책임 분리
             }
 
             UserConnectionEntity connection = UserConnectionEntity.builder()

@@ -1,12 +1,10 @@
 package com.PickOne.global.security.service;
 
-import com.PickOne.domain.user.model.domain.Email;
-import com.PickOne.domain.user.model.domain.Password;
-import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.domain.user.model.domain.*;
 import com.PickOne.domain.user.repository.UserRepository;
-import com.PickOne.global.security.config.PasswordEncoder;
 import com.PickOne.global.security.dto.LoginRequest;
 import com.PickOne.global.security.dto.SignupRequest;
+import com.PickOne.global.security.repository.AuthRepository;
 import com.PickOne.global.security.repository.RefreshTokenRepository;
 import com.PickOne.global.security.repository.TokenBlacklistRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,7 +13,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -28,6 +28,9 @@ class AuthServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private AuthRepository authRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -53,7 +56,7 @@ class AuthServiceTest {
 
         when(userRepository.findByEmail(request.email())).thenReturn(Optional.empty());
         when(passwordEncoder.encode("password123")).thenReturn("encoded123");
-        when(userRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(authRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(jwtService.generateAccessToken(any())).thenReturn("access-token");
         when(jwtService.generateRefreshToken(any())).thenReturn("refresh-token");
 
@@ -69,7 +72,15 @@ class AuthServiceTest {
     void login_success() {
         Email email = Email.of("login@example.com");
         Password password = Password.ofEncoded("encoded123");
-        User user = new User(1L, email, password, "유저", true);
+        User user = new User(1L, email, password,  new Nickname("닉네임"),
+                new ProfileImage("https://img.example.com"),
+                true,
+                false,
+                false,
+                Role.USER,
+                List.of(new Instrument("ELECTRIC_GUITAR")),
+                List.of(new Genre("ROCK"))
+        );
 
         when(userRepository.findByEmail(email.getValue())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("rawpass", "encoded123")).thenReturn(true);
@@ -90,7 +101,15 @@ class AuthServiceTest {
     void login_wrong_password() {
         Email email = Email.of("fail@example.com");
         Password password = Password.ofEncoded("encoded123");
-        User user = new User(2L, email, password, "닉", true);
+        User user = new User(1L, email, password,  new Nickname("닉네임"),
+                new ProfileImage("https://img.example.com"),
+                true,
+                false,
+                false,
+                Role.USER,
+                List.of(new Instrument("ELECTRIC_GUITAR")),
+                List.of(new Genre("ROCK"))
+        );
 
         when(userRepository.findByEmail(email.getValue())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrong", "encoded123")).thenReturn(false);
@@ -107,7 +126,15 @@ class AuthServiceTest {
     void refresh_success() {
         String refreshToken = "refresh.token.value";
         String email = "refresh@example.com";
-        User user = new User(3L, Email.of(email), Password.ofEncoded("pw"), "닉", true);
+        User user = new User(3L, Email.of(email), Password.ofEncoded("pw"),  new Nickname("닉네임"),
+                new ProfileImage("https://img.example.com"),
+                true,
+                false,
+                false,
+                Role.USER,
+                List.of(new Instrument("ELECTRIC_GUITAR")),
+                List.of(new Genre("ROCK"))
+        );
 
         when(jwtService.validateRefreshToken(refreshToken)).thenReturn(true);
         when(jwtService.extractUsername(refreshToken)).thenReturn(email);
