@@ -1,6 +1,6 @@
 package com.PickOne.domain.term.dto;
 
-import com.PickOne.domain.term.model.domain.Term;
+import com.PickOne.domain.term.model.entity.TermEntity;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -16,7 +16,7 @@ public record TermRequestDto(
         @NotNull Boolean required,
         @NotNull LocalDateTime effectiveDate
 ) {
-    public Term toDomain(Long id) {
-        return new Term(id, title, content, version, required, effectiveDate);
+    public TermEntity toEntity() {
+        return new TermEntity(null, title, content, version, required, effectiveDate);
     }
 }

@@ -3,38 +3,38 @@ package com.PickOne.domain.term.service;
 import java.util.List;
 
 
-import com.PickOne.domain.term.model.domain.Term;
-import com.PickOne.domain.term.repository.TermRepository;
+import com.PickOne.domain.term.model.entity.TermEntity;
+import com.PickOne.domain.term.repository.TermJpaRepository;
+import com.PickOne.global.exception.BusinessException;
+import com.PickOne.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class TermService {
 
-    private final TermRepository termRepository;
+    private final TermJpaRepository termjpaRepository;
 
     @Transactional
-    public Term create(Term term) {
-        return termRepository.save(term);
+    public TermEntity create(TermEntity term) {
+        return termjpaRepository.save(term);
     }
 
     @Transactional(readOnly = true)
-    public Term getById(Long id) {
-        return termRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("약관을 찾을 수 없습니다. ID=" + id));
+    public TermEntity getById(Long id) {
+        return termjpaRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TERM_NOT_FOUND));
     }
 
     @Transactional(readOnly = true)
-    public List<Term> getAll() {
-        return termRepository.findAll();
+    public List<TermEntity> getAll() {
+        return termjpaRepository.findAll();
     }
 
     @Transactional
     public void delete(Long id) {
-        termRepository.deleteById(id);
+        termjpaRepository.deleteById(id);
     }
 }

@@ -2,9 +2,10 @@ package com.PickOne.domain.term.controller;
 
 import com.PickOne.domain.term.dto.TermRequestDto;
 import com.PickOne.domain.term.dto.TermResponseDto;
-import com.PickOne.domain.term.mapper.TermMapper;
-import com.PickOne.domain.term.model.domain.Term;
+import com.PickOne.domain.term.model.entity.TermEntity;
 import com.PickOne.domain.term.service.TermService;
+import com.PickOne.global.exception.BaseResponse;
+import com.PickOne.global.exception.SuccessCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -25,31 +26,31 @@ public class TermController {
 
     @Operation(summary = "약관 등록", description = "새로운 약관을 등록합니다.")
     @PostMapping
-    public ResponseEntity<TermResponseDto> create(@RequestBody @Valid TermRequestDto request) {
-        Term saved = termService.create(request.toDomain(null));
-        return ResponseEntity.ok(TermMapper.toResponse(saved));
+    public ResponseEntity<BaseResponse<TermResponseDto>> create(@RequestBody @Valid TermRequestDto request) {
+        TermEntity saved = termService.create(request.toEntity());
+        return BaseResponse.success(SuccessCode.CREATED, TermResponseDto.fromEntity(saved));
     }
 
     @Operation(summary = "단일 약관 조회", description = "ID로 약관을 조회합니다.")
     @GetMapping("/{id}")
-    public ResponseEntity<TermResponseDto> getById(@PathVariable Long id) {
-        Term term = termService.getById(id);
-        return ResponseEntity.ok(TermMapper.toResponse(term));
+    public ResponseEntity<BaseResponse<TermResponseDto>> getById(@PathVariable Long id) {
+        TermEntity term = termService.getById(id);
+        return BaseResponse.success(SuccessCode.OK, TermResponseDto.fromEntity(term));
     }
 
     @Operation(summary = "전체 약관 목록 조회", description = "등록된 모든 약관을 조회합니다.")
     @GetMapping
-    public ResponseEntity<List<TermResponseDto>> getAll() {
+    public ResponseEntity<BaseResponse<List<TermResponseDto>>> getAll() {
         List<TermResponseDto> responses = termService.getAll().stream()
-                .map(TermMapper::toResponse)
+                .map(TermResponseDto::fromEntity)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(responses);
+        return BaseResponse.success(SuccessCode.OK, responses);
     }
 
     @Operation(summary = "약관 삭제", description = "ID를 기준으로 약관을 삭제합니다.")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<BaseResponse<Void>> delete(@PathVariable Long id) {
         termService.delete(id);
-        return ResponseEntity.noContent().build();
+        return BaseResponse.success(SuccessCode.DELETED);
     }
 }

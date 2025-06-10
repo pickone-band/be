@@ -1,7 +1,7 @@
 package com.PickOne.domain.term.service;
 
-import com.PickOne.domain.term.model.domain.Term;
-import com.PickOne.domain.term.repository.TermRepository;
+import com.PickOne.domain.term.model.entity.TermEntity;
+import com.PickOne.domain.term.repository.TermJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -15,10 +15,10 @@ import static org.mockito.Mockito.*;
 
 class TermServiceTest {
 
-    @Mock private TermRepository termRepository;
+    @Mock private TermJpaRepository termJpaRepository;
     @InjectMocks private TermService termService;
 
-    private final Term mockTerm = new Term(
+    private final TermEntity mockTerm = new TermEntity(
             1L,
             "제목",
             "내용",
@@ -34,37 +34,37 @@ class TermServiceTest {
 
     @Test
     void 약관_등록_성공() {
-        when(termRepository.save(any(Term.class))).thenReturn(mockTerm);
-        Term result = termService.create(mockTerm);
+        when(termJpaRepository.save(any(TermEntity.class))).thenReturn(mockTerm);
+        TermEntity result = termService.create(mockTerm);
 
         assertThat(result).isNotNull();
         assertThat(result.getTitle()).isEqualTo("제목");
-        verify(termRepository).save(mockTerm);
+        verify(termJpaRepository).save(mockTerm);
     }
 
     @Test
     void 약관_단건_조회_성공() {
-        when(termRepository.findById(1L)).thenReturn(Optional.of(mockTerm));
+        when(termJpaRepository.findById(1L)).thenReturn(Optional.of(mockTerm));
 
-        Term result = termService.getById(1L);
+        TermEntity result = termService.getById(1L);
 
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getVersion()).isEqualTo("v1.0");
-        verify(termRepository).findById(1L);
+        verify(termJpaRepository).findById(1L);
     }
 
     @Test
     void 약관_전체_조회_성공() {
-        when(termRepository.findAll()).thenReturn(List.of(mockTerm));
-        List<Term> terms = termService.getAll();
+        when(termJpaRepository.findAll()).thenReturn(List.of(mockTerm));
+        List<TermEntity> terms = termService.getAll();
 
         assertThat(terms).hasSize(1);
-        verify(termRepository).findAll();
+        verify(termJpaRepository).findAll();
     }
 
     @Test
     void 약관_삭제_성공() {
         termService.delete(1L);
-        verify(termRepository).deleteById(1L);
+        verify(termJpaRepository).deleteById(1L);
     }
 }
