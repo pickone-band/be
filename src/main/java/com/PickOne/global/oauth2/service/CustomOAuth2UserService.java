@@ -68,7 +68,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             user = userRepository.findById(existingConnection.get().getUserId())
                     .orElseThrow(() -> new IllegalStateException("User not found"));
         } else {
-            String email = userInfo.getEmail();
+            Email email = Email.of(userInfo.getEmail());
             Optional<User> maybeUser = userRepository.findByEmail(email);
             if (maybeUser.isPresent()) {
                 user = maybeUser.get();

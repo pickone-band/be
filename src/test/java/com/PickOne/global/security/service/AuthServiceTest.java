@@ -54,7 +54,7 @@ class AuthServiceTest {
     void signup_success() {
         SignupRequest request = new SignupRequest("user@example.com", "password123", "닉네임");
 
-        when(userRepository.findByEmail(request.email())).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(Email.of(request.email()))).thenReturn(Optional.empty());
         when(passwordEncoder.encode("password123")).thenReturn("encoded123");
         when(authRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(jwtService.generateAccessToken(any())).thenReturn("access-token");
@@ -82,7 +82,7 @@ class AuthServiceTest {
                 List.of(new Genre("ROCK"))
         );
 
-        when(userRepository.findByEmail(email.getValue())).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail(Email.of(email.getValue()))).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("rawpass", "encoded123")).thenReturn(true);
         when(jwtService.generateAccessToken(any())).thenReturn("access-token");
         when(jwtService.generateRefreshToken(any())).thenReturn("refresh-token");
@@ -111,7 +111,7 @@ class AuthServiceTest {
                 List.of(new Genre("ROCK"))
         );
 
-        when(userRepository.findByEmail(email.getValue())).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail(Email.of(email.getValue()))).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrong", "encoded123")).thenReturn(false);
 
         LoginRequest request = new LoginRequest(email.getValue(), "wrong");
@@ -138,7 +138,7 @@ class AuthServiceTest {
 
         when(jwtService.validateRefreshToken(refreshToken)).thenReturn(true);
         when(jwtService.extractUsername(refreshToken)).thenReturn(email);
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail(Email.of(email))).thenReturn(Optional.of(user));
         when(jwtService.generateAccessToken(any())).thenReturn("access-token");
         when(jwtService.generateRefreshToken(any())).thenReturn("refresh-token");
 

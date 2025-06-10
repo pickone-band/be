@@ -1,9 +1,7 @@
 package com.PickOne.domain.user.service;
 
-import com.PickOne.domain.user.model.domain.Password;
-import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.domain.user.model.domain.*;
 import com.PickOne.domain.user.repository.impl.JpaUserRepositoryImpl;
-
 import com.PickOne.global.exception.BusinessException;
 import com.PickOne.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -12,8 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +25,8 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public User findByEmail(String email) {
+    public User findByEmail(String rawEmail) {
+        Email email = Email.of(rawEmail);
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
     }
@@ -62,12 +59,12 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public Page<User> findUsersByInstrument(String instrument, Pageable pageable) {
-        return userRepository.findAllByInstrument(instrument, pageable);
+    public Page<User> findUsersByInstrument(String rawInstrument, Pageable pageable) {
+        return userRepository.findAllByInstrument(new Instrument(rawInstrument), pageable);
     }
 
     @Transactional(readOnly = true)
-    public Page<User> findUsersByGenre(String genre, Pageable pageable) {
-        return userRepository.findAllByGenre(genre, pageable);
+    public Page<User> findUsersByGenre(String rawGenre, Pageable pageable) {
+        return userRepository.findAllByGenre(new Genre(rawGenre), pageable);
     }
 }

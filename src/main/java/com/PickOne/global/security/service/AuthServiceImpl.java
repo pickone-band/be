@@ -33,7 +33,7 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public AuthResult signup(SignupRequest request) {
-    String email = request.email();
+    Email email = Email.of(request.email());
     if (userRepository.findByEmail(email).isPresent()) {
       throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
     }
@@ -41,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
 
     User user = new User(
             null,
-            Email.of(email),
+            email,
             password,
             null,
             null,
@@ -58,7 +58,7 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public AuthResult login(LoginRequest request) {
-    User user = userRepository.findByEmail(request.email())
+    User user = userRepository.findByEmail(Email.of(request.email()))
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이메일입니다."));
 
     if (!user.getPassword().matches(request.password(), passwordEncoder)) {
@@ -74,7 +74,7 @@ public class AuthServiceImpl implements AuthService {
       throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.");
     }
 
-    String email = jwtService.extractUsername(refreshToken);
+    Email email = Email.of(jwtService.extractUsername(refreshToken));
         User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 

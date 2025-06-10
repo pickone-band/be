@@ -87,7 +87,7 @@ class CustomOAuth2UserServiceTest {
 
             when(userConnectionRepository.findByProviderAndProviderUserId("GOOGLE", providerId))
                     .thenReturn(Optional.empty());
-            when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+            when(userRepository.findByEmail(Email.of(email))).thenReturn(Optional.empty());
             when(passwordEncoder.encode(any())).thenReturn("encoded-password");
 
             when(authRepository.save(any(User.class))).thenAnswer(invocation -> {
