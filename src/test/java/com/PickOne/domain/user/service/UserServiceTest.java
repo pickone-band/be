@@ -55,12 +55,13 @@ class UserServiceTest {
     @Test
     @DisplayName("이메일로 유저 조회 - 성공")
     void findByEmail_success() {
-        String email = "test@example.com";
+        String rawEmail = "test@example.com";
+        Email email = Email.of(rawEmail);
         User user = createMockUser(1L);
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
 
-        User result = userService.findByEmail(email);
+        User result = userService.findByEmail(rawEmail);
 
         assertThat(result).isEqualTo(user);
     }
@@ -107,7 +108,12 @@ class UserServiceTest {
         userService.updateUser(userId, updated);
 
         verify(userRepository, times(1)).update(
-                argThat(user -> user.getNickname().getValue().equals("newNick") && !user.isPublic())
+                argThat(user ->
+                        user.getNickname().getValue().equals("newNick") &&
+                                !user.isPublic() &&
+                                user.getGenres().contains(new Genre("Jazz")) &&
+                                user.getInstruments().contains(new Instrument("Guitar"))
+                )
         );
     }
 

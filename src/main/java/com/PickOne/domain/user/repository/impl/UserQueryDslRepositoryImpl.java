@@ -1,5 +1,7 @@
 package com.PickOne.domain.user.repository.impl;
 
+import com.PickOne.domain.user.model.domain.Genre;
+import com.PickOne.domain.user.model.domain.Instrument;
 import com.PickOne.domain.user.model.entity.UserEntity;
 import com.PickOne.domain.user.repository.UserQueryDslRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -20,32 +22,32 @@ public class UserQueryDslRepositoryImpl implements UserQueryDslRepository {
     private final JPAQueryFactory query;
 
     @Override
-    public Page<UserEntity> findAllByInstrument(String instrumentName, Pageable pageable) {
+    public Page<UserEntity> findAllByInstrument(Instrument instrument, Pageable pageable) {
         List<UserEntity> content = query.selectFrom(userEntity)
-                .where(userEntity.instruments.any().name.eq(instrumentName))
+                .where(userEntity.instruments.contains(instrument))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
         Long count = query.select(userEntity.count())
                 .from(userEntity)
-                .where(userEntity.instruments.any().name.eq(instrumentName))
+                .where(userEntity.instruments.contains(instrument))
                 .fetchOne();
 
         return PageableExecutionUtils.getPage(content, pageable, () -> count != null ? count : 0);
     }
 
     @Override
-    public Page<UserEntity> findAllByGenre(String genreName, Pageable pageable) {
+    public Page<UserEntity> findAllByGenre(Genre genre, Pageable pageable) {
         List<UserEntity> content = query.selectFrom(userEntity)
-                .where(userEntity.genres.any().name.eq(genreName))
+                .where(userEntity.genres.contains(genre))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
         Long count = query.select(userEntity.count())
                 .from(userEntity)
-                .where(userEntity.genres.any().name.eq(genreName))
+                .where(userEntity.genres.contains(genre))
                 .fetchOne();
 
         return PageableExecutionUtils.getPage(content, pageable, () -> count != null ? count : 0);

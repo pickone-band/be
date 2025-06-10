@@ -13,6 +13,7 @@ import com.PickOne.domain.recruitments.repository.RecruitmentRepository;
 import com.PickOne.domain.user.mapper.UserMapper;
 import com.PickOne.domain.user.model.domain.*;
 import com.PickOne.domain.user.model.entity.UserEntity;
+import com.PickOne.domain.user.repository.UserJpaRepository;
 import com.PickOne.domain.user.repository.UserRepository;
 import com.PickOne.global.security.repository.AuthRepository;
 import org.junit.jupiter.api.Test;
@@ -40,7 +41,8 @@ public class ApplicationServiceTest {
     private AuthRepository authRepository;
     @Autowired
     private RecruitmentRepository recruitmentRepository;
-
+    @Autowired
+    private UserJpaRepository userJpaRepository;
     @Test
     void 멤버_지원_테스트() {
         // given
@@ -86,15 +88,23 @@ public class ApplicationServiceTest {
     @Test
     void 멤버_지원_조회_테스트() {
         // given
-        User testUser = User.of(
+        User testUser = new User(
                 null,
                 Email.of("test2@example.com"),
                 Password.ofEncoded("encoded-password"),
-                "테스트유저2",
-                true
+                new Nickname("테스트유저2"),
+                new ProfileImage("https://example.com/default-profile.jpg"),
+                true,   // isPublic
+                false,  // isVerified
+                false,  // isOauth
+                Role.USER,
+                List.of(new com.PickOne.domain.user.model.domain.Instrument("Drum")),
+                List.of(new Genre("Pop"))
         );
-        User savedUser = userRepository.save(testUser);
+        User savedUser = authRepository.save(testUser);  // ← userRepository → authRepository 로 변경
 
+        UserEntity userEntity = userJpaRepository.findByEmail(savedUser.getEmail())
+                .orElseThrow(() -> new RuntimeException("UserEntity not found"));
         // 모집글 등록
         Recruitment recruitment = Recruitment.builder()
                 .title("조회용 모집글")

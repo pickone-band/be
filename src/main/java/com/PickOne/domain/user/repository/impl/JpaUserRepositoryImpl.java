@@ -1,6 +1,9 @@
 package com.PickOne.domain.user.repository.impl;
 
 import com.PickOne.domain.user.mapper.UserMapper;
+import com.PickOne.domain.user.model.domain.Email;
+import com.PickOne.domain.user.model.domain.Genre;
+import com.PickOne.domain.user.model.domain.Instrument;
 import com.PickOne.domain.user.model.domain.User;
 import com.PickOne.domain.user.model.entity.UserEntity;
 import com.PickOne.domain.user.repository.UserJpaRepository;
@@ -28,26 +31,26 @@ public class JpaUserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public Optional<User> findByEmail(String email) {
+    public Optional<User> findByEmail(Email email) {
         return userJpaRepository.findByEmail(email).map(UserMapper::toDomain);
     }
 
-    public Page<User> findAllByInstrument(String instrument, Pageable pageable) {
+    public Page<User> findAllByInstrument(Instrument instrument, Pageable pageable) {
         return userQueryDslRepository.findAllByInstrument(instrument, pageable).map(UserMapper::toDomain);
     }
 
-    public Page<User> findAllByGenre(String genre, Pageable pageable) {
+    public Page<User> findAllByGenre(Genre genre, Pageable pageable) {
         return userQueryDslRepository.findAllByGenre(genre, pageable).map(UserMapper::toDomain);
     }
 
     public Page<User> search(String keyword, boolean onlyPublic, Pageable pageable) {
         return userQueryDslRepository.search(keyword, onlyPublic, pageable).map(UserMapper::toDomain);
     }
+
     @Override
     public void update(User user) {
         UserEntity entity = userJpaRepository.findById(user.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
-
         entity.updateFromDomain(user);
     }
 

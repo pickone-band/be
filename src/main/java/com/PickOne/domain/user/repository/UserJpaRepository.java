@@ -1,5 +1,7 @@
 package com.PickOne.domain.user.repository;
 
+import com.PickOne.domain.user.model.domain.Email;
+import com.PickOne.domain.user.model.domain.Nickname;
 import com.PickOne.domain.user.model.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -7,8 +9,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserJpaRepository extends JpaRepository<UserEntity, Long> {
-    Optional<UserEntity> findByEmail(String email);
-    Optional<UserEntity> findByNickname(String nickname);
+    Optional<UserEntity> findByEmail(Email email);
+    Optional<UserEntity> findByNickname(Nickname nickname);
     List<UserEntity> findByIsPublicTrue();
-    boolean existsByEmail(String email);
+    boolean existsByEmail(Email email);
 }
