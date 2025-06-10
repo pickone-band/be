@@ -62,9 +62,12 @@ public class ApplicationServiceTest {
 
         User savedUser = authRepository.save(testUser);
 
+        UserEntity userEntity = userJpaRepository.findByEmail(savedUser.getEmail())
+                .orElseThrow(() -> new RuntimeException("UserEntity not found"));
+
         Recruitment recruitment = Recruitment.builder()
                 .title("테스트 모집글")
-                .userEntity(UserMapper.toEntity(savedUser))
+                .userEntity(userEntity)
                 .build();
         recruitmentRepository.save(recruitment);
 
@@ -108,7 +111,7 @@ public class ApplicationServiceTest {
         // 모집글 등록
         Recruitment recruitment = Recruitment.builder()
                 .title("조회용 모집글")
-                .userEntity(UserMapper.toEntity(savedUser))
+                .userEntity(userEntity)
                 .build();
         recruitmentRepository.save(recruitment);
 
