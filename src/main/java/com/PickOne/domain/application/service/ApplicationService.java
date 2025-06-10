@@ -1,15 +1,13 @@
 package com.PickOne.domain.application.service;
 
 import com.PickOne.domain.application.dto.request.ApplicationRequestDto;
-import com.PickOne.domain.application.model.ApplicationStatus;
+import com.PickOne.domain.application.dto.request.ApplicationResponseDto;
 import com.PickOne.domain.application.model.entity.Application;
 import com.PickOne.domain.application.repository.ApplicationRepository;
 import com.PickOne.domain.recruitments.model.entity.Recruitment;
 import com.PickOne.domain.recruitments.repository.RecruitmentRepository;
-import com.PickOne.domain.user.model.domain.User;
 import com.PickOne.domain.user.model.entity.UserEntity;
 import com.PickOne.domain.user.repository.UserJpaRepository;
-import com.PickOne.domain.user.repository.UserRepository;
 import com.PickOne.global.exception.BusinessException;
 import com.PickOne.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +39,32 @@ public class ApplicationService {
         Application application=applicationRepository.save(requestDto.toEntity(userEntity,recruitment));
 
         return application.getId();
+    }
+
+
+    @Transactional
+    public ApplicationResponseDto getMyApplication(Long userId, Long recruitmentId) {
+        UserEntity userEntity=userJpaRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
+        Recruitment recruitment =recruitmentRepository.findById(recruitmentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_RECRUITMENT_ID));
+        Application application =applicationRepository.findByUserEntityAndRecruitment(userEntity,recruitment)
+                .orElseThrow(() -> new BusinessException(ErrorCode.APPLICATION_INFO_NOT_FOUND));
+
+        return ApplicationResponseDto.builder()
+                .recruitmentId(recruitment.getId())
+                .title(recruitment.getTitle())
+                .region(recruitment.getRegion())
+                .thumbnail(recruitment.getThumbnail())
+                .createdAt(recruitment.getCreatedAt().toString())  // 필요 시 포맷팅
+
+                .message(application.getMessage())
+                .portfolioUrl(application.getPortfolioUrl())
+                .applicantThumbnail(application.getThumbnail())
+                .mbti(application.getMbti())
+                .instrument(application.getInstrument())
+                .proficiency(application.getProficiency())
+                .build();
     }
 
 }
