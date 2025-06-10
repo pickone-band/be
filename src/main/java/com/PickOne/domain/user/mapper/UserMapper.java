@@ -45,7 +45,7 @@ public class UserMapper {
                 user.getId(),
                 user.getEmail().getValue(),
                 user.getNickname().getValue(),
-                user.getProfileImage().getUrl(),
+                user.getProfileImage() != null ? user.getProfileImage().getUrl() : null,
                 user.isPublic(),
                 user.getRole().name()
         );

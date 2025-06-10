@@ -43,7 +43,7 @@ public class AuthServiceImpl implements AuthService {
             null,
             email,
             password,
-            null,
+            new Nickname(request.nickname()),
             null,
             true,
             false,
