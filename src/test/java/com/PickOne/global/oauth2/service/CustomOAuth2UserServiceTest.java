@@ -42,6 +42,7 @@ class CustomOAuth2UserServiceTest {
 
     @BeforeEach
     void setUp() {
+        authRepository = mock(AuthRepository.class);
         userRepository = mock(UserRepository.class);
         userConnectionRepository = mock(UserConnectionRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
