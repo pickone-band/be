@@ -32,13 +32,15 @@ public class ApplicationServiceTest {
     @MockBean
     private OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
 
-
     @Autowired
     private ApplicationService applicationService;
+
     @Autowired
     private RecruitmentRepository recruitmentRepository;
+
     @Autowired
     private UserJpaRepository userJpaRepository;
+
     @Test
     void 멤버_지원_테스트() {
         // given

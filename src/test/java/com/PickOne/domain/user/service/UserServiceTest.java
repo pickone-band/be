@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -34,12 +35,17 @@ class UserServiceTest {
     @Test
     @DisplayName("ID로 유저 조회 - 성공")
     void findById_success() {
-        Long userId = 1L;
-        UserEntity entity = createMockUserEntity(userId);
+
+        UserEntity entity = createMockUserEntity(null);
+        Long userId = 1L; // 가짜 ID
+        ReflectionTestUtils.setField(entity, "id", userId); // ID 필드 강제 주입
+
         when(userJpaRepository.findById(userId)).thenReturn(Optional.of(entity));
 
+        // when
         User result = userService.findById(userId);
 
+        // then
         assertThat(result.getId()).isEqualTo(userId);
         assertThat(result.getEmail().getValue()).isEqualTo(entity.getEmail());
     }
