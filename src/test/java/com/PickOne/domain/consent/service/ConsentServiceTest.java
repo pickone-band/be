@@ -115,7 +115,7 @@ class ConsentServiceTest {
         ConsentEntity consent = mock(ConsentEntity.class);
         when(consent.isConsented()).thenReturn(true);
 
-        when(consentRepository.findByUserIdAndTermsId(userId, termId))
+        when(consentRepository.findByUserIdAndTermId(userId, termId))
                 .thenReturn(Optional.of(consent));
 
         assertTrue(consentService.hasConsented(userId, termId));
@@ -124,7 +124,7 @@ class ConsentServiceTest {
     @Test
     @DisplayName("동의 여부: 동의 이력이 없는 경우 false 반환")
     void hasConsented_false() {
-        when(consentRepository.findByUserIdAndTermsId(userId, termId))
+        when(consentRepository.findByUserIdAndTermId(userId, termId))
                 .thenReturn(Optional.empty());
 
         assertFalse(consentService.hasConsented(userId, termId));
@@ -134,6 +134,6 @@ class ConsentServiceTest {
     @DisplayName("동의 삭제가 정상적으로 호출됨")
     void deleteConsent() {
         consentService.deleteConsent(userId, termId);
-        verify(consentRepository).deleteByUserIdAndTermsId(userId, termId);
+        verify(consentRepository).deleteByUserIdAndTermId(userId, termId);
     }
 }
