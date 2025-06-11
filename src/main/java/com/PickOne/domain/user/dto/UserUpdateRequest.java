@@ -1,10 +1,6 @@
 package com.PickOne.domain.user.dto;
 
-import com.PickOne.domain.user.model.domain.Nickname;
-import com.PickOne.domain.user.model.domain.ProfileImage;
-import com.PickOne.domain.user.model.domain.User;
-import com.PickOne.domain.user.model.domain.Instrument;
-import com.PickOne.domain.user.model.domain.Genre;
+import com.PickOne.domain.user.model.domain.*;
 
 import java.util.List;
 
@@ -21,9 +17,11 @@ public record UserUpdateRequest(
     public User toUpdatedDomain(User current) {
         return new User(
                 current.getId(),
-                current.getEmail(),
+                current.getEmail(), // current.getEmail()은 String이므로 다시 객체로 감싸야 함
                 current.getPassword(),
                 new Nickname(nickname),
+                current.getGender(),
+                current.getBirthDate(),
                 new ProfileImage(profileImageUrl),
                 isPublic,
                 current.isVerified(),

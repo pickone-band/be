@@ -1,10 +1,15 @@
 package com.PickOne.global.security.service;
 
+import com.PickOne.domain.consent.repository.ConsentJpaRepository;
+import com.PickOne.domain.term.model.entity.TermEntity;
+import com.PickOne.domain.term.service.TermService;
 import com.PickOne.domain.user.model.domain.*;
-import com.PickOne.domain.user.repository.UserRepository;
+import com.PickOne.domain.user.model.entity.UserEntity;
+import com.PickOne.domain.user.repository.UserJpaRepository;
+import com.PickOne.global.exception.BusinessException;
+import com.PickOne.global.security.dto.ConsentAgreementDto;
 import com.PickOne.global.security.dto.LoginRequest;
-import com.PickOne.global.security.dto.SignupRequest;
-import com.PickOne.global.security.repository.AuthRepository;
+import com.PickOne.global.security.dto.SignupRequestDto;
 import com.PickOne.global.security.repository.RefreshTokenRepository;
 import com.PickOne.global.security.repository.TokenBlacklistRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +20,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,10 +34,7 @@ class AuthServiceTest {
     private AuthServiceImpl authService;
 
     @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private AuthRepository authRepository;
+    private UserJpaRepository userJpaRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -44,19 +48,50 @@ class AuthServiceTest {
     @Mock
     private TokenBlacklistRepository tokenBlacklistRepository;
 
+    @Mock
+    private TermService termService;
+
+    @Mock
+    private ConsentJpaRepository consentJpaRepository;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        when(termService.getAll()).thenReturn(List.of(
+                new TermEntity(
+                        1L,
+                        "서비스 이용약관",
+                        "내용입니다.",
+                        "v1.0",
+                        true,
+                        LocalDateTime.now()
+                ),
+                new TermEntity(
+                        2L,
+                        "마케팅 정보 수신",
+                        "동의하시면 이벤트 정보를 받아볼 수 있습니다.",
+                        "v1.0",
+                        false,
+                        LocalDateTime.now()
+                )
+        ));
     }
 
     @Test
     @DisplayName("회원가입 성공")
     void signup_success() {
-        SignupRequest request = new SignupRequest("user@example.com", "password123", "닉네임");
+        SignupRequestDto request = new SignupRequestDto(
+                "user@example.com",
+                "password123",
+                "닉네임",
+                LocalDate.of(1990, 1, 1),
+                Gender.MALE,
+                List.of(new ConsentAgreementDto(1L, true))
+        );
 
-        when(userRepository.findByEmail(Email.of(request.email()))).thenReturn(Optional.empty());
+        when(userJpaRepository.findByEmail("user@example.com")).thenReturn(Optional.empty());
+        when(userJpaRepository.findByNickname("닉네임")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("password123")).thenReturn("encoded123");
-        when(authRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(jwtService.generateAccessToken(any())).thenReturn("access-token");
         when(jwtService.generateRefreshToken(any())).thenReturn("refresh-token");
 
@@ -64,60 +99,68 @@ class AuthServiceTest {
 
         assertThat(result.accessToken()).isNotBlank();
         assertThat(result.refreshToken()).isNotBlank();
-        assertThat(result.user().getEmail().getValue()).isEqualTo(request.email());
+        assertThat(result.email()).isEqualTo(request.email());
     }
 
     @Test
     @DisplayName("로그인 성공")
     void login_success() {
-        Email email = Email.of("login@example.com");
+        String email = "user@example.com";
         Password password = Password.ofEncoded("encoded123");
-        User user = new User(1L, email, password,  new Nickname("닉네임"),
-                new ProfileImage("https://img.example.com"),
-                true,
-                false,
-                false,
+        UserEntity user = new UserEntity(
+                "user@example.com",
+                Password.ofEncoded("encodedPassword123"),
+                "닉네임",
+                "https://img.example.com",
                 Role.USER,
+                true,   // isPublic
+                false,  // isOauth
                 List.of(new Instrument("ELECTRIC_GUITAR")),
-                List.of(new Genre("ROCK"))
+                List.of(new Genre("ROCK")),
+                Gender.MALE,
+                LocalDate.of(1990, 1, 1)
         );
 
-        when(userRepository.findByEmail(Email.of(email.getValue()))).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("rawpass", "encoded123")).thenReturn(true);
+        when(userJpaRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("rawpass", "encodedPassword123")).thenReturn(true);
         when(jwtService.generateAccessToken(any())).thenReturn("access-token");
         when(jwtService.generateRefreshToken(any())).thenReturn("refresh-token");
 
-        LoginRequest request = new LoginRequest(email.getValue(), "rawpass");
+        LoginRequest request = new LoginRequest(email, "rawpass");
 
         var result = authService.login(request);
 
         assertThat(result.accessToken()).isNotNull();
         assertThat(result.refreshToken()).isNotNull();
-        assertThat(result.user().getEmail().getValue()).isEqualTo(email.getValue());
+        assertThat(result.email()).isEqualTo(email);
     }
 
     @Test
     @DisplayName("로그인 실패 - 비밀번호 불일치")
     void login_wrong_password() {
-        Email email = Email.of("fail@example.com");
+        String email = "fail@example.com";
         Password password = Password.ofEncoded("encoded123");
-        User user = new User(1L, email, password,  new Nickname("닉네임"),
-                new ProfileImage("https://img.example.com"),
-                true,
-                false,
-                false,
+        UserEntity user = new UserEntity(
+                "user@example.com",
+                password,
+                "닉네임",
+                "https://img.example.com",
                 Role.USER,
+                true,   // isPublic
+                false,  // isOauth
                 List.of(new Instrument("ELECTRIC_GUITAR")),
-                List.of(new Genre("ROCK"))
+                List.of(new Genre("ROCK")),
+                Gender.MALE,
+                LocalDate.of(1990, 1, 1)
         );
 
-        when(userRepository.findByEmail(Email.of(email.getValue()))).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("wrong", "encoded123")).thenReturn(false);
+        when(userJpaRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("rawpass", "encodedPassword123")).thenReturn(true);
 
-        LoginRequest request = new LoginRequest(email.getValue(), "wrong");
+        LoginRequest request = new LoginRequest(email, "wrong");
 
         assertThatThrownBy(() -> authService.login(request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("비밀번호가 일치하지 않습니다");
     }
 
@@ -126,19 +169,23 @@ class AuthServiceTest {
     void refresh_success() {
         String refreshToken = "refresh.token.value";
         String email = "refresh@example.com";
-        User user = new User(3L, Email.of(email), Password.ofEncoded("pw"),  new Nickname("닉네임"),
-                new ProfileImage("https://img.example.com"),
-                true,
-                false,
-                false,
+        UserEntity user = new UserEntity(
+                "user@example.com",
+                Password.ofEncoded("encodedPassword123"),
+                "닉네임",
+                "https://img.example.com",
                 Role.USER,
+                true,   // isPublic
+                false,  // isOauth
                 List.of(new Instrument("ELECTRIC_GUITAR")),
-                List.of(new Genre("ROCK"))
+                List.of(new Genre("ROCK")),
+                Gender.MALE,
+                LocalDate.of(1990, 1, 1)
         );
 
         when(jwtService.validateRefreshToken(refreshToken)).thenReturn(true);
         when(jwtService.extractUsername(refreshToken)).thenReturn(email);
-        when(userRepository.findByEmail(Email.of(email))).thenReturn(Optional.of(user));
+        when(userJpaRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(jwtService.generateAccessToken(any())).thenReturn("access-token");
         when(jwtService.generateRefreshToken(any())).thenReturn("refresh-token");
 

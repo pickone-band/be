@@ -1,8 +1,8 @@
 package com.PickOne.global.verification.service;
 
 import com.PickOne.domain.user.model.domain.User;
-import com.PickOne.domain.user.repository.UserRepository;
-import com.PickOne.global.security.repository.AuthRepository;
+import com.PickOne.domain.user.model.entity.UserEntity;
+import com.PickOne.domain.user.repository.UserJpaRepository;
 import com.PickOne.global.verification.model.domain.EmailMessage;
 import com.PickOne.global.verification.model.domain.VerificationToken;
 import com.PickOne.global.verification.repository.VerificationTokenRepository;
@@ -26,8 +26,8 @@ public class EmailVerificationService {
     private final EmailTemplateService emailTemplateService;
     private final EmailSenderService emailSenderService;
     private final VerificationTokenRepository tokenRepository;
-    private final UserRepository userRepository;
-    private final AuthRepository authRepository;
+    private final UserJpaRepository userJpaRepository;
+
 
     @Value("${app.email.verification-required:true}")
     private boolean verificationRequired;
@@ -94,17 +94,17 @@ public class EmailVerificationService {
         }
 
         // 사용자 활성화
-        User user = userRepository.findById(verificationToken.getUserId())
+        UserEntity user = userJpaRepository.findById(verificationToken.getUserId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
 
-        user = user.verify();
-        authRepository.save(user);
+        user.verify();
+        userJpaRepository.save(user);
 
         // 토큰 삭제
         tokenRepository.deleteByToken(token);
 
         // 환영 이메일 발송
-        EmailMessage welcomeEmail = emailTemplateService.createWelcomeEmail(user.getEmail().getValue());
+        EmailMessage welcomeEmail = emailTemplateService.createWelcomeEmail(user.getEmail());
         emailSenderService.sendEmail(welcomeEmail);
 
         log.info("사용자 {}의 이메일 인증이 완료되었습니다", user.getId());
@@ -115,7 +115,7 @@ public class EmailVerificationService {
      * 비밀번호 재설정 토큰 검증
      */
     @Transactional
-    public User validatePasswordResetToken(String token) {
+    public UserEntity validatePasswordResetToken(String token) {
         VerificationToken verificationToken = tokenRepository.findByToken(token)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
 
@@ -129,7 +129,7 @@ public class EmailVerificationService {
         }
 
         // 사용자 조회
-        return userRepository.findById(verificationToken.getUserId())
+        return userJpaRepository.findById(verificationToken.getUserId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
     }
 

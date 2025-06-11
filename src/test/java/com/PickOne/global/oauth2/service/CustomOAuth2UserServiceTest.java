@@ -1,13 +1,13 @@
 package com.PickOne.global.oauth2.service;
 
 import com.PickOne.domain.user.model.domain.*;
-import com.PickOne.domain.user.repository.UserRepository;
+import com.PickOne.domain.user.model.entity.UserEntity;
+import com.PickOne.domain.user.repository.UserJpaRepository;
 import com.PickOne.global.oauth2.model.domain.OAuth2Provider;
 import com.PickOne.global.oauth2.model.domain.OAuth2UserInfo;
 import com.PickOne.global.oauth2.model.entity.UserConnectionEntity;
 import com.PickOne.global.oauth2.repository.UserConnectionRepository;
 import com.PickOne.global.security.model.entity.UserPrincipal;
-import com.PickOne.global.security.repository.AuthRepository;
 import com.PickOne.global.security.repository.RefreshTokenRepository;
 import com.PickOne.global.security.service.JwtService;
 
@@ -21,6 +21,7 @@ import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,8 +33,7 @@ import static org.mockito.Mockito.*;
 
 class CustomOAuth2UserServiceTest {
 
-    private AuthRepository authRepository;
-    private UserRepository userRepository;
+    private UserJpaRepository userJpaRepository;
     private UserConnectionRepository userConnectionRepository;
     private PasswordEncoder passwordEncoder;
     private JwtService jwtService;
@@ -42,14 +42,14 @@ class CustomOAuth2UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        authRepository = mock(AuthRepository.class);
-        userRepository = mock(UserRepository.class);
+
+        userJpaRepository = mock(UserJpaRepository.class);
         userConnectionRepository = mock(UserConnectionRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
         jwtService = mock(JwtService.class);
         refreshTokenRepository = mock(RefreshTokenRepository.class);
 
-        service = new CustomOAuth2UserService(userRepository, authRepository,userConnectionRepository, passwordEncoder, jwtService, refreshTokenRepository) {
+        service = new CustomOAuth2UserService(userJpaRepository, userConnectionRepository, passwordEncoder, jwtService, refreshTokenRepository) {
             @Override
             protected OAuth2User loadOAuth2User(OAuth2UserRequest userRequest) {
                 return new DefaultOAuth2User(
@@ -88,23 +88,23 @@ class CustomOAuth2UserServiceTest {
 
             when(userConnectionRepository.findByProviderAndProviderUserId("GOOGLE", providerId))
                     .thenReturn(Optional.empty());
-            when(userRepository.findByEmail(Email.of(email))).thenReturn(Optional.empty());
+            when(userJpaRepository.findByEmail(email)).thenReturn(Optional.empty());
             when(passwordEncoder.encode(any())).thenReturn("encoded-password");
 
-            when(authRepository.save(any(User.class))).thenAnswer(invocation -> {
-                User userToSave = invocation.getArgument(0);
-                return new User(
-                        1L,
+            when(userJpaRepository.save(any(UserEntity.class))).thenAnswer(invocation -> {
+                UserEntity userToSave = invocation.getArgument(0);
+                return new UserEntity(
                         userToSave.getEmail(),
                         userToSave.getPassword(),
-                        new Nickname(name),
-                        new ProfileImage("https://img.example.com"),
-                        true,
-                        false,
-                        false,
+                        userToSave.getNickname(),
+                        userToSave.getProfileImage(),
                         Role.USER,
-                        List.of(new Instrument("ELECTRIC_GUITAR")),
-                        List.of(new Genre("ROCK"))
+                        true,   // isPublic
+                        false,  // isOauth
+                        List.of(new com.PickOne.domain.user.model.domain.Instrument("Drum")),
+                        List.of(new Genre("Pop")),
+                        Gender.FEMALE,
+                        LocalDate.of(1993, 5, 15)
                 );
             });
 

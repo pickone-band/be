@@ -45,9 +45,9 @@ public class ConsentController {
     @GetMapping("/{userId}/check/{termsId}")
     public ResponseEntity<BaseResponse<Boolean>> hasConsented(
             @PathVariable Long userId,
-            @PathVariable Long termsId
+            @PathVariable Long termId
     ) {
-        boolean result = consentService.hasConsented(userId, termsId);
+        boolean result = consentService.hasConsented(userId, termId);
         return BaseResponse.success(result);
     }
 
@@ -55,9 +55,9 @@ public class ConsentController {
     @DeleteMapping("/{userId}/{termsId}")
     public ResponseEntity<BaseResponse<Void>> deleteConsent(
             @PathVariable Long userId,
-            @PathVariable Long termsId
+            @PathVariable Long termId
     ) {
-        consentService.deleteConsent(userId, termsId);
+        consentService.deleteConsent(userId, termId);
         return BaseResponse.success();
     }
 }

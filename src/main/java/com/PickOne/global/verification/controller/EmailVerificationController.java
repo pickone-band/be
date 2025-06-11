@@ -1,6 +1,7 @@
 package com.PickOne.global.verification.controller;
 
 import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.domain.user.model.entity.UserEntity;
 import com.PickOne.domain.user.service.UserService;
 import com.PickOne.global.exception.BaseResponse;
 import com.PickOne.global.exception.BusinessException;
@@ -69,7 +70,7 @@ public class EmailVerificationController {
     public ResponseEntity<BaseResponse<Void>> resetPassword(
             @RequestBody @Valid PasswordResetRequest request) {
         request.validate();
-        User user = emailVerificationService.validatePasswordResetToken(request.token());
+        UserEntity user = emailVerificationService.validatePasswordResetToken(request.token());
         userService.updatePassword(user.getId(), request.newPassword());
         emailVerificationService.completePasswordReset(request.token());
         return BaseResponse.success(SuccessCode.OK);

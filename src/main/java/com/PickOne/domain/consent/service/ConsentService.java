@@ -42,13 +42,13 @@ public class ConsentService {
 
     @Transactional(readOnly = true)
     public boolean hasConsented(Long userId, Long termId) {
-        return consentRepository.findByUserIdAndTermsId(userId, termId)
+        return consentRepository.findByUserIdAndTermId(userId, termId)
                 .map(ConsentEntity::isConsented)
                 .orElse(false);
     }
 
     @Transactional
     public void deleteConsent(Long userId, Long termId) {
-        consentRepository.deleteByUserIdAndTermsId(userId, termId);
+        consentRepository.deleteByUserIdAndTermId(userId, termId);
     }
 }

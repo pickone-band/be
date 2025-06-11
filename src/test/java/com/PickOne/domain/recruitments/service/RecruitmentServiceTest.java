@@ -14,20 +14,16 @@ import com.PickOne.domain.recruitments.model.Proficiency;
 import com.PickOne.domain.recruitments.model.Status;
 import com.PickOne.domain.recruitments.model.Type;
 import com.PickOne.domain.recruitments.model.Visibility;
-import com.PickOne.domain.user.model.domain.Email;
 import com.PickOne.domain.user.model.domain.Password;
-import com.PickOne.domain.user.model.domain.User;
-import com.PickOne.domain.user.repository.UserRepository;
+import com.PickOne.domain.user.model.entity.UserEntity;
+import com.PickOne.domain.user.repository.UserJpaRepository;
 import com.PickOne.global.exception.BusinessException;
 import com.PickOne.global.exception.ErrorCode;
-import com.PickOne.global.security.repository.AuthRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -48,7 +44,7 @@ class RecruitmentServiceTest {
     private RecruitmentService recruitmentService;
 
     @Autowired
-    private AuthRepository authRepository;
+    private UserJpaRepository userJpaRepository;
 
     RecruitmentRequestDto requestDto = RecruitmentRequestDto.builder()
             .type(Type.Once)
@@ -84,8 +80,8 @@ class RecruitmentServiceTest {
     @Test
     void 모집공고_등록_성공_테스트() {
         // given - 도메인 객체 생성 및 저장
-        User testUser = createTestUser("test@example.com", "테스트유저");
-        User savedUser = authRepository.save(testUser);
+        UserEntity testUser = createTestUser("test@example.com", "테스트유저");
+        UserEntity savedUser = userJpaRepository.save(testUser);
 
         //when - 저장된 유저 ID를 통해 모집공고 등록
         Long savedId = recruitmentService.registerRecruitment(requestDto, savedUser.getId());
@@ -96,7 +92,7 @@ class RecruitmentServiceTest {
 
     @Test
     void 모집공고_단건_조회_테스트() {
-        User savedUser = authRepository.save(createTestUser("test@example.com", "테스트유저"));
+        UserEntity savedUser = userJpaRepository.save(createTestUser("test@example.com", "테스트유저"));
         Long savedId = recruitmentService.registerRecruitment(requestDto, savedUser.getId());
         RecruitmentResponseDto responseDto = recruitmentService.getRecruitment(savedId);
         assertEquals(responseDto.getGenres().getGenre(), List.of(Genre.INDIE_ROCK, Genre.SHOEGAZING));
@@ -104,7 +100,7 @@ class RecruitmentServiceTest {
 
     @Test
     void 모집공고_수정_테스트() {
-        User savedUser = authRepository.save(createTestUser("test@example.com", "테스트유저"));
+        UserEntity savedUser = userJpaRepository.save(createTestUser("test@example.com", "테스트유저"));
         Long savedId = recruitmentService.registerRecruitment(requestDto, savedUser.getId());
 
         RecruitmentRequestDto modifyDto = RecruitmentRequestDto.builder()
@@ -139,10 +135,10 @@ class RecruitmentServiceTest {
 
     @Test
     void 모집공고_삭제_테스트() {
-        User savedUser1 = authRepository.save(createTestUser("test@example.com", "테스트유저"));  // ✅
+        UserEntity savedUser1 = userJpaRepository.save(createTestUser("test@example.com", "테스트유저"));  // ✅
         Long savedId = recruitmentService.registerRecruitment(requestDto, savedUser1.getId());
 
-        User savedUser2 = authRepository.save(createTestUser("test2@example.com", "다른유저"));
+        UserEntity savedUser2 = userJpaRepository.save(createTestUser("test2@example.com", "다른유저"));
         // when & then
         BusinessException exception = assertThrows(BusinessException.class, () -> {
             recruitmentService.deleteRecruitment(savedId, savedUser2.getId());
@@ -151,19 +147,19 @@ class RecruitmentServiceTest {
         assertEquals(ErrorCode.UNAUTHORIZED_RECRUITMENT_ACCESS, exception.getErrorCode());
     }
 
-    private User createTestUser(String email, String nickname) {
-        return new User(
-                null,
-                Email.of(email),
+    private UserEntity createTestUser(String email, String nickname) {
+        return new UserEntity(
+                email,
                 Password.ofEncoded("encoded-password"),
-                new com.PickOne.domain.user.model.domain.Nickname(nickname),
-                new com.PickOne.domain.user.model.domain.ProfileImage("https://img.example.com"),
-                true,
-                false,
-                false,
+                nickname,
+                "https://img.example.com",
                 com.PickOne.domain.user.model.domain.Role.USER,
+                true,   // isPublic
+                false,  // isOauth
                 List.of(new com.PickOne.domain.user.model.domain.Instrument("ELECTRIC_GUITAR")),
-                List.of(new com.PickOne.domain.user.model.domain.Genre("ROCK"))
+                List.of(new com.PickOne.domain.user.model.domain.Genre("ROCK")),
+                com.PickOne.domain.user.model.domain.Gender.MALE,           // 기본값
+                java.time.LocalDate.of(1995, 1, 1)                           // 기본 생년월일
         );
     }
 }

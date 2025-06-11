@@ -1,22 +1,30 @@
 package com.PickOne.global.security.service;
 
+import com.PickOne.domain.consent.model.entity.ConsentEntity;
+import com.PickOne.domain.consent.repository.ConsentJpaRepository;
+import com.PickOne.domain.term.model.entity.TermEntity;
+import com.PickOne.domain.term.service.TermService;
 import com.PickOne.domain.user.mapper.UserMapper;
 import com.PickOne.domain.user.model.domain.*;
-import com.PickOne.domain.user.repository.UserRepository;
+import com.PickOne.domain.user.model.entity.UserEntity;
+import com.PickOne.domain.user.repository.UserJpaRepository;
 
+import com.PickOne.global.exception.BusinessException;
+import com.PickOne.global.exception.ErrorCode;
+import com.PickOne.global.security.dto.ConsentAgreementDto;
 import com.PickOne.global.security.dto.LoginRequest;
-import com.PickOne.global.security.dto.SignupRequest;
-import com.PickOne.global.security.dto.AuthResponseDto;
+import com.PickOne.global.security.dto.SignupRequestDto;
 import com.PickOne.global.security.dto.AuthResult;
 
 import com.PickOne.global.security.model.entity.UserPrincipal;
-import com.PickOne.global.security.repository.AuthRepository;
 import com.PickOne.global.security.repository.RefreshTokenRepository;
 import com.PickOne.global.security.repository.TokenBlacklistRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -24,61 +32,74 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-  private final AuthRepository authRepository;
-  private final UserRepository userRepository;
+  private final TermService termService;
+  private final ConsentJpaRepository consentJpaRepository;
+  private final UserJpaRepository userJpaRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtService jwtService;
   private final RefreshTokenRepository refreshTokenRepository;
   private final TokenBlacklistRepository tokenBlacklistRepository;
 
   @Override
-  public AuthResult signup(SignupRequest request) {
-    Email email = Email.of(request.email());
-    if (userRepository.findByEmail(email).isPresent()) {
-      throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
-    }
-    Password password = Password.ofRaw(request.password(), passwordEncoder);
+  @Transactional
+  public AuthResult signup(SignupRequestDto request) {
+    String email = request.email();
+    String nickname = request.nickname();
 
-    User user = new User(
+    // 중복 검사
+    if (userJpaRepository.findByEmail(email).isPresent()) {
+      throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
+    }
+    if (userJpaRepository.findByNickname(nickname).isPresent()) {
+      throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
+    }
+    UserEntity user = new UserEntity(
+            request.email(),
+            Password.ofRaw(request.password(), passwordEncoder),
+            request.nickname(),
             null,
-            email,
-            password,
-            new Nickname(request.nickname()),
-            null,
+            Role.USER,
             true,
             false,
-            false,
-            Role.USER,
             List.of(),
-            List.of()
+            List.of(),
+            request.gender(),
+            request.birthDate()
     );
-    user = authRepository.save(user);
-    return issueTokens(user);
+
+    userJpaRepository.save(user);
+
+
+
+    validateRequiredTerms(request.agreements());
+    saveUserConsents(user, request.agreements());
+
+    return issueTokens(UserMapper.toDomain(user));
   }
 
   @Override
   public AuthResult login(LoginRequest request) {
-    User user = userRepository.findByEmail(Email.of(request.email()))
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이메일입니다."));
+    UserEntity user = userJpaRepository.findByEmail(request.email())
+            .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
 
     if (!user.getPassword().matches(request.password(), passwordEncoder)) {
-      throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+      throw new BusinessException(ErrorCode.INVALID_PASSWORD);
     }
 
-    return issueTokens(user);
+    return issueTokens(UserMapper.toDomain(user));
   }
 
   @Override
   public AuthResult refresh(String refreshToken) {
     if (!jwtService.validateRefreshToken(refreshToken)) {
-      throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.");
+      throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
     }
 
-    Email email = Email.of(jwtService.extractUsername(refreshToken));
-        User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+    String email = jwtService.extractUsername(refreshToken);
+    UserEntity user = userJpaRepository.findByEmail(email)
+            .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
 
-    return issueTokens(user);
+    return issueTokens(UserMapper.toDomain(user));
   }
 
   @Override
@@ -91,6 +112,35 @@ public class AuthServiceImpl implements AuthService {
     String refreshToken = jwtService.generateRefreshToken(UserPrincipal.from(user));
     refreshTokenRepository.save(user.getEmail().getValue(), refreshToken, jwtService.getRefreshTokenExpiration());
 
-    return new AuthResult(accessToken, refreshToken, user);
+    return new AuthResult(accessToken, refreshToken, user.getEmail().getValue());
+  }
+
+  private void validateRequiredTerms(List<ConsentAgreementDto> agreements) {
+    List<TermEntity> requiredTerms = termService.getAll().stream()
+            .filter(TermEntity::isRequired)
+            .toList();
+
+    for (TermEntity term : requiredTerms) {
+      boolean agreed = agreements.stream()
+              .anyMatch(dto -> dto.termId().equals(term.getId()) && Boolean.TRUE.equals(dto.consented()));
+      if (!agreed) {
+        throw new BusinessException(ErrorCode.REQUIRED_TERM_NOT_AGREED);
+      }
+    }
+  }
+
+  private void saveUserConsents(UserEntity user, List<ConsentAgreementDto> agreements) {
+
+    for (ConsentAgreementDto dto : agreements) {
+      TermEntity term = termService.getById(dto.termId());
+      ConsentEntity consent = new ConsentEntity(
+              null,
+              user,
+              term,
+              dto.consented(),
+              LocalDateTime.now()
+      );
+      consentJpaRepository.save(consent);
+    }
   }
 }

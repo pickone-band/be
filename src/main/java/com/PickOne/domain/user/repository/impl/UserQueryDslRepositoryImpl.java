@@ -54,11 +54,21 @@ public class UserQueryDslRepositoryImpl implements UserQueryDslRepository {
     }
 
     @Override
+    public Page<UserEntity> findAllByInstrument(String instrument, Pageable pageable) {
+        return findAllByInstrument(new Instrument(instrument), pageable);
+    }
+
+    @Override
+    public Page<UserEntity> findAllByGenre(String genre, Pageable pageable) {
+        return findAllByGenre(new Genre(genre), pageable);
+    }
+
+    @Override
     public Page<UserEntity> search(String keyword, boolean onlyPublic, Pageable pageable) {
         List<UserEntity> content = query.selectFrom(userEntity)
                 .where(
-                        userEntity.nickname.value.containsIgnoreCase(keyword)
-                                .or(userEntity.email.value.containsIgnoreCase(keyword))
+                        userEntity.nickname.containsIgnoreCase(keyword)
+                                .or(userEntity.email.containsIgnoreCase(keyword))
                                 .and(onlyPublic ? userEntity.isPublic.isTrue() : null)
                 )
                 .offset(pageable.getOffset())
@@ -68,8 +78,8 @@ public class UserQueryDslRepositoryImpl implements UserQueryDslRepository {
         Long count = query.select(userEntity.count())
                 .from(userEntity)
                 .where(
-                        userEntity.nickname.value.containsIgnoreCase(keyword)
-                                .or(userEntity.email.value.containsIgnoreCase(keyword))
+                        userEntity.nickname.containsIgnoreCase(keyword)
+                                .or(userEntity.email.containsIgnoreCase(keyword))
                                 .and(onlyPublic ? userEntity.isPublic.isTrue() : null)
                 )
                 .fetchOne();
