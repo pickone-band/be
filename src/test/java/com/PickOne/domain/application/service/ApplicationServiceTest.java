@@ -19,11 +19,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @SpringBootTest
+@Transactional
 public class ApplicationServiceTest {
 
     @MockBean
@@ -45,7 +47,7 @@ public class ApplicationServiceTest {
     void 멤버_지원_테스트() {
         // given
         UserEntity testUser = new UserEntity(
-                "test@example.com",
+                "apply-test@example.com",
                 Password.ofEncoded("encoded-password"),
                 "테스트유저",
                 "https://example.com/profile.jpg",
@@ -90,7 +92,7 @@ public class ApplicationServiceTest {
     void 멤버_지원_조회_테스트() {
         // given
         UserEntity testUser = new UserEntity(
-                "test@example.com",
+                "view-test@example.com",
                 Password.ofEncoded("encoded-password"),
                 "테스트유저",
                 "https://example.com/profile.jpg",
