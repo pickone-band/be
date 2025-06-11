@@ -1,7 +1,6 @@
 package com.PickOne.global.verification.service;
 
 import com.PickOne.domain.user.model.domain.*;
-import com.PickOne.domain.user.repository.UserRepository;
 import com.PickOne.global.exception.BusinessException;
 import com.PickOne.global.verification.model.domain.EmailMessage;
 import com.PickOne.global.verification.model.domain.VerificationToken;
@@ -13,7 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,7 +27,6 @@ class EmailVerificationServiceTest {
     private EmailTemplateService emailTemplateService;
     @Mock private EmailSenderService emailSenderService;
     @Mock private VerificationTokenRepository tokenRepository;
-    @Mock private UserRepository userRepository;
 
     @InjectMocks
     private EmailVerificationService emailVerificationService;
@@ -38,15 +35,9 @@ class EmailVerificationServiceTest {
 
     @BeforeEach
     void setup() {
-        user = new User(1L, Email.of("test@example.com"), null,  new Nickname("닉네임"),
-                new ProfileImage("https://img.example.com"),
-                true,
-                false,
-                false,
-                Role.USER,
-                List.of(new Instrument("ELECTRIC_GUITAR")),
-                List.of(new Genre("ROCK"))
-        );
+        user = mock(User.class);
+        given(user.getId()).willReturn(1L);
+        given(user.getEmail()).willReturn(Email.of("test@example.com"));
     }
 
     @Test

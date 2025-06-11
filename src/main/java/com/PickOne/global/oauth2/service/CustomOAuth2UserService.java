@@ -1,24 +1,22 @@
 package com.PickOne.global.oauth2.service;
 
-import com.PickOne.domain.user.model.domain.Email;
+import com.PickOne.domain.user.mapper.UserMapper;
 import com.PickOne.domain.user.model.domain.Password;
 import com.PickOne.domain.user.model.domain.Role;
-import com.PickOne.domain.user.model.domain.User;
-import com.PickOne.domain.user.repository.UserRepository;
+import com.PickOne.domain.user.model.entity.UserEntity;
+import com.PickOne.domain.user.repository.UserJpaRepository;
 import com.PickOne.global.oauth2.model.domain.OAuth2Provider;
 import com.PickOne.global.oauth2.model.domain.OAuth2UserInfo;
 import com.PickOne.global.oauth2.model.entity.UserConnectionEntity;
 import com.PickOne.global.oauth2.repository.UserConnectionRepository;
 
 import com.PickOne.global.security.model.entity.UserPrincipal;
-import com.PickOne.global.security.repository.AuthRepository;
 import com.PickOne.global.security.repository.RefreshTokenRepository;
 import com.PickOne.global.security.service.JwtService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -35,8 +33,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private final UserRepository userRepository;
-    private final AuthRepository authRepository;
+    private final UserJpaRepository userJpaRepository;
     private final UserConnectionRepository userConnectionRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -63,31 +60,30 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         Optional<UserConnectionEntity> existingConnection = userConnectionRepository
                 .findByProviderAndProviderUserId(provider.name(), userInfo.getId());
 
-        User user;
+        UserEntity user;
         if (existingConnection.isPresent()) {
-            user = userRepository.findById(existingConnection.get().getUserId())
+            user = userJpaRepository.findById(existingConnection.get().getUserId())
                     .orElseThrow(() -> new IllegalStateException("User not found"));
         } else {
-            Email email = Email.of(userInfo.getEmail());
-            Optional<User> maybeUser = userRepository.findByEmail(email);
+            Optional<UserEntity> maybeUser = userJpaRepository.findByEmail(userInfo.getEmail());
             if (maybeUser.isPresent()) {
                 user = maybeUser.get();
             } else {
                 Password tempPassword = Password.ofRaw("oauth2TempPass" + userInfo.getEmail(), passwordEncoder);
-                user = new User(
-                        null,
-                        Email.of(userInfo.getEmail()),
+                user = new UserEntity(
+                        userInfo.getEmail(),
                         tempPassword,
-                        null,
-                        null,
-                        true,
-                        false,
-                        true,
+                        userInfo.getNickname(),
+                        userInfo.getProfileImageUrl(),
                         Role.USER,
+                        true,
+                        true,
                         List.of(),
-                        List.of()
+                        List.of(),
+                        userInfo.getGender(),
+                        userInfo.getBirthDate()
                 );
-                user = authRepository.save(user); // ✅ 저장 책임 분리
+                user = userJpaRepository.save(user);
             }
 
             UserConnectionEntity connection = UserConnectionEntity.builder()
@@ -100,10 +96,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             userConnectionRepository.save(connection);
         }
 
-        UserPrincipal userPrincipal = UserPrincipal.from(user);
+        UserPrincipal userPrincipal = UserPrincipal.from(UserMapper.toDomain(user));
         String accessToken = jwtService.generateAccessToken(userPrincipal);
         String refreshToken = jwtService.generateRefreshToken(userPrincipal);
-        refreshTokenRepository.save(user.getEmail().getValue(), refreshToken, jwtService.getRefreshTokenExpiration());
+        refreshTokenRepository.save(user.getEmail(), refreshToken, jwtService.getRefreshTokenExpiration());
 
         return userPrincipal;
     }

@@ -57,7 +57,7 @@ public enum ErrorCode {
     REQUIRED_TERM_NOT_AGREED(HttpStatus.BAD_REQUEST, 2603, "필수 약관에 동의해야 합니다."),
 
     // ✅ 인증 및 로그인 관련 (4000번대)
-    INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, 4001, "아이디 또는 비밀번호가 잘못되었습니다."),
+    INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, 4001, "비밀번호가 일치하지 않습니다"),
     UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED, 4002, "인증되지 않은 사용자입니다."),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, 4003, "유효하지 않은 토큰입니다."),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, 4004, "토큰이 만료되었습니다."),

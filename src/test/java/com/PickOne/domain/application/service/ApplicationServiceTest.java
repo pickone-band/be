@@ -10,12 +10,9 @@ import com.PickOne.domain.recruitments.model.Mbti;
 import com.PickOne.domain.recruitments.model.Proficiency;
 import com.PickOne.domain.recruitments.model.entity.Recruitment;
 import com.PickOne.domain.recruitments.repository.RecruitmentRepository;
-import com.PickOne.domain.user.mapper.UserMapper;
 import com.PickOne.domain.user.model.domain.*;
 import com.PickOne.domain.user.model.entity.UserEntity;
 import com.PickOne.domain.user.repository.UserJpaRepository;
-import com.PickOne.domain.user.repository.UserRepository;
-import com.PickOne.global.security.repository.AuthRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,6 +20,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @SpringBootTest
@@ -38,29 +36,27 @@ public class ApplicationServiceTest {
     @Autowired
     private ApplicationService applicationService;
     @Autowired
-    private AuthRepository authRepository;
-    @Autowired
     private RecruitmentRepository recruitmentRepository;
     @Autowired
     private UserJpaRepository userJpaRepository;
     @Test
     void 멤버_지원_테스트() {
         // given
-        User testUser = new User(
-                null,
-                Email.of("test@example.com"),
+        UserEntity testUser = new UserEntity(
+                "test@example.com",
                 Password.ofEncoded("encoded-password"),
-                new Nickname("테스트유저"),
-                new ProfileImage("https://example.com/profile.jpg"),
-                true,   // isPublic
-                false,  // isVerified
-                false,  // isOauth
+                "테스트유저",
+                "https://example.com/profile.jpg",
                 Role.USER,
+                true,
+                false,
                 List.of(new com.PickOne.domain.user.model.domain.Instrument("Guitar")),
-                List.of(new com.PickOne.domain.user.model.domain.Genre("Rock"))
+                List.of(new com.PickOne.domain.user.model.domain.Genre("Rock")),
+                Gender.MALE,  // 예시값, 실제 성별 입력 필요
+                LocalDate.of(1995, 1, 1)  // 예시 생년월일
         );
 
-        User savedUser = authRepository.save(testUser);
+        UserEntity savedUser = userJpaRepository.save(testUser);
 
         UserEntity userEntity = userJpaRepository.findByEmail(savedUser.getEmail())
                 .orElseThrow(() -> new RuntimeException("UserEntity not found"));
@@ -91,20 +87,20 @@ public class ApplicationServiceTest {
     @Test
     void 멤버_지원_조회_테스트() {
         // given
-        User testUser = new User(
-                null,
-                Email.of("test2@example.com"),
+        UserEntity testUser = new UserEntity(
+                "test@example.com",
                 Password.ofEncoded("encoded-password"),
-                new Nickname("테스트유저2"),
-                new ProfileImage("https://example.com/default-profile.jpg"),
-                true,   // isPublic
-                false,  // isVerified
-                false,  // isOauth
+                "테스트유저",
+                "https://example.com/profile.jpg",
                 Role.USER,
-                List.of(new com.PickOne.domain.user.model.domain.Instrument("Drum")),
-                List.of(new Genre("Pop"))
+                true,
+                false,
+                List.of(new com.PickOne.domain.user.model.domain.Instrument("Guitar")),
+                List.of(new com.PickOne.domain.user.model.domain.Genre("Rock")),
+                Gender.MALE,  // 예시값, 실제 성별 입력 필요
+                LocalDate.of(1995, 1, 1)  // 예시 생년월일
         );
-        User savedUser = authRepository.save(testUser);  // ← userRepository → authRepository 로 변경
+        UserEntity savedUser = userJpaRepository.save(testUser);  // ← userRepository → authRepository 로 변경
 
         UserEntity userEntity = userJpaRepository.findByEmail(savedUser.getEmail())
                 .orElseThrow(() -> new RuntimeException("UserEntity not found"));

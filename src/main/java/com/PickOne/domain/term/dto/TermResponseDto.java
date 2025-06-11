@@ -1,6 +1,6 @@
 package com.PickOne.domain.term.dto;
 
-import com.PickOne.domain.term.model.domain.Term;
+import com.PickOne.domain.term.model.entity.TermEntity;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +15,7 @@ public record TermResponseDto(
         boolean required,
         LocalDateTime effectiveDate
 ) {
-    public static TermResponseDto from(Term term) {
+    public static TermResponseDto fromEntity(TermEntity term) {
         return new TermResponseDto(
                 term.getId(),
                 term.getTitle(),

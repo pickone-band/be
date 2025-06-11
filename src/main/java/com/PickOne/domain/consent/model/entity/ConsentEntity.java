@@ -1,31 +1,34 @@
-package com.PickOne.domain.consent.model.entity;
+    package com.PickOne.domain.consent.model.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
+    import com.PickOne.domain.term.model.entity.TermEntity;
+    import com.PickOne.domain.user.model.entity.UserEntity;
+    import jakarta.persistence.*;
+    import lombok.*;
 
-import java.time.LocalDateTime;
+    import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "consents")
-@Getter
-@Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-public class ConsentEntity {
+    @Entity
+    @Table(name = "consents")
+    @Getter
+    @NoArgsConstructor(access = AccessLevel.PROTECTED)
+    @AllArgsConstructor
+    public class ConsentEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // 내부 식별자 (DB용)
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
 
-    @Column(nullable = false)
-    private Long userId;
+        @ManyToOne(fetch = FetchType.LAZY, optional = false)
+        @JoinColumn(name = "users_id", nullable = false)
+        private UserEntity user;
 
-    @Column(nullable = false)
-    private Long termsId;
+        @ManyToOne(fetch = FetchType.LAZY, optional = false)
+        @JoinColumn(name = "terms_id", nullable = false)
+        private TermEntity term;
 
-    @Column(nullable = false)
-    private boolean consented;
+        @Column(nullable = false)
+        private boolean consented;
 
-    @Column(nullable = false)
-    private LocalDateTime consentDate;
-}
+        @Column(nullable = false)
+        private LocalDateTime consentDate;
+    }

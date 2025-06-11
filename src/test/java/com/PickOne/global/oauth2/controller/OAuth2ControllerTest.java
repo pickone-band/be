@@ -19,6 +19,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.mockito.Mockito.when;
@@ -84,6 +85,8 @@ class OAuth2ControllerTest {
                         Email.of("test@example.com"),
                         Password.ofEncoded("encoded"),
                         new Nickname("nickname"),
+                        Gender.MALE,  // 성별 명시
+                        LocalDate.of(1990, 1, 1),  // 생일 명시
                         new ProfileImage("https://example.com/image.png"),
                         true,    // isPublic
                         true,    // isVerified
@@ -91,8 +94,7 @@ class OAuth2ControllerTest {
                         Role.USER,
                         List.of(new Instrument("ELECTRIC_GUITAR")),
                         List.of(new Genre("ROCK"))
-                )
-        );
+                ));
 
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());

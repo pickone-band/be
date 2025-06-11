@@ -14,9 +14,6 @@ public class ProfileImage {
     protected ProfileImage() {}
 
     public ProfileImage(String url) {
-        if (url == null || !url.startsWith("http")) {
-            throw new IllegalArgumentException("유효한 프로필 이미지 URL이어야 합니다.");
-        }
         this.url = url;
     }
 
