@@ -1,7 +1,7 @@
 package com.PickOne.domain.application.model.entity;
 
 
-import com.PickOne.domain.application.dto.request.ApplicationInstrumentDto;
+import com.PickOne.domain.application.dto.request.ApplicationRequestDto;
 import com.PickOne.domain.application.model.ApplicationStatus;
 import com.PickOne.domain.recruitments.model.Instrument;
 import com.PickOne.domain.recruitments.model.Mbti;
@@ -76,6 +76,14 @@ public class Application {
         }
     }
 
+    public void update(ApplicationRequestDto applicationRequestDto) {
+        this.message = applicationRequestDto.getMessage();
+        this.portfolioUrl = applicationRequestDto.getPortfolioUrl();
+        this.thumbnail = applicationRequestDto.getThumbnail();
+        this.mbti = applicationRequestDto.getMbti();
+        this.instrument = applicationRequestDto.getInstrument();
+        this.proficiency = applicationRequestDto.getProficiency();
+    }
 
 
 }

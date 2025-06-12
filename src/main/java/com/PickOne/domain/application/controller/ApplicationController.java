@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -46,6 +47,17 @@ public class ApplicationController {
             @AuthenticationPrincipal UserPrincipal user){
         ApplicationResponseDto applicationResponseDto= applicationService.getMyApplication(user.getUserId(),recruitmentId);
         return BaseResponse.success(applicationResponseDto);
+    }
+
+    @Operation(summary = "멤버 모집글 신청글 수정",
+            description = "<a href='https://www.notion.so/1ae9366dcb7d814e9dd0cb651b35d752' target='_blank'>👉API 명세서 바로가기</a>")
+    @PatchMapping("/apply/{recruitmentId}")
+    public ResponseEntity<BaseResponse<Void>> modifyMyApplications(
+            @PathVariable Long recruitmentId,
+            @AuthenticationPrincipal UserPrincipal user,
+            @RequestBody ApplicationRequestDto requestDto){
+        applicationService.modifyApplication(user.getUserId(),recruitmentId,requestDto);
+        return BaseResponse.success();
     }
 
 }
