@@ -1,8 +1,8 @@
 package com.PickOne.domain.application.dto.request;
 
-import com.PickOne.domain.recruitments.model.Instrument;
-import com.PickOne.domain.recruitments.model.Mbti;
-import com.PickOne.domain.recruitments.model.Proficiency;
+import com.PickOne.global.common.enums.Instrument;
+import com.PickOne.global.common.enums.Mbti;
+import com.PickOne.global.common.enums.Proficiency;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

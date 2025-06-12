@@ -1,6 +1,6 @@
 package com.PickOne.domain.recruitments.dto.response;
 
-import com.PickOne.domain.recruitments.model.Genre;
+import com.PickOne.global.common.enums.Genre;
 import com.PickOne.domain.recruitments.model.entity.RecruitmentGenre;
 import java.util.List;
 import java.util.stream.Collectors;

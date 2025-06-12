@@ -1,7 +1,7 @@
 package com.PickOne.domain.recruitments.dto.response;
 
-import com.PickOne.domain.recruitments.model.Instrument;
-import com.PickOne.domain.recruitments.model.Proficiency;
+import com.PickOne.global.common.enums.Instrument;
+import com.PickOne.global.common.enums.Proficiency;
 import com.PickOne.domain.recruitments.model.entity.RecruitmentInstrument;
 import lombok.Builder;
 import lombok.Getter;

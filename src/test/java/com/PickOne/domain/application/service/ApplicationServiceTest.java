@@ -5,9 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.PickOne.domain.application.dto.request.ApplicationRequestDto;
 import com.PickOne.domain.application.dto.request.ApplicationResponseDto;
-import com.PickOne.domain.recruitments.model.Instrument;
-import com.PickOne.domain.recruitments.model.Mbti;
-import com.PickOne.domain.recruitments.model.Proficiency;
+import com.PickOne.global.common.enums.Instrument;
+import com.PickOne.global.common.enums.Mbti;
+import com.PickOne.global.common.enums.Proficiency;
 import com.PickOne.domain.recruitments.model.entity.Recruitment;
 import com.PickOne.domain.recruitments.repository.RecruitmentRepository;
 import com.PickOne.domain.user.model.domain.*;
@@ -135,5 +135,62 @@ public class ApplicationServiceTest {
         // then
         assertNotNull(application);
        assertEquals(application.getPortfolioUrl(),requestDto.getPortfolioUrl());
+    }
+    @Test
+    void 멤버_지원글_수정_테스트() {
+        // given
+        UserEntity testUser = new UserEntity(
+                "edit-test@example.com",
+                Password.ofEncoded("encoded-password"),
+                "수정테스트유저",
+                "https://example.com/profile.jpg",
+                Role.USER,
+                true,
+                false,
+                List.of(new com.PickOne.domain.user.model.domain.Instrument("Bass")),
+                List.of(new com.PickOne.domain.user.model.domain.Genre("Jazz")),
+                Gender.FEMALE,
+                LocalDate.of(1997, 5, 15)
+        );
+        UserEntity savedUser = userJpaRepository.save(testUser);
+
+        Recruitment recruitment = Recruitment.builder()
+                .title("테스트 모집글")
+                .userEntity(savedUser)
+                .build();
+        recruitmentRepository.save(recruitment);
+
+        ApplicationRequestDto initialRequest = ApplicationRequestDto.builder()
+                .message("초기 지원 메시지")
+                .portfolioUrl("https://original-portfolio.com")
+                .thumbnail("https://img.com/original.jpg")
+                .mbti(Mbti.ISFP)
+                .instrument(Instrument.BASS)
+                .proficiency(Proficiency.BEGINNER)
+                .build();
+
+        Long applicationId = applicationService.applyToRecruitment(savedUser.getId(), recruitment.getId(), initialRequest);
+        assertNotNull(applicationId);
+
+        // when - 수정
+        ApplicationRequestDto updatedRequest = ApplicationRequestDto.builder()
+                .message("수정된 메시지")
+                .portfolioUrl("https://updated-portfolio.com")
+                .thumbnail("https://img.com/updated.jpg")
+                .mbti(Mbti.ENTP)
+                .instrument(Instrument.KEYBOARD)
+                .proficiency(Proficiency.ADVANCED)
+                .build();
+
+        applicationService.modifyApplication(savedUser.getId(), recruitment.getId(), updatedRequest);
+
+        // then - 수정 결과 확인
+        ApplicationResponseDto updatedApplication = applicationService.getMyApplication(savedUser.getId(), recruitment.getId());
+
+        assertEquals(updatedRequest.getMessage(), updatedApplication.getMessage());
+        assertEquals(updatedRequest.getPortfolioUrl(), updatedApplication.getPortfolioUrl());
+        assertEquals(updatedRequest.getMbti(), updatedApplication.getMbti());
+        assertEquals(updatedRequest.getInstrument(), updatedApplication.getInstrument());
+        assertEquals(updatedRequest.getProficiency(), updatedApplication.getProficiency());
     }
 }

@@ -1,6 +1,6 @@
 package com.PickOne.domain.recruitments.dto.request;
 
-import com.PickOne.domain.recruitments.model.Genre;
+import com.PickOne.global.common.enums.Genre;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

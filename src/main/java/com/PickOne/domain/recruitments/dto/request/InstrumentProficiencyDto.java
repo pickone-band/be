@@ -1,10 +1,9 @@
 package com.PickOne.domain.recruitments.dto.request;
 
-import com.PickOne.domain.recruitments.model.Instrument;
-import com.PickOne.domain.recruitments.model.Proficiency;
+import com.PickOne.global.common.enums.Instrument;
+import com.PickOne.global.common.enums.Proficiency;
 import com.PickOne.domain.recruitments.model.entity.Recruitment;
 import com.PickOne.domain.recruitments.model.entity.RecruitmentInstrument;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;

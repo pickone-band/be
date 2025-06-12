@@ -67,5 +67,17 @@ public class ApplicationService {
                 .build();
     }
 
+    @Transactional
+    public void modifyApplication(Long userId, Long recruitmentId, ApplicationRequestDto requestDto) {
+        UserEntity userEntity=userJpaRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
+        Recruitment recruitment =recruitmentRepository.findById(recruitmentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_RECRUITMENT_ID));
+        Application application =applicationRepository.findByUserEntityAndRecruitment(userEntity,recruitment)
+                .orElseThrow(() -> new BusinessException(ErrorCode.APPLICATION_INFO_NOT_FOUND));
+
+        application.update(requestDto);
+    }
+
 }
 

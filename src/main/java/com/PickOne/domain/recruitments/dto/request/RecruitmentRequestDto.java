@@ -1,7 +1,5 @@
 package com.PickOne.domain.recruitments.dto.request;
 
-import com.PickOne.domain.recruitments.model.Genre;
-import com.PickOne.domain.recruitments.model.Instrument;
 import com.PickOne.domain.recruitments.model.Status;
 import com.PickOne.domain.recruitments.model.Type;
 import com.PickOne.domain.recruitments.model.Visibility;
