@@ -1,6 +1,6 @@
 package com.PickOne.domain.recruitments.model.entity;
 
-import com.PickOne.domain.recruitments.model.Genre;
+import com.PickOne.global.common.enums.Genre;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

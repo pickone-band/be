@@ -1,9 +1,9 @@
 package com.PickOne.domain.application.dto.request;
 
 import com.PickOne.domain.application.model.entity.Application;
-import com.PickOne.domain.recruitments.model.Instrument;
-import com.PickOne.domain.recruitments.model.Mbti;
-import com.PickOne.domain.recruitments.model.Proficiency;
+import com.PickOne.global.common.enums.Instrument;
+import com.PickOne.global.common.enums.Mbti;
+import com.PickOne.global.common.enums.Proficiency;
 import com.PickOne.domain.recruitments.model.entity.Recruitment;
 import com.PickOne.domain.user.model.entity.UserEntity;
 import lombok.AllArgsConstructor;

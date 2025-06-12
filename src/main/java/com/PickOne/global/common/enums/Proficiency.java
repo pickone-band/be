@@ -1,4 +1,4 @@
-package com.PickOne.domain.recruitments.model;
+package com.PickOne.global.common.enums;
 
 import lombok.Getter;
 
