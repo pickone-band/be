@@ -26,14 +26,25 @@ public class RedisMessageSubscriber implements MessageListener {
             String body = new String(message.getBody(), StandardCharsets.UTF_8);
             String channel = new String(pattern, StandardCharsets.UTF_8);
 
-            if (channel.contains("message-topic")) {
+            if (channel.contains("messaging")) {
                 MessageDto msg = objectMapper.readValue(body, MessageDto.class);
-                messagingTemplate.convertAndSendToUser(
-                        msg.recipientId().toString(),
-                        "/queue/messages",
-                        msg
-                );
-            } else if (channel.contains("notification-topic")) {
+
+                if (msg.recipientId() != null) {
+                    // 1:1 쪽지
+                    messagingTemplate.convertAndSendToUser(
+                            msg.recipientId().toString(),
+                            "/queue/messages",
+                            msg
+                    );
+                } else {
+                    // 채팅방 broadcast
+                    messagingTemplate.convertAndSend(
+                            "/topic/room/" + msg.roomId(),
+                            msg
+                    );
+                }
+
+            } else if (channel.contains("notification")) {
                 NotificationDto dto = objectMapper.readValue(body, NotificationDto.class);
                 messagingTemplate.convertAndSendToUser(
                         dto.recipientId().toString(),

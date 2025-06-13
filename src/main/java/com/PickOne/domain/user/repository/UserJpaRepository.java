@@ -1,7 +1,5 @@
 package com.PickOne.domain.user.repository;
 
-import com.PickOne.domain.user.model.domain.Email;
-import com.PickOne.domain.user.model.domain.Nickname;
 import com.PickOne.domain.user.model.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 

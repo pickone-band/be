@@ -1,10 +1,13 @@
 package com.PickOne.global.security.service;
 
 
+import com.PickOne.domain.user.model.entity.UserEntity;
+import com.PickOne.domain.user.repository.UserJpaRepository;
+import com.PickOne.global.exception.BusinessException;
+import com.PickOne.global.exception.ErrorCode;
 import com.PickOne.global.security.model.entity.UserPrincipal;
 import com.PickOne.global.security.repository.TokenBlacklistRepository;
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
@@ -41,6 +44,7 @@ public class JwtService {
 
   private final TokenBlacklistRepository tokenBlacklistRepository;
   private final CustomUserDetailsService userDetailsService;
+  private final UserJpaRepository userJpaRepository;
 
   public String generateAccessToken(UserPrincipal userDetails) {
     return generateToken(
@@ -71,7 +75,7 @@ public class JwtService {
   }
 
   public boolean isTokenBlacklisted(String token) {
-    return !tokenBlacklistRepository.isBlacklisted(token);
+    return tokenBlacklistRepository.isBlacklisted(token);
   }
 
   public void blacklistToken(String token) {
@@ -84,21 +88,16 @@ public class JwtService {
     Claims claims = extractAllClaims(token);
     String email = claims.getSubject();
 
-    try {
-      UserPrincipal userPrincipal = (UserPrincipal) userDetailsService.loadUserByUsername(email);
-      return new UsernamePasswordAuthenticationToken(
-              userPrincipal, null, userPrincipal.getAuthorities());
-    } catch (Exception e) {
-      log.error("인증 정보 생성 중 오류: {}", e.getMessage());
+    UserEntity userEntity = userJpaRepository.findByEmail(email)
+            .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
 
-      List<String> authorities = claims.get("authorities", List.class);
-      List<GrantedAuthority> grantedAuthorities =
-              authorities != null
-                      ? authorities.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList())
-                      : new ArrayList<>();
+    UserPrincipal userPrincipal = UserPrincipal.from(userEntity);
 
-      return new UsernamePasswordAuthenticationToken(email, null, grantedAuthorities);
-    }
+    return new UsernamePasswordAuthenticationToken(
+            userPrincipal,
+            null,
+            userPrincipal.getAuthorities()
+    );
   }
 
   public String resolveToken(HttpServletRequest request) {

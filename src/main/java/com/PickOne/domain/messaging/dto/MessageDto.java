@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 public record MessageDto(
         String id,
+        Long roomId,
         Long senderId,
         Long recipientId,
         String content,
