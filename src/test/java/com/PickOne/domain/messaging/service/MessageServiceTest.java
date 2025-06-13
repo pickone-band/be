@@ -1,6 +1,7 @@
 package com.PickOne.domain.messaging.service;
 
 import com.PickOne.domain.messaging.model.document.MessageDocument;
+import com.PickOne.domain.messaging.repository.ChatRoomUserRepository;
 import com.PickOne.domain.messaging.repository.MessageMongoRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +22,9 @@ class MessageServiceTest {
     @Mock
     private MessageMongoRepository messageMongoRepository;
 
+    @Mock
+    private ChatRoomUserRepository chatRoomUserRepository;
+
     @InjectMocks
     private MessageService messageService;
 
@@ -31,6 +35,8 @@ class MessageServiceTest {
         Long senderId = 10L;
         String content = "안녕하세요";
         LocalDateTime now = LocalDateTime.now();
+
+        given(chatRoomUserRepository.existsByUserIdAndChatRoomId(senderId, roomId)).willReturn(true); // 중요
 
         MessageDocument saved = new MessageDocument("m1", roomId, senderId, content, now);
         given(messageMongoRepository.save(any())).willReturn(saved);
