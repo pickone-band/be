@@ -1,6 +1,5 @@
 package com.PickOne.global.oauth2.service;
 
-import com.PickOne.domain.user.mapper.UserMapper;
 import com.PickOne.domain.user.model.domain.Password;
 import com.PickOne.domain.user.model.domain.Role;
 import com.PickOne.domain.user.model.entity.UserEntity;
@@ -96,7 +95,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             userConnectionRepository.save(connection);
         }
 
-        UserPrincipal userPrincipal = UserPrincipal.from(UserMapper.toDomain(user));
+        UserPrincipal userPrincipal = UserPrincipal.from(user);
         String accessToken = jwtService.generateAccessToken(userPrincipal);
         String refreshToken = jwtService.generateRefreshToken(userPrincipal);
         refreshTokenRepository.save(user.getEmail(), refreshToken, jwtService.getRefreshTokenExpiration());

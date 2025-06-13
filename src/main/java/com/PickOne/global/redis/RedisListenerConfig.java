@@ -1,6 +1,5 @@
 package com.PickOne.global.redis;
 
-import com.PickOne.global.websocket.handler.RedisSubscriberForWebsocket;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +12,7 @@ import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 @RequiredArgsConstructor
 public class RedisListenerConfig {
 
-    private final RedisSubscriberForWebsocket redisMessageSubscriber;
+    private final RedisMessageSubscriber redisMessageSubscriber;
     private final ChannelTopic messageTopic;
     private final ChannelTopic notificationTopic;
 
