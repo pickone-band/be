@@ -1,4 +1,4 @@
-package com.PickOne.global.websocket.interceptor;
+package com.PickOne.global.websocket.intercepter;
 
 import com.PickOne.global.security.service.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class WebSocketAuthInterceptor implements ChannelInterceptor {
+public class WebSocketAuthIntercepter implements ChannelInterceptor {
 
     private final JwtService jwtService;
 

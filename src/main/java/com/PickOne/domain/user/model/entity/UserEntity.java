@@ -52,13 +52,13 @@ public class UserEntity {
     @Column(nullable = false)
     private boolean isOauth;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "user_instruments", joinColumns = @JoinColumn(name = "user_id"))
-    private List<Instrument> instruments;
+        @ElementCollection(fetch = FetchType.LAZY)
+        @CollectionTable(name = "user_instruments", joinColumns = @JoinColumn(name = "user_id"))
+        private List<Instrument> instruments;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "user_genres", joinColumns = @JoinColumn(name = "user_id"))
-    private List<Genre> genres;
+        @ElementCollection(fetch = FetchType.LAZY)
+        @CollectionTable(name = "user_genres", joinColumns = @JoinColumn(name = "user_id"))
+        private List<Genre> genres;
 
     public UserEntity(
             String email,
