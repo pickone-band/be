@@ -4,9 +4,6 @@ import com.PickOne.domain.term.model.entity.TermEntity;
 
 import java.time.LocalDateTime;
 
-/**
- * 약관 조회 응답 DTO
- */
 public record TermResponseDto(
         Long id,
         String title,

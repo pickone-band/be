@@ -3,11 +3,11 @@ package com.PickOne.domain.messaging.controller;
 import com.PickOne.domain.messaging.dto.MessageDto;
 import com.PickOne.domain.messaging.service.ChatRoomService;
 import com.PickOne.domain.messaging.service.MessageService;
-import com.PickOne.global.redis.RedisMessagePublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -17,7 +17,7 @@ public class StompGroupChatController {
 
     private final MessageService messageService;
     private final ChatRoomService chatRoomService;
-    private final RedisMessagePublisher redisMessagePublisher;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @MessageMapping("/messages/group")
     public void handleGroupMessage(@Payload MessageDto message) {
@@ -38,6 +38,9 @@ public class StompGroupChatController {
                 null
         );
 
-        redisMessagePublisher.publishMessage(broadcast);
+        messagingTemplate.convertAndSend(
+                "/topic/room/" + broadcast.roomId(),
+                broadcast
+        );
     }
 }

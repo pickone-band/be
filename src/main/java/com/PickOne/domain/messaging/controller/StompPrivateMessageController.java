@@ -3,11 +3,11 @@ package com.PickOne.domain.messaging.controller;
 import com.PickOne.domain.messaging.dto.MessageDto;
 import com.PickOne.domain.messaging.service.ChatRoomService;
 import com.PickOne.domain.messaging.service.MessageService;
-import com.PickOne.global.redis.RedisMessagePublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -17,7 +17,7 @@ public class StompPrivateMessageController {
 
     private final MessageService messageService;
     private final ChatRoomService chatRoomService;
-    private final RedisMessagePublisher redisMessagePublisher;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @MessageMapping("/messages/private")
     public void handlePrivateMessage(@Payload MessageDto message) {
@@ -37,6 +37,11 @@ public class StompPrivateMessageController {
                 null
         );
 
-        redisMessagePublisher.publishMessage(broadcast);
+        // 바로 STOMP로 전송 (Redis 없이)
+        messagingTemplate.convertAndSendToUser(
+                broadcast.recipientId().toString(),
+                "/queue/messages",
+                broadcast
+        );
     }
 }
