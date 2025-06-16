@@ -35,7 +35,7 @@ public class AuthServiceImpl implements AuthService {
   private final ConsentJpaRepository consentJpaRepository;
   private final UserJpaRepository userJpaRepository;
   private final PasswordEncoder passwordEncoder;
-  private final JwtService jwtService;
+  private final TokenProvider tokenProvider;
   private final RefreshTokenRepository refreshTokenRepository;
   private final TokenBlacklistRepository tokenBlacklistRepository;
 
@@ -94,11 +94,11 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public AuthResult refresh(String refreshToken) {
-    if (!jwtService.validateRefreshToken(refreshToken)) {
+    if (!tokenProvider.validateRefreshToken(refreshToken)) {
       throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
     }
 
-    String email = jwtService.extractUsername(refreshToken);
+    String email = tokenProvider.extractUsername(refreshToken);
     UserEntity user = userJpaRepository.findByEmail(email)
             .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
 
@@ -107,15 +107,15 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void logout(String accessToken) {
-    jwtService.blacklistToken(accessToken);
+    tokenProvider.blacklistToken(accessToken);
   }
 
   private AuthResult issueTokens(UserEntity userEntity) { // <- User → UserEntity
     UserPrincipal principal = UserPrincipal.from(userEntity);
-    String accessToken = jwtService.generateAccessToken(principal);
-    String refreshToken = jwtService.generateRefreshToken(principal);
+    String accessToken = tokenProvider.generateAccessToken(principal);
+    String refreshToken = tokenProvider.generateRefreshToken(principal);
 
-    refreshTokenRepository.save(userEntity.getEmail(), refreshToken, jwtService.getRefreshTokenExpiration());
+    refreshTokenRepository.save(userEntity.getEmail(), refreshToken, tokenProvider.getRefreshTokenExpiration());
 
     return new AuthResult(accessToken, refreshToken, userEntity.getEmail());
   }

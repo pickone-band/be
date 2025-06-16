@@ -1,6 +1,6 @@
 package com.PickOne.global.security.filter;
 
-import com.PickOne.global.security.service.JwtService;
+import com.PickOne.global.security.service.TokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,19 +20,19 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
+    private final TokenProvider tokenProvider;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        String token = jwtService.resolveToken(request);
+        String token = tokenProvider.resolveToken(request);
 
         Authentication currentAuth = SecurityContextHolder.getContext().getAuthentication();
 
         if (token != null && (currentAuth == null || currentAuth instanceof AnonymousAuthenticationToken)) {
-            Authentication authentication = jwtService.getAuthentication(token);
+            Authentication authentication = tokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             if (authentication instanceof UsernamePasswordAuthenticationToken usernameToken) {

@@ -65,7 +65,6 @@ public class OAuth2Controller {
         }
     }
 
-
     /**
      * 현재 인증된 사용자 정보 조회
      */

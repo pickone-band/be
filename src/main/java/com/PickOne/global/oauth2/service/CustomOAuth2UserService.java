@@ -9,7 +9,7 @@ import com.PickOne.global.oauth2.model.entity.UserConnectionEntity;
 import com.PickOne.global.oauth2.repository.UserConnectionRepository;
 import com.PickOne.global.security.model.entity.UserPrincipal;
 import com.PickOne.global.security.repository.RefreshTokenRepository;
-import com.PickOne.global.security.service.JwtService;
+import com.PickOne.global.security.service.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,7 +31,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private final UserJpaRepository userJpaRepository;
     private final UserConnectionRepository userConnectionRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
+    private final TokenProvider tokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
 
     protected OAuth2User loadOAuth2User(OAuth2UserRequest userRequest) {
@@ -86,9 +86,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
 
         UserPrincipal principal = UserPrincipal.from(user);
-        String accessToken = jwtService.generateAccessToken(principal);
-        String refreshToken = jwtService.generateRefreshToken(principal);
-        refreshTokenRepository.save(user.getEmail(), refreshToken, jwtService.getRefreshTokenExpiration());
+        String accessToken = tokenProvider.generateAccessToken(principal);
+        String refreshToken = tokenProvider.generateRefreshToken(principal);
+        refreshTokenRepository.save(user.getEmail(), refreshToken, tokenProvider.getRefreshTokenExpiration());
 
         return principal;
     }

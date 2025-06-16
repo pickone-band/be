@@ -1,6 +1,7 @@
 package com.PickOne.global.websocket.intercepter;
 
-import com.PickOne.global.security.service.JwtService;
+import com.PickOne.global.security.config.SecurityConstants;
+import com.PickOne.global.security.service.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
@@ -9,7 +10,6 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -21,24 +21,24 @@ import java.util.List;
 @Slf4j
 public class WebSocketAuthIntercepter implements ChannelInterceptor {
 
-    private final JwtService jwtService;
+    private final TokenProvider tokenProvider;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
         if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
-            List<String> authorizationHeaders = accessor.getNativeHeader("Authorization");
+            List<String> authorizationHeaders = accessor.getNativeHeader(SecurityConstants.AUTH_HEADER);
 
             if (authorizationHeaders != null && !authorizationHeaders.isEmpty()) {
                 String authHeader = authorizationHeaders.get(0);
 
-                if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                    String token = authHeader.substring(7);
+                if (authHeader != null && authHeader.startsWith(SecurityConstants.TOKEN_PREFIX)) {
+                    String token = authHeader.substring(SecurityConstants.TOKEN_PREFIX.length());
 
                     try {
-                        if (!jwtService.isTokenBlacklisted(token)) {
-                            Authentication auth = jwtService.getAuthentication(token);
+                        if (!tokenProvider.isTokenBlacklisted(token)) {
+                            Authentication auth = tokenProvider.getAuthentication(token);
                             accessor.setUser(auth);
                             SecurityContextHolder.getContext().setAuthentication(auth);
                             log.debug("웹소켓 연결이 인증되었습니다: {}", auth.getName());
