@@ -1,6 +1,6 @@
 package com.PickOne.global.verification.repository;
 
-import com.PickOne.global.verification.model.domain.VerificationToken;
+import com.PickOne.global.verification.model.domain.VerificationType;
 import com.PickOne.global.verification.model.entity.VerificationTokenEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -10,16 +10,13 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-@Repository
 public interface VerificationTokenJpaRepository extends JpaRepository<VerificationTokenEntity, Long> {
-
-    VerificationToken save(VerificationToken token);
 
     Optional<VerificationTokenEntity> findByToken(String token);
 
-    Optional<VerificationTokenEntity> findByUserIdAndTokenType(Long userId, VerificationToken.TokenType tokenType);
+    Optional<VerificationTokenEntity> findByUser_IdAndType(Long userId, VerificationType type);
 
     @Modifying
-    @Query("DELETE FROM VerificationTokenEntity t WHERE t.expiryDate < ?1")
-    void deleteExpiredTokens(LocalDateTime now); 
+    @Query("DELETE FROM VerificationTokenEntity t WHERE t.expiredAt < :now")
+    void deleteExpiredTokens(LocalDateTime now);
 }
