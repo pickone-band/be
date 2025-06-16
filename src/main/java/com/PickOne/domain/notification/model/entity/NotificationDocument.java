@@ -1,6 +1,5 @@
 package com.PickOne.domain.notification.model.entity;
 
-import com.PickOne.domain.notification.model.domain.Notification;
 import com.PickOne.domain.notification.model.domain.NotificationStatus;
 import com.PickOne.domain.notification.model.domain.NotificationType;
 import lombok.AllArgsConstructor;
@@ -29,16 +28,15 @@ public class NotificationDocument {
     @Indexed
     private Long recipientId;
 
-    private String type;
+    private String title;
 
     private String content;
 
-    private String status;
+    private NotificationType type;
 
-    private String refEntityType;
+    private NotificationStatus status;
 
-    private String refEntityId;
-
+    @Indexed
     private LocalDateTime createdAt;
 
     private LocalDateTime readAt;
