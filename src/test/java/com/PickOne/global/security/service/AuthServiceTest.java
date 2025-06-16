@@ -109,19 +109,19 @@
         void login_success() {
             String email = "test@email.com";
 
-            UserEntity user = new UserEntity(
-                    email,
-                    "encoded-password",
-                    "nickname",
-                    "profile-img",
-                    Role.USER,
-                    true,
-                    false,
-                    Gender.MALE,
-                    LocalDate.of(1990, 1, 1),
-                    null,
-                    List.of()
-            );
+            UserEntity user = UserEntity.builder()
+                    .email(email)
+                    .password("encoded-password")
+                    .nickname("nickname")
+                    .profileImage("profile-img")
+                    .role(Role.USER)
+                    .isPublic(true)
+                    .isOauth(false)
+                    .gender(Gender.MALE)
+                    .birthDate(LocalDate.of(1990, 1, 1))
+                    .mbti(null)
+                    .genres(List.of())
+                    .build();
 
             when(userJpaRepository.findByEmail(email)).thenReturn(Optional.of(user));
             when(passwordEncoder.matches("rawpass", "encoded-password")).thenReturn(true); // ✅ 수정
@@ -143,19 +143,19 @@
         void login_wrong_password() {
             String email = "fail@example.com";
 
-            UserEntity user = new UserEntity(
-                    email,
-                    "encoded-password",
-                    "nickname",
-                    "profile-img",
-                    Role.USER,
-                    true,
-                    false,
-                    Gender.MALE,
-                    LocalDate.of(1990, 1, 1),
-                    null,          // mbti
-                    List.of()      // genres
-            );
+            UserEntity user = UserEntity.builder()
+                    .email(email)
+                    .password("encoded-password")
+                    .nickname("nickname")
+                    .profileImage("profile-img")
+                    .role(Role.USER)
+                    .isPublic(true)
+                    .isOauth(false)
+                    .gender(Gender.MALE)
+                    .birthDate(LocalDate.of(1990, 1, 1))
+                    .mbti(null)
+                    .genres(List.of())
+                    .build();
 
             when(userJpaRepository.findByEmail(email)).thenReturn(Optional.of(user));
             when(passwordEncoder.matches("rawpass", "encodedPassword123")).thenReturn(true);
@@ -172,19 +172,20 @@
         void refresh_success() {
             String refreshToken = "refresh.token.value";
             String email = "refresh@example.com";
-            UserEntity user = new UserEntity(
-                    email,
-                    "encoded-password",
-                    "nickname",
-                    "profile-img",
-                    Role.USER,
-                    true,
-                    false,
-                    Gender.MALE,
-                    LocalDate.of(1990, 1, 1),
-                    null,          // mbti
-                    List.of()      // genres
-            );
+            UserEntity user = UserEntity.builder()
+                    .email(email)
+                    .password("encoded-password")
+                    .nickname("nickname")
+                    .profileImage("profile-img")
+                    .role(Role.USER)
+                    .isPublic(true)
+                    .isOauth(false)
+                    .gender(Gender.MALE)
+                    .birthDate(LocalDate.of(1990, 1, 1))
+                    .mbti(null)
+                    .genres(List.of())
+                    .build();
+
 
             when(jwtService.validateRefreshToken(refreshToken)).thenReturn(true);
             when(jwtService.extractUsername(refreshToken)).thenReturn(email);

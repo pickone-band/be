@@ -52,20 +52,19 @@ public class AuthServiceImpl implements AuthService {
       throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
     }
 
-    UserEntity user = new UserEntity(
-            request.email(),
-            passwordEncoder.encode(request.password()),
-            request.nickname(),
-            null, // profileImage
-            Role.USER,
-            true,  // isPublic
-            false, // isOauth
-            request.gender(),
-            request.birthDate(),
-            null,        // <-- mbti는 아직 회원가입에서 받지 않음
-            List.of()    // 기본 빈 장르 리스트
-    );
-
+    UserEntity user = UserEntity.builder()
+            .email(request.email())
+            .password(passwordEncoder.encode(request.password()))
+            .nickname(request.nickname())
+            .profileImage(null)
+            .role(Role.USER)
+            .isPublic(true)
+            .isOauth(false)
+            .gender(request.gender())
+            .birthDate(request.birthDate())
+            .mbti(null) // 회원가입에서 아직 받지 않음
+            .genres(List.of()) // 기본 빈 장르
+            .build();
 
 
 // 비밀번호 비교도 직접 호출

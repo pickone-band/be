@@ -65,9 +65,47 @@ class ChatRoomServiceTest {
 
         CreateChatRoomRequest request = new CreateChatRoomRequest("테스트방", participantIds);
 
-        UserEntity creator = new UserEntity("creator@test.com", "encoded", "크리에이터", null, Role.USER, true, false, Gender.MALE, LocalDate.now(), null, List.of());
-        UserEntity participant1 = new UserEntity("user1@test.com", "encoded", "유저1", null, Role.USER, true, false, Gender.FEMALE, LocalDate.now(), null, List.of());
-        UserEntity participant2 = new UserEntity("user2@test.com", "encoded", "유저2", null, Role.USER, true, false, Gender.MALE, LocalDate.now(), null, List.of());
+        UserEntity creator = UserEntity.builder()
+                .email("creator@test.com")
+                .password("encoded")
+                .nickname("크리에이터")
+                .profileImage(null)
+                .role(Role.USER)
+                .isPublic(true)
+                .isOauth(false)
+                .gender(Gender.MALE)
+                .birthDate(LocalDate.now())
+                .mbti(null)
+                .genres(List.of())
+                .build();
+
+        UserEntity participant1 = UserEntity.builder()
+                .email("user1@test.com")
+                .password("encoded")
+                .nickname("유저1")
+                .profileImage(null)
+                .role(Role.USER)
+                .isPublic(true)
+                .isOauth(false)
+                .gender(Gender.FEMALE)
+                .birthDate(LocalDate.now())
+                .mbti(null)
+                .genres(List.of())
+                .build();
+
+        UserEntity participant2 = UserEntity.builder()
+                .email("user2@test.com")
+                .password("encoded")
+                .nickname("유저2")
+                .profileImage(null)
+                .role(Role.USER)
+                .isPublic(true)
+                .isOauth(false)
+                .gender(Gender.MALE)
+                .birthDate(LocalDate.now())
+                .mbti(null)
+                .genres(List.of())
+                .build();
 
         given(userJpaRepository.findById(creatorId)).willReturn(Optional.of(creator));
         given(userJpaRepository.findAllById(participantIds)).willReturn(List.of(participant1, participant2));
@@ -90,7 +128,19 @@ class ChatRoomServiceTest {
         // given
         Long userId = 1L;
 
-        UserEntity user = new UserEntity("creator@test.com", null, "크리에이터", null, Role.USER, true, false, Gender.MALE, LocalDate.now(), null, List.of());
+        UserEntity user = UserEntity.builder()
+                .email("creator@test.com")
+                .password(null)
+                .nickname("크리에이터")
+                .profileImage(null)
+                .role(Role.USER)
+                .isPublic(true)
+                .isOauth(false)
+                .gender(Gender.MALE)
+                .birthDate(LocalDate.now())
+                .mbti(null)
+                .genres(List.of())
+                .build();
 
 
         ChatRoomEntity room1 = new ChatRoomEntity(100L, "방1", new ArrayList<>());
