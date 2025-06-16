@@ -7,10 +7,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserJpaRepository extends JpaRepository<UserEntity, Long> {
-    Optional<UserEntity> findById(Long id);
     Optional<UserEntity> findByEmail(String email);
     Optional<UserEntity> findByNickname(String nickname);
     List<UserEntity> findByIsPublicTrue();
     boolean existsByEmail(String email);
-    void deleteById(Long id);
 }

@@ -48,17 +48,18 @@ public class ApplicationServiceTest {
         // given
         UserEntity testUser = new UserEntity(
                 "apply-test@example.com",
-                Password.ofEncoded("encoded-password"),
+                "encoded-password",
                 "테스트유저",
                 "https://example.com/profile.jpg",
                 Role.USER,
                 true,
                 false,
-                List.of(new com.PickOne.domain.user.model.domain.Instrument("Guitar")),
-                List.of(new com.PickOne.domain.user.model.domain.Genre("Rock")),
-                Gender.MALE,  // 예시값, 실제 성별 입력 필요
-                LocalDate.of(1995, 1, 1)  // 예시 생년월일
+                Gender.MALE,
+                LocalDate.of(1995, 1, 1),
+                Mbti.ENFP, // 테스트용으로 일부 값 지정
+                List.of()
         );
+
 
         UserEntity savedUser = userJpaRepository.save(testUser);
 
@@ -92,18 +93,19 @@ public class ApplicationServiceTest {
     void 멤버_지원_조회_테스트() {
         // given
         UserEntity testUser = new UserEntity(
-                "view-test@example.com",
-                Password.ofEncoded("encoded-password"),
+                "apply-test@example.com",
+                "encoded-password",
                 "테스트유저",
                 "https://example.com/profile.jpg",
                 Role.USER,
                 true,
                 false,
-                List.of(new com.PickOne.domain.user.model.domain.Instrument("Guitar")),
-                List.of(new com.PickOne.domain.user.model.domain.Genre("Rock")),
-                Gender.MALE,  // 예시값, 실제 성별 입력 필요
-                LocalDate.of(1995, 1, 1)  // 예시 생년월일
+                Gender.MALE,
+                LocalDate.of(1995, 1, 1),
+                Mbti.ENFP, // 테스트용으로 일부 값 지정
+                List.of()
         );
+
         UserEntity savedUser = userJpaRepository.save(testUser);  // ← userRepository → authRepository 로 변경
 
         UserEntity userEntity = userJpaRepository.findByEmail(savedUser.getEmail())
@@ -140,18 +142,19 @@ public class ApplicationServiceTest {
     void 멤버_지원글_수정_테스트() {
         // given
         UserEntity testUser = new UserEntity(
-                "edit-test@example.com",
-                Password.ofEncoded("encoded-password"),
-                "수정테스트유저",
+                "apply-test@example.com",
+                "encoded-password",
+                "테스트유저",
                 "https://example.com/profile.jpg",
                 Role.USER,
                 true,
                 false,
-                List.of(new com.PickOne.domain.user.model.domain.Instrument("Bass")),
-                List.of(new com.PickOne.domain.user.model.domain.Genre("Jazz")),
-                Gender.FEMALE,
-                LocalDate.of(1997, 5, 15)
+                Gender.MALE,
+                LocalDate.of(1995, 1, 1),
+                Mbti.ENFP, // 테스트용으로 일부 값 지정
+                List.of()
         );
+
         UserEntity savedUser = userJpaRepository.save(testUser);
 
         Recruitment recruitment = Recruitment.builder()

@@ -1,8 +1,5 @@
 package com.PickOne.global.security.dto;
 
-import com.PickOne.domain.user.dto.UserResponse;
-import com.PickOne.domain.user.mapper.UserMapper;
-
 public record AuthResponseDto(String accessToken, String refreshToken, String email) {
 
     public static AuthResponseDto of(AuthResult result) {

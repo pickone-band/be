@@ -1,6 +1,8 @@
 package com.PickOne.global.verification.service;
 
-import com.PickOne.domain.user.model.domain.*;
+import com.PickOne.domain.user.model.entity.UserEntity;
+import com.PickOne.global.common.enums.Genre;
+import com.PickOne.global.common.enums.Mbti;
 import com.PickOne.global.exception.BusinessException;
 import com.PickOne.global.verification.model.domain.EmailMessage;
 import com.PickOne.global.verification.model.domain.VerificationToken;
@@ -14,13 +16,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -28,29 +31,45 @@ class EmailVerificationServiceTest {
 
     @Mock
     private EmailTemplateService emailTemplateService;
-    @Mock private EmailSenderService emailSenderService;
-    @Mock private VerificationTokenRepository tokenRepository;
+
+    @Mock
+    private EmailSenderService emailSenderService;
+
+    @Mock
+    private VerificationTokenRepository tokenRepository;
 
     @InjectMocks
     private EmailVerificationService emailVerificationService;
 
-    private User user;
+    private UserEntity user;
 
     @BeforeEach
     void setup() {
-        user = mock(User.class);
-        given(user.getId()).willReturn(1L);
-        given(user.getEmail()).willReturn(Email.of("test@example.com"));
+        user = UserEntity.builder()
+                .email("test@example.com")
+                .password("encoded-password")
+                .nickname("테스트유저")
+                .role(com.PickOne.domain.user.model.domain.Role.USER)
+                .isPublic(true)
+                .isOauth(false)
+                .gender(com.PickOne.domain.user.model.domain.Gender.MALE)
+                .birthDate(LocalDate.of(1990, 1, 1))
+                .mbti(Mbti.ENTP)
+                .genres(List.of(Genre.REGGAE, Genre.JAZZ))
+                .build();
     }
 
     @Test
     void sendPasswordResetEmail_shouldSendEmailAndSaveToken() {
+        // given
         given(tokenRepository.findByUserIdAndTokenType(anyLong(), any())).willReturn(Optional.empty());
         given(emailTemplateService.createPasswordResetEmail(anyString(), anyString()))
                 .willReturn(EmailMessage.of("test@example.com", "subject", "body", true));
 
+        // when
         emailVerificationService.sendPasswordResetEmail(user);
 
+        // then
         verify(tokenRepository).save(any(VerificationToken.class));
         verify(emailSenderService).sendEmail(any(EmailMessage.class));
     }
