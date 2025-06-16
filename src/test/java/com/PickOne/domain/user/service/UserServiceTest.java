@@ -1,18 +1,20 @@
 package com.PickOne.domain.user.service;
 
-import com.PickOne.domain.user.mapper.UserMapper;
-import com.PickOne.domain.user.model.domain.*;
+import com.PickOne.domain.user.dto.UserUpdateRequestDto;
+import com.PickOne.domain.user.model.domain.Gender;
+import com.PickOne.domain.user.model.domain.Role;
 import com.PickOne.domain.user.model.entity.UserEntity;
 import com.PickOne.domain.user.repository.UserJpaRepository;
+import com.PickOne.global.common.enums.Genre;
 import com.PickOne.global.exception.BusinessException;
 import com.PickOne.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,19 +37,14 @@ class UserServiceTest {
     @Test
     @DisplayName("ID로 유저 조회 - 성공")
     void findById_success() {
-
-        UserEntity entity = createMockUserEntity(null);
-        Long userId = 1L; // 가짜 ID
-        ReflectionTestUtils.setField(entity, "id", userId); // ID 필드 강제 주입
-
+        Long userId = 1L;
+        UserEntity entity = createMockUserEntity(userId);
         when(userJpaRepository.findById(userId)).thenReturn(Optional.of(entity));
 
-        // when
-        User result = userService.findById(userId);
+        UserEntity result = userService.findById(userId);
 
-        // then
         assertThat(result.getId()).isEqualTo(userId);
-        assertThat(result.getEmail().getValue()).isEqualTo(entity.getEmail());
+        assertThat(result.getEmail()).isEqualTo(entity.getEmail());
     }
 
     @Test
@@ -64,29 +61,29 @@ class UserServiceTest {
     @Test
     @DisplayName("이메일로 유저 조회 - 성공")
     void findByEmail_success() {
-        String rawEmail = "test@example.com";
+        String email = "test@example.com";
         UserEntity entity = createMockUserEntity(1L);
-        when(userJpaRepository.findByEmail(rawEmail)).thenReturn(Optional.of(entity));
+        when(userJpaRepository.findByEmail(email)).thenReturn(Optional.of(entity));
 
-        User result = userService.findByEmail(rawEmail);
+        UserEntity result = userService.findByEmail(email);
 
-        assertThat(result.getEmail().getValue()).isEqualTo(rawEmail);
+        assertThat(result.getEmail()).isEqualTo(email);
     }
 
     @Test
     @DisplayName("비밀번호 변경 - 성공")
     void updatePassword_success() {
         Long userId = 1L;
-        String newRawPassword = "newPass123!";
+        String rawPassword = "newPass123!";
         String encodedPassword = "encodedPass";
         UserEntity entity = createMockUserEntity(userId);
 
         when(userJpaRepository.findById(userId)).thenReturn(Optional.of(entity));
-        when(passwordEncoder.encode(newRawPassword)).thenReturn(encodedPassword);
+        when(passwordEncoder.encode(rawPassword)).thenReturn(encodedPassword);
 
-        userService.updatePassword(userId, newRawPassword);
+        userService.updatePassword(userId, rawPassword);
 
-        assertThat(entity.getPassword().getValue()).isEqualTo(encodedPassword);
+        assertThat(entity.getPassword()).isEqualTo(encodedPassword);
     }
 
     @Test
@@ -94,31 +91,41 @@ class UserServiceTest {
     void updateUser_success() {
         Long userId = 1L;
         UserEntity entity = createMockUserEntity(userId);
-        User updateData = UserMapper.toDomain(entity).changeNickname(new Nickname("newNick"));
-
         when(userJpaRepository.findById(userId)).thenReturn(Optional.of(entity));
 
-        userService.updateUser(userId, updateData);
+        UserUpdateRequestDto request = new UserUpdateRequestDto(
+                "newNick",
+                "https://img.new/nick.png",
+                true,
+                null,
+                List.of(Genre.JAZZ), // ✅ 불변 리스트 사용
+                List.of()            // ✅ 불변 리스트 사용
+        );
+
+        userService.updateUser(userId, request);
 
         assertThat(entity.getNickname()).isEqualTo("newNick");
+        assertThat(entity.getProfileImage()).isEqualTo("https://img.new/nick.png");
+        assertThat(entity.getGenres()).containsExactly(Genre.JAZZ);
+        assertThat(entity.getUserInstruments()).isEmpty();
     }
 
     @Test
     @DisplayName("회원 삭제 - 성공")
     void deleteUser_success() {
         Long userId = 1L;
-        when(userJpaRepository.findById(userId)).thenReturn(Optional.of(createMockUserEntity(userId)));
+        when(userJpaRepository.existsById(userId)).thenReturn(true);
 
         userService.deleteUser(userId);
 
-        verify(userJpaRepository, times(1)).deleteById(userId);
+        verify(userJpaRepository).deleteById(userId);
     }
 
     @Test
     @DisplayName("회원 삭제 - 실패")
     void deleteUser_fail() {
         Long userId = 1L;
-        when(userJpaRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userJpaRepository.existsById(userId)).thenReturn(false);
 
         assertThatThrownBy(() -> userService.deleteUser(userId))
                 .isInstanceOf(BusinessException.class)
@@ -126,18 +133,28 @@ class UserServiceTest {
     }
 
     private UserEntity createMockUserEntity(Long id) {
-        return new UserEntity(
-                "test@example.com",
-                Password.ofEncoded("encodedPass"),
-                "tester",
-                "https://img.test/img.png",
-                Role.USER,
-                true,
-                false,
-                List.of(new Instrument("Guitar")),
-                List.of(new Genre("Jazz")),
-                Gender.MALE,
-                LocalDate.of(1990, 1, 1)
-        );
+        UserEntity user = UserEntity.builder()
+                .email("test@example.com")
+                .password("encodedPass")
+                .nickname("tester")
+                .profileImage("https://img.test/img.png")
+                .role(Role.USER)
+                .isPublic(true)
+                .isOauth(false)
+                .gender(Gender.MALE)
+                .birthDate(LocalDate.of(1990, 1, 1))
+                .mbti(null)
+                .genres(List.of(Genre.JAZZ))
+                .build();
+
+        if (id != null) {
+            // ID 강제 삽입
+            try {
+                var field = UserEntity.class.getDeclaredField("id");
+                field.setAccessible(true);
+                field.set(user, id);
+            } catch (Exception ignored) {}
+        }
+        return user;
     }
 }
