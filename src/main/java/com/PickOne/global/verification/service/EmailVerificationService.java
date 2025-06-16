@@ -1,13 +1,13 @@
-// === EmailVerificationService - VO 제거 및 Entity 기반으로 변경 ===
 package com.PickOne.global.verification.service;
 
 import com.PickOne.domain.user.model.entity.UserEntity;
 import com.PickOne.domain.user.repository.UserJpaRepository;
-import com.PickOne.global.verification.model.domain.EmailMessage;
-import com.PickOne.global.verification.model.domain.VerificationToken;
-import com.PickOne.global.verification.repository.VerificationTokenRepository;
 import com.PickOne.global.exception.BusinessException;
 import com.PickOne.global.exception.ErrorCode;
+import com.PickOne.global.verification.dto.EmailMessage;
+import com.PickOne.global.verification.model.domain.VerificationType;
+import com.PickOne.global.verification.model.entity.VerificationTokenEntity;
+import com.PickOne.global.verification.repository.VerificationTokenJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +25,7 @@ public class EmailVerificationService {
 
     private final EmailTemplateService emailTemplateService;
     private final EmailSenderService emailSenderService;
-    private final VerificationTokenRepository tokenRepository;
+    private final VerificationTokenJpaRepository tokenRepository;
     private final UserJpaRepository userJpaRepository;
 
     @Value("${app.email.verification-required:true}")
@@ -33,93 +33,118 @@ public class EmailVerificationService {
 
     @Transactional
     public void sendVerificationEmail(UserEntity user) {
-        Optional<VerificationToken> existingToken = tokenRepository.findByUserIdAndTokenType(
-                user.getId(), VerificationToken.TokenType.EMAIL_VERIFICATION);
-        existingToken.ifPresent(token -> tokenRepository.deleteByToken(token.getToken()));
+        tokenRepository.findByUser_IdAndType(user.getId(), VerificationType.REGISTER)
+                .ifPresent(tokenRepository::delete);
 
-        VerificationToken token = VerificationToken.createEmailVerificationToken(user.getId());
+        VerificationTokenEntity token = VerificationTokenEntity.builder()
+                .user(user)
+                .email(user.getEmail())
+                .token(UUID.randomUUID().toString())
+                .type(VerificationType.REGISTER)
+                .expiredAt(LocalDateTime.now().plusHours(24))
+                .isUsed(false)
+                .build();
+
         tokenRepository.save(token);
 
-        EmailMessage emailMessage = emailTemplateService.createVerificationEmail(
-                user.getEmail(), token.getToken());
-        emailSenderService.sendEmail(emailMessage);
+        EmailMessage emailMessage = new EmailMessage(
+                user.getEmail(),
+                "PickOne 회원가입 이메일 인증",
+                emailTemplateService.createVerificationEmail(user.getEmail(), token.getToken()).body(),
+                true
+        );
 
+        emailSenderService.sendEmail(emailMessage);
         log.info("사용자 {}에게 인증 이메일을 발송했습니다", user.getId());
     }
 
     @Transactional
     public void sendPasswordResetEmail(UserEntity user) {
-        Optional<VerificationToken> existingToken = tokenRepository.findByUserIdAndTokenType(
-                user.getId(), VerificationToken.TokenType.PASSWORD_RESET);
-        existingToken.ifPresent(token -> tokenRepository.deleteByToken(token.getToken()));
+        tokenRepository.findByUser_IdAndType(user.getId(), VerificationType.RESET_PASSWORD)
+                .ifPresent(tokenRepository::delete);
 
-        VerificationToken token = VerificationToken.createPasswordResetToken(user.getId());
+        VerificationTokenEntity token = VerificationTokenEntity.builder()
+                .user(user)
+                .email(user.getEmail())
+                .token(UUID.randomUUID().toString())
+                .type(VerificationType.RESET_PASSWORD)
+                .expiredAt(LocalDateTime.now().plusHours(1))
+                .isUsed(false)
+                .build();
+
         tokenRepository.save(token);
 
-        EmailMessage emailMessage = emailTemplateService.createPasswordResetEmail(
-                user.getEmail(), token.getToken());
-        emailSenderService.sendEmail(emailMessage);
+        EmailMessage emailMessage = new EmailMessage(
+                user.getEmail(),
+                "PickOne 비밀번호 재설정",
+                emailTemplateService.createPasswordResetEmail(user.getEmail(), token.getToken()).body(),
+                true
+        );
 
+        emailSenderService.sendEmail(emailMessage);
         log.info("사용자 {}에게 비밀번호 재설정 이메일을 발송했습니다", user.getId());
     }
 
     @Transactional
     public boolean verifyEmail(String token) {
-        VerificationToken verificationToken = tokenRepository.findByToken(token)
+        VerificationTokenEntity verificationToken = tokenRepository.findByToken(token)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
 
-        if (verificationToken.getTokenType() != VerificationToken.TokenType.EMAIL_VERIFICATION)
+        if (verificationToken.getType() != VerificationType.REGISTER)
             throw new BusinessException(ErrorCode.INVALID_TOKEN);
 
         if (verificationToken.isExpired()) {
-            tokenRepository.deleteByToken(token);
+            tokenRepository.delete(verificationToken);
             throw new BusinessException(ErrorCode.EXPIRED_TOKEN);
         }
 
-        UserEntity user = userJpaRepository.findById(verificationToken.getUserId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
-
+        UserEntity user = verificationToken.getUser();
         user.verify();
         userJpaRepository.save(user);
-        tokenRepository.deleteByToken(token);
+        tokenRepository.delete(verificationToken);
 
-        EmailMessage welcomeEmail = emailTemplateService.createWelcomeEmail(user.getEmail());
+        EmailMessage welcomeEmail = new EmailMessage(
+                user.getEmail(),
+                "PickOne 가입을 환영합니다!",
+                emailTemplateService.createWelcomeEmail(user.getEmail()).body(),
+                true
+        );
+
         emailSenderService.sendEmail(welcomeEmail);
-
         log.info("사용자 {}의 이메일 인증이 완료되었습니다", user.getId());
         return true;
     }
 
     @Transactional
     public UserEntity validatePasswordResetToken(String token) {
-        VerificationToken verificationToken = tokenRepository.findByToken(token)
+        VerificationTokenEntity verificationToken = tokenRepository.findByToken(token)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
 
-        if (verificationToken.getTokenType() != VerificationToken.TokenType.PASSWORD_RESET)
+        if (verificationToken.getType() != VerificationType.RESET_PASSWORD)
             throw new BusinessException(ErrorCode.INVALID_TOKEN);
 
         if (verificationToken.isExpired()) {
-            tokenRepository.deleteByToken(token);
+            tokenRepository.delete(verificationToken);
             throw new BusinessException(ErrorCode.EXPIRED_TOKEN);
         }
 
-        return userJpaRepository.findById(verificationToken.getUserId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
-    }
-
-    public boolean isEmailVerificationRequired() {
-        return verificationRequired;
+        return verificationToken.getUser();
     }
 
     @Transactional
     public void completePasswordReset(String token) {
-        tokenRepository.deleteByToken(token);
+        tokenRepository.findByToken(token)
+                .ifPresent(tokenRepository::delete);
     }
 
-    @Scheduled(cron = "0 0 0 * * ?")
     @Transactional
+    @Scheduled(cron = "0 0 0 * * ?")
     public void cleanupExpiredTokens() {
-        tokenRepository.deleteExpiredTokens();
-        log.info("{}에 만료된 인증 토큰들이 정리되었습니다", LocalDateTime.now());
+        tokenRepository.deleteExpiredTokens(LocalDateTime.now());
+        log.info("{}에 만료된 인증 토큰들을 정리했습니다.", LocalDateTime.now());
+    }
+
+    public boolean isEmailVerificationRequired() {
+        return verificationRequired;
     }
 }

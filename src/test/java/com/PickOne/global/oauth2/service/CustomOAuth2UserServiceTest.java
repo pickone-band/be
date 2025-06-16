@@ -93,19 +93,19 @@ class CustomOAuth2UserServiceTest {
 
             when(userJpaRepository.save(any(UserEntity.class))).thenAnswer(invocation -> {
                 UserEntity u = invocation.getArgument(0);
-                return new UserEntity(
-                        u.getEmail(),
-                        u.getPassword(),
-                        u.getNickname(),
-                        u.getProfileImage(),
-                        Role.USER,
-                        true,
-                        true,
-                        Gender.FEMALE,
-                        LocalDate.of(1993, 5, 15),
-                        null,
-                        List.of()
-                );
+                return UserEntity.builder()
+                        .email(u.getEmail())
+                        .password(u.getPassword())
+                        .nickname(u.getNickname())
+                        .profileImage(u.getProfileImage())
+                        .role(Role.USER)
+                        .isPublic(true)
+                        .isOauth(true)
+                        .gender(Gender.FEMALE)
+                        .birthDate(LocalDate.of(1993, 5, 15))
+                        .mbti(null)
+                        .genres(List.of())
+                        .build();
             });
 
 

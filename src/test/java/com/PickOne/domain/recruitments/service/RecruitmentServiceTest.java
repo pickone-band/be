@@ -151,18 +151,18 @@ class RecruitmentServiceTest {
     }
 
     private UserEntity createTestUser(String email, String nickname) {
-        return new UserEntity(
-                email,
-                "encoded-password",
-                nickname,
-                "https://img.example.com",
-                Role.USER,
-                true,   // isPublic
-                false,  // isOauth
-                Gender.MALE,
-                LocalDate.of(1995, 1, 1),
-                null,
-                List.of()
-        );
+        return UserEntity.builder()
+                .email(email)
+                .password("encoded-password")
+                .nickname(nickname)
+                .profileImage("https://img.example.com")
+                .role(Role.USER)
+                .isPublic(true)
+                .isOauth(false)
+                .gender(Gender.MALE)
+                .birthDate(LocalDate.of(1995, 1, 1))
+                .mbti(null)
+                .genres(List.of())
+                .build();
     }
 }

@@ -32,7 +32,7 @@ public class UserInstrumentEntity extends BaseEntity {
     private UserEntity user;
 
     @Builder
-    public UserInstrumentEntity(Instrument instrument, Proficiency proficiency) {
+    private UserInstrumentEntity(Instrument instrument, Proficiency proficiency) {
         this.instrument = instrument;
         this.proficiency = proficiency;
     }

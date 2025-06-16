@@ -1,6 +1,6 @@
 package com.PickOne.global.verification.dto;
 
-public record VerificationResponse(
+public record VerificationResponseDto(
         boolean success,
         String message
 ) {}

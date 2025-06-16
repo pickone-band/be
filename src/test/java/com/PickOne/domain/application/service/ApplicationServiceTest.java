@@ -46,20 +46,19 @@ public class ApplicationServiceTest {
     @Test
     void 멤버_지원_테스트() {
         // given
-        UserEntity testUser = new UserEntity(
-                "apply-test@example.com",
-                "encoded-password",
-                "테스트유저",
-                "https://example.com/profile.jpg",
-                Role.USER,
-                true,
-                false,
-                Gender.MALE,
-                LocalDate.of(1995, 1, 1),
-                Mbti.ENFP, // 테스트용으로 일부 값 지정
-                List.of()
-        );
-
+        UserEntity testUser = UserEntity.builder()
+                .email("apply-test@example.com")
+                .password("encoded-password")
+                .nickname("테스트유저")
+                .profileImage("https://example.com/profile.jpg")
+                .role(Role.USER)
+                .isPublic(true)
+                .isOauth(false)
+                .gender(Gender.MALE)
+                .birthDate(LocalDate.of(1995, 1, 1))
+                .mbti(Mbti.ENFP)
+                .genres(List.of())
+                .build();
 
         UserEntity savedUser = userJpaRepository.save(testUser);
 
@@ -92,19 +91,19 @@ public class ApplicationServiceTest {
     @Test
     void 멤버_지원_조회_테스트() {
         // given
-        UserEntity testUser = new UserEntity(
-                "apply-test@example.com",
-                "encoded-password",
-                "테스트유저",
-                "https://example.com/profile.jpg",
-                Role.USER,
-                true,
-                false,
-                Gender.MALE,
-                LocalDate.of(1995, 1, 1),
-                Mbti.ENFP, // 테스트용으로 일부 값 지정
-                List.of()
-        );
+        UserEntity testUser = UserEntity.builder()
+                .email("apply-test@example.com")
+                .password("encoded-password")
+                .nickname("테스트유저")
+                .profileImage("https://example.com/profile.jpg")
+                .role(Role.USER)
+                .isPublic(true)
+                .isOauth(false)
+                .gender(Gender.MALE)
+                .birthDate(LocalDate.of(1995, 1, 1))
+                .mbti(Mbti.ENFP)
+                .genres(List.of())
+                .build();
 
         UserEntity savedUser = userJpaRepository.save(testUser);  // ← userRepository → authRepository 로 변경
 
@@ -141,19 +140,19 @@ public class ApplicationServiceTest {
     @Test
     void 멤버_지원글_수정_테스트() {
         // given
-        UserEntity testUser = new UserEntity(
-                "apply-test@example.com",
-                "encoded-password",
-                "테스트유저",
-                "https://example.com/profile.jpg",
-                Role.USER,
-                true,
-                false,
-                Gender.MALE,
-                LocalDate.of(1995, 1, 1),
-                Mbti.ENFP, // 테스트용으로 일부 값 지정
-                List.of()
-        );
+        UserEntity testUser = UserEntity.builder()
+                .email("apply-test@example.com")
+                .password("encoded-password")
+                .nickname("테스트유저")
+                .profileImage("https://example.com/profile.jpg")
+                .role(Role.USER)
+                .isPublic(true)
+                .isOauth(false)
+                .gender(Gender.MALE)
+                .birthDate(LocalDate.of(1995, 1, 1))
+                .mbti(Mbti.ENFP)
+                .genres(List.of())
+                .build();
 
         UserEntity savedUser = userJpaRepository.save(testUser);
 
