@@ -69,7 +69,7 @@ public class UserEntity extends BaseEntity {
     private List<UserInstrumentEntity> userInstruments = new ArrayList<>();
 
     @Builder
-    public UserEntity(
+    private UserEntity(
             String email,
             String password,
             String nickname,
