@@ -78,7 +78,7 @@ public class ChatRoomController {
     @PostMapping("/messages/{messageId}/read")
     @Operation(summary = "메시지 읽음 처리", description = "특정 메시지를 읽음으로 표시")
     public ResponseEntity<BaseResponse<Void>> markAsRead(
-            @AuthenticationPrincipal(expression = "id") Long userId,
+            @AuthenticationPrincipal(expression = "userId") Long userId,
             @PathVariable String messageId
     ) {
         messageReadService.markAsRead(messageId, userId);
