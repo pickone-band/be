@@ -13,34 +13,25 @@ import org.springframework.stereotype.Controller;
 @Controller
 @RequiredArgsConstructor
 @Slf4j
-public class StompGroupChatController {
+class StompChatController {
 
     private final MessageService messageService;
     private final ChatRoomService chatRoomService;
     private final SimpMessagingTemplate messagingTemplate;
 
-    @MessageMapping("/messages/group")
-    public void handleGroupMessage(@Payload MessageDto message) {
-        log.debug("[STOMP] 단체 채팅 수신: {}", message);
-
+    @MessageMapping("/messages")
+    public void handleMessage(@Payload MessageDto message) {
+        log.debug("[STOMP] 메시지 수신: {}", message);
         chatRoomService.validateUserInRoom(message.roomId(), message.senderId());
+
         var saved = messageService.sendMessage(message.roomId(), message.senderId(), message.content());
 
         MessageDto broadcast = new MessageDto(
-                saved.getId(),
-                saved.getRoomId(),
-                saved.getSenderId(),
-                null, // recipientId 없이 broadcast
-                saved.getContent(),
-                "SENT",
-                saved.getSentAt(),
-                null,
-                null
+                saved.getId(), saved.getRoomId(), saved.getSenderId(),
+                message.recipientId(), saved.getContent(), "SENT",
+                saved.getSentAt(), null, null
         );
 
-        messagingTemplate.convertAndSend(
-                "/topic/room/" + broadcast.roomId(),
-                broadcast
-        );
+        messagingTemplate.convertAndSend("/topic/room/" + broadcast.roomId(), broadcast);
     }
 }
