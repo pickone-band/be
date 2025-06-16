@@ -1,6 +1,6 @@
 package com.PickOne.global.verification.event;
 
-import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.domain.user.model.entity.UserEntity;
 import com.PickOne.domain.user.service.UserService;
 import com.PickOne.global.verification.service.EmailVerificationService;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class AuthEventListener {
         log.info("사용자 {}의 회원가입 이벤트를 처리하고 있습니다", event.getUserId());
 
         try {
-            User user = userService.findById(event.getUserId());
+            UserEntity user = userService.findById(event.getUserId());
             emailVerificationService.sendVerificationEmail(user);
         } catch (Exception e) {
             log.error("사용자 {}의 인증 이메일 발송에 실패했습니다: {}",

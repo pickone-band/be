@@ -54,17 +54,24 @@ public class AuthServiceImpl implements AuthService {
 
     UserEntity user = new UserEntity(
             request.email(),
-            Password.ofRaw(request.password(), passwordEncoder),
+            passwordEncoder.encode(request.password()),
             request.nickname(),
-            null,
+            null, // profileImage
             Role.USER,
-            true,
-            false,
-            List.of(),
-            List.of(),
+            true,  // isPublic
+            false, // isOauth
             request.gender(),
-            request.birthDate()
+            request.birthDate(),
+            null,        // <-- mbti는 아직 회원가입에서 받지 않음
+            List.of()    // 기본 빈 장르 리스트
     );
+
+
+
+// 비밀번호 비교도 직접 호출
+    if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+      throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+    }
 
     userJpaRepository.save(user);
 
@@ -79,11 +86,11 @@ public class AuthServiceImpl implements AuthService {
     UserEntity user = userJpaRepository.findByEmail(request.email())
             .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
 
-    if (!user.getPassword().matches(request.password(), passwordEncoder)) {
+    if (!passwordEncoder.matches(request.password(), user.getPassword())) {
       throw new BusinessException(ErrorCode.INVALID_PASSWORD);
     }
 
-    return issueTokens(user); // <- 변경
+    return issueTokens(user);
   }
 
   @Override

@@ -1,6 +1,5 @@
 package com.PickOne.global.verification.controller;
 
-import com.PickOne.domain.user.model.domain.User;
 import com.PickOne.domain.user.model.entity.UserEntity;
 import com.PickOne.domain.user.service.UserService;
 import com.PickOne.global.exception.BaseResponse;
@@ -25,11 +24,10 @@ public class EmailVerificationController {
     private final EmailVerificationService emailVerificationService;
     private final UserService userService;
 
-    // 인증 메일 재전송
     @PostMapping("/resend")
     public ResponseEntity<BaseResponse<Void>> resendVerificationEmail(
             @RequestBody @Valid EmailRequest request) {
-        User user = userService.findByEmail(request.email());
+        UserEntity user = userService.findByEmail(request.email());
         if (user.isVerified()) {
             throw new BusinessException(ErrorCode.ALREADY_VERIFIED);
         }
@@ -37,7 +35,6 @@ public class EmailVerificationController {
         return BaseResponse.success(SuccessCode.OK);
     }
 
-    // 인증 토큰 검증
     @PostMapping("/verify")
     public ResponseEntity<BaseResponse<VerificationResponse>> verifyEmail(
             @RequestBody @Valid TokenRequest request) {
@@ -47,16 +44,14 @@ public class EmailVerificationController {
         return BaseResponse.success(response);
     }
 
-    // 비밀번호 재설정 요청
     @PostMapping("/reset-password/request")
     public ResponseEntity<BaseResponse<Void>> forgotPassword(
             @RequestBody @Valid EmailRequest request) {
-        User user = userService.findByEmail(request.email());
+        UserEntity user = userService.findByEmail(request.email());
         emailVerificationService.sendPasswordResetEmail(user);
         return BaseResponse.success(SuccessCode.OK);
     }
 
-    // 비밀번호 재설정 토큰 검증
     @PostMapping("/reset-password/validate")
     public ResponseEntity<BaseResponse<VerificationResponse>> validateResetToken(
             @RequestBody @Valid TokenRequest request) {
@@ -65,7 +60,6 @@ public class EmailVerificationController {
         return BaseResponse.success(response);
     }
 
-    // 비밀번호 재설정 실행
     @PostMapping("/reset-password")
     public ResponseEntity<BaseResponse<Void>> resetPassword(
             @RequestBody @Valid PasswordResetRequest request) {

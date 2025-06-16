@@ -1,6 +1,6 @@
+// === EmailVerificationService - VO 제거 및 Entity 기반으로 변경 ===
 package com.PickOne.global.verification.service;
 
-import com.PickOne.domain.user.model.domain.User;
 import com.PickOne.domain.user.model.entity.UserEntity;
 import com.PickOne.domain.user.repository.UserJpaRepository;
 import com.PickOne.global.verification.model.domain.EmailMessage;
@@ -28,82 +28,61 @@ public class EmailVerificationService {
     private final VerificationTokenRepository tokenRepository;
     private final UserJpaRepository userJpaRepository;
 
-
     @Value("${app.email.verification-required:true}")
     private boolean verificationRequired;
 
-    /**
-     * 이메일 인증 토큰 생성 및 발송
-     */
     @Transactional
-    public void sendVerificationEmail(User user) {
-        // 기존 토큰이 있다면 삭제
+    public void sendVerificationEmail(UserEntity user) {
         Optional<VerificationToken> existingToken = tokenRepository.findByUserIdAndTokenType(
                 user.getId(), VerificationToken.TokenType.EMAIL_VERIFICATION);
         existingToken.ifPresent(token -> tokenRepository.deleteByToken(token.getToken()));
 
-        // 새 토큰 생성
         VerificationToken token = VerificationToken.createEmailVerificationToken(user.getId());
         tokenRepository.save(token);
 
-        // 이메일 생성 및 발송
         EmailMessage emailMessage = emailTemplateService.createVerificationEmail(
-                user.getEmail().getValue(), token.getToken());
+                user.getEmail(), token.getToken());
         emailSenderService.sendEmail(emailMessage);
 
         log.info("사용자 {}에게 인증 이메일을 발송했습니다", user.getId());
     }
 
-    /**
-     * 비밀번호 재설정 이메일 발송
-     */
     @Transactional
-    public void sendPasswordResetEmail(User user) {
-        // 기존 토큰이 있다면 삭제
+    public void sendPasswordResetEmail(UserEntity user) {
         Optional<VerificationToken> existingToken = tokenRepository.findByUserIdAndTokenType(
                 user.getId(), VerificationToken.TokenType.PASSWORD_RESET);
         existingToken.ifPresent(token -> tokenRepository.deleteByToken(token.getToken()));
 
-        // 새 토큰 생성
         VerificationToken token = VerificationToken.createPasswordResetToken(user.getId());
         tokenRepository.save(token);
 
-        // 이메일 생성 및 발송
         EmailMessage emailMessage = emailTemplateService.createPasswordResetEmail(
-                user.getEmail().getValue(), token.getToken());
+                user.getEmail(), token.getToken());
         emailSenderService.sendEmail(emailMessage);
 
         log.info("사용자 {}에게 비밀번호 재설정 이메일을 발송했습니다", user.getId());
     }
 
-    /**
-     * 이메일 인증 토큰 검증
-     */
     @Transactional
     public boolean verifyEmail(String token) {
         VerificationToken verificationToken = tokenRepository.findByToken(token)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
 
-        if (verificationToken.getTokenType() != VerificationToken.TokenType.EMAIL_VERIFICATION) {
+        if (verificationToken.getTokenType() != VerificationToken.TokenType.EMAIL_VERIFICATION)
             throw new BusinessException(ErrorCode.INVALID_TOKEN);
-        }
 
         if (verificationToken.isExpired()) {
             tokenRepository.deleteByToken(token);
             throw new BusinessException(ErrorCode.EXPIRED_TOKEN);
         }
 
-        // 사용자 활성화
         UserEntity user = userJpaRepository.findById(verificationToken.getUserId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
 
         user.verify();
         userJpaRepository.save(user);
-
-        // 토큰 삭제
         tokenRepository.deleteByToken(token);
 
-        // 환영 이메일 발송
         EmailMessage welcomeEmail = emailTemplateService.createWelcomeEmail(user.getEmail());
         emailSenderService.sendEmail(welcomeEmail);
 
@@ -111,46 +90,32 @@ public class EmailVerificationService {
         return true;
     }
 
-    /**
-     * 비밀번호 재설정 토큰 검증
-     */
     @Transactional
     public UserEntity validatePasswordResetToken(String token) {
         VerificationToken verificationToken = tokenRepository.findByToken(token)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
 
-        if (verificationToken.getTokenType() != VerificationToken.TokenType.PASSWORD_RESET) {
+        if (verificationToken.getTokenType() != VerificationToken.TokenType.PASSWORD_RESET)
             throw new BusinessException(ErrorCode.INVALID_TOKEN);
-        }
 
         if (verificationToken.isExpired()) {
             tokenRepository.deleteByToken(token);
             throw new BusinessException(ErrorCode.EXPIRED_TOKEN);
         }
 
-        // 사용자 조회
         return userJpaRepository.findById(verificationToken.getUserId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
     }
 
-    /**
-     * 사용자의 인증 상태 확인
-     */
     public boolean isEmailVerificationRequired() {
         return verificationRequired;
     }
 
-    /**
-     * 사용자 인증 완료 후 토큰 삭제
-     */
     @Transactional
     public void completePasswordReset(String token) {
         tokenRepository.deleteByToken(token);
     }
 
-    /**
-     * 만료된 토큰 정리 (매일 자정에 실행)
-     */
     @Scheduled(cron = "0 0 0 * * ?")
     @Transactional
     public void cleanupExpiredTokens() {
