@@ -35,7 +35,7 @@ public class AuthServiceImpl implements AuthService {
   private final PasswordEncoder passwordEncoder;
   private final TokenProvider tokenProvider;
   private final RefreshTokenRepository refreshTokenRepository;
-    private final EmailVerificationService emailVerificationService;
+  private final EmailVerificationService emailVerificationService;
 
   @Override
   @Transactional
