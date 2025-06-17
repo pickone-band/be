@@ -41,7 +41,6 @@ public class JwtService implements TokenProvider{
   private long refreshTokenExpiration;
 
   private final TokenBlacklistRepository tokenBlacklistRepository;
-  private final CustomUserDetailsService userDetailsService;
   private final UserJpaRepository userJpaRepository;
 
   @Override
@@ -64,7 +63,7 @@ public class JwtService implements TokenProvider{
   public boolean validateRefreshToken(String refreshToken) {
     try {
       Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(refreshToken);
-      return !isTokenBlacklisted(refreshToken);
+      return isTokenBlacklisted(refreshToken);
     } catch (JwtException e) {
       log.error("Invalid refresh token: {}", e.getMessage());
       return false;
@@ -78,7 +77,7 @@ public class JwtService implements TokenProvider{
 
   @Override
   public boolean isTokenBlacklisted(String token) {
-    return tokenBlacklistRepository.isBlacklisted(token);
+    return !tokenBlacklistRepository.isBlacklisted(token);
   }
 
   @Override

@@ -10,14 +10,12 @@ import com.PickOne.domain.user.repository.UserJpaRepository;
 
 import com.PickOne.global.exception.BusinessException;
 import com.PickOne.global.exception.ErrorCode;
-import com.PickOne.global.security.dto.ConsentAgreementDto;
-import com.PickOne.global.security.dto.LoginRequest;
-import com.PickOne.global.security.dto.SignupRequestDto;
-import com.PickOne.global.security.dto.AuthResult;
+import com.PickOne.global.security.dto.*;
 
 import com.PickOne.global.security.model.entity.UserPrincipal;
 import com.PickOne.global.security.repository.RefreshTokenRepository;
 import com.PickOne.global.security.repository.TokenBlacklistRepository;
+import com.PickOne.global.verification.service.EmailVerificationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,7 +35,7 @@ public class AuthServiceImpl implements AuthService {
   private final PasswordEncoder passwordEncoder;
   private final TokenProvider tokenProvider;
   private final RefreshTokenRepository refreshTokenRepository;
-  private final TokenBlacklistRepository tokenBlacklistRepository;
+    private final EmailVerificationService emailVerificationService;
 
   @Override
   @Transactional
@@ -74,6 +72,8 @@ public class AuthServiceImpl implements AuthService {
 
     userJpaRepository.save(user);
 
+    emailVerificationService.sendVerificationEmail(user);
+
     validateRequiredTerms(request.agreements());
     saveUserConsents(user, request.agreements());
 
@@ -87,6 +87,10 @@ public class AuthServiceImpl implements AuthService {
 
     if (!passwordEncoder.matches(request.password(), user.getPassword())) {
       throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+    }
+
+    if (!user.isVerified()) {
+      throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED);
     }
 
     return issueTokens(user);
@@ -146,5 +150,23 @@ public class AuthServiceImpl implements AuthService {
       );
       consentJpaRepository.save(consent);
     }
+  }
+
+  @Override
+  @Transactional
+  public void changePassword(String accessToken, ChangePasswordRequest request) {
+    String email = tokenProvider.extractUsername(accessToken);
+    UserEntity user = userJpaRepository.findByEmail(email)
+            .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
+
+    if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+      throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+    }
+    if (passwordEncoder.matches(request.newPassword(), user.getPassword())) {
+      throw new BusinessException(ErrorCode.SAME_AS_OLD_PASSWORD); // 필요 시 ErrorCode 추가
+    }
+
+    user.updatePassword(passwordEncoder.encode(request.newPassword()));
+    userJpaRepository.save(user);
   }
 }

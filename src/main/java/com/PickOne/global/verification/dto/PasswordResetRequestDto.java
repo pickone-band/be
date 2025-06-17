@@ -10,7 +10,7 @@ public record PasswordResetRequestDto(
 ) {
     public void validate() {
         if (!newPassword.equals(confirmPassword)) {
-            throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
+            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
         }
     }
 }

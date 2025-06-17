@@ -7,6 +7,7 @@
     import com.PickOne.domain.user.model.entity.UserEntity;
     import com.PickOne.domain.user.repository.UserJpaRepository;
     import com.PickOne.global.exception.BusinessException;
+    import com.PickOne.global.security.dto.ChangePasswordRequest;
     import com.PickOne.global.security.dto.ConsentAgreementDto;
     import com.PickOne.global.security.dto.LoginRequest;
     import com.PickOne.global.security.dto.SignupRequestDto;
@@ -209,4 +210,97 @@
 
             verify(jwtService, times(1)).blacklistToken(accessToken);
         }
+
+        @Test
+        @DisplayName("비밀번호 변경 성공")
+        void change_password_success() {
+            String token = "access.token.value";
+            String email = "user@example.com";
+            String oldEncodedPw = "encoded-old";
+            String newRawPw = "new-password";
+
+            UserEntity user = UserEntity.builder()
+                    .email(email)
+                    .password(oldEncodedPw)
+                    .nickname("nickname")
+                    .role(Role.USER)
+                    .isOauth(false)
+                    .isPublic(true)
+                    .gender(Gender.MALE)
+                    .birthDate(LocalDate.of(1990, 1, 1))
+                    .genres(List.of())
+                    .build();
+
+            when(jwtService.extractUsername(token)).thenReturn(email);
+            when(userJpaRepository.findByEmail(email)).thenReturn(Optional.of(user));
+            when(passwordEncoder.matches("old-password", oldEncodedPw)).thenReturn(true);
+            when(passwordEncoder.matches(newRawPw, oldEncodedPw)).thenReturn(false);
+            when(passwordEncoder.encode(newRawPw)).thenReturn("encoded-new");
+
+            ChangePasswordRequest request = new ChangePasswordRequest("old-password", newRawPw);
+            authService.changePassword(token, request);
+
+            assertThat(user.getPassword()).isEqualTo("encoded-new");
+            verify(userJpaRepository, times(1)).save(user);
+        }
+
+        @Test
+        @DisplayName("비밀번호 변경 실패 - 현재 비밀번호 불일치")
+        void change_password_wrong_current() {
+            String token = "access.token.value";
+            String email = "user@example.com";
+
+            UserEntity user = UserEntity.builder()
+                    .email(email)
+                    .password("encoded-old")
+                    .nickname("nickname")
+                    .role(Role.USER)
+                    .isOauth(false)
+                    .isPublic(true)
+                    .gender(Gender.MALE)
+                    .birthDate(LocalDate.of(1990, 1, 1))
+                    .genres(List.of())
+                    .build();
+
+            when(jwtService.extractUsername(token)).thenReturn(email);
+            when(userJpaRepository.findByEmail(email)).thenReturn(Optional.of(user));
+            when(passwordEncoder.matches("wrong-password", "encoded-old")).thenReturn(false);
+
+            ChangePasswordRequest request = new ChangePasswordRequest("wrong-password", "new-password");
+
+            assertThatThrownBy(() -> authService.changePassword(token, request))
+                    .isInstanceOf(BusinessException.class)
+                    .hasMessageContaining("비밀번호가 일치하지 않습니다");
+        }
+
+        @Test
+        @DisplayName("비밀번호 변경 실패 - 기존 비밀번호와 동일")
+        void change_password_same_as_old() {
+            String token = "access.token.value";
+            String email = "user@example.com";
+
+            UserEntity user = UserEntity.builder()
+                    .email(email)
+                    .password("encoded-old")
+                    .nickname("nickname")
+                    .role(Role.USER)
+                    .isOauth(false)
+                    .isPublic(true)
+                    .gender(Gender.MALE)
+                    .birthDate(LocalDate.of(1990, 1, 1))
+                    .genres(List.of())
+                    .build();
+
+            when(jwtService.extractUsername(token)).thenReturn(email);
+            when(userJpaRepository.findByEmail(email)).thenReturn(Optional.of(user));
+            when(passwordEncoder.matches("old-password", "encoded-old")).thenReturn(true);
+            when(passwordEncoder.matches("old-password", "encoded-old")).thenReturn(true); // 새 비밀번호도 같다고 가정
+
+            ChangePasswordRequest request = new ChangePasswordRequest("old-password", "old-password");
+
+            assertThatThrownBy(() -> authService.changePassword(token, request))
+                    .isInstanceOf(BusinessException.class)
+                    .hasMessageContaining("새 비밀번호가 기존 비밀번호와 동일합니다");
+        }
+
     }
