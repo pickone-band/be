@@ -77,6 +77,7 @@ public class UserEntity extends BaseEntity {
             Role role,
             boolean isPublic,
             boolean isOauth,
+            boolean isVerified,
             Gender gender,
             LocalDate birthDate,
             Mbti mbti,
@@ -89,7 +90,7 @@ public class UserEntity extends BaseEntity {
         this.role = role;
         this.isPublic = isPublic;
         this.isOauth = isOauth;
-        this.isVerified = false;
+        this.isVerified = isVerified;
         this.gender = gender;
         this.birthDate = birthDate;
         this.mbti = mbti;
