@@ -1,7 +1,8 @@
 package com.PickOne.domain.application.service;
 
 import com.PickOne.domain.application.dto.request.ApplicationRequestDto;
-import com.PickOne.domain.application.dto.request.ApplicationResponseDto;
+import com.PickOne.domain.application.dto.response.ApplicationResponseDto;
+import com.PickOne.domain.application.model.ApplicationStatus;
 import com.PickOne.domain.application.model.entity.Application;
 import com.PickOne.domain.application.repository.ApplicationRepository;
 import com.PickOne.domain.recruitments.model.entity.Recruitment;
@@ -64,6 +65,7 @@ public class ApplicationService {
                 .mbti(application.getMbti())
                 .instrument(application.getInstrument())
                 .proficiency(application.getProficiency())
+                .status(application.getStatus())
                 .build();
     }
 
@@ -79,5 +81,20 @@ public class ApplicationService {
         application.update(requestDto);
     }
 
+    @Transactional
+    public void cancelMyApplication(Long userId, Long recruitmentId) {
+        UserEntity userEntity=userJpaRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
+        Recruitment recruitment =recruitmentRepository.findById(recruitmentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_RECRUITMENT_ID));
+        Application application =applicationRepository.findByUserEntityAndRecruitment(userEntity,recruitment)
+                .orElseThrow(() -> new BusinessException(ErrorCode.APPLICATION_INFO_NOT_FOUND));
+
+        if (application.getStatus() == ApplicationStatus.CANCELED) {
+            throw new IllegalStateException("이미 취소된 신청입니다.");
+        }
+
+        application.changeStatus(ApplicationStatus.CANCELED);
+    }
 }
 

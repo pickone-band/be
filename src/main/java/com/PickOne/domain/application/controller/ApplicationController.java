@@ -1,7 +1,7 @@
 package com.PickOne.domain.application.controller;
 
 import com.PickOne.domain.application.dto.request.ApplicationRequestDto;
-import com.PickOne.domain.application.dto.request.ApplicationResponseDto;
+import com.PickOne.domain.application.dto.response.ApplicationResponseDto;
 import com.PickOne.domain.application.service.ApplicationService;
 import com.PickOne.global.exception.BaseResponse;
 import com.PickOne.global.security.model.entity.UserPrincipal;
@@ -57,6 +57,16 @@ public class ApplicationController {
             @AuthenticationPrincipal UserPrincipal user,
             @RequestBody ApplicationRequestDto requestDto){
         applicationService.modifyApplication(user.getUserId(),recruitmentId,requestDto);
+        return BaseResponse.success();
+    }
+
+    @Operation(summary = "멤버 모집글 신청글 취소",
+            description = "<a href='https://www.notion.so/1bc9366dcb7d8000a9b8c7f0d0e6929c' target='_blank'>👉API 명세서 바로가기</a>")
+    @PatchMapping("/apply/{recruitmentId}/cancel")
+    public ResponseEntity<BaseResponse<Void>> cancelMyApplications(
+            @PathVariable Long recruitmentId,
+            @AuthenticationPrincipal UserPrincipal user){
+        applicationService.cancelMyApplication(user.getUserId(),recruitmentId);
         return BaseResponse.success();
     }
 

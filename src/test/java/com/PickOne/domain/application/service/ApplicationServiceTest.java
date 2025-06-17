@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.PickOne.domain.application.dto.request.ApplicationRequestDto;
-import com.PickOne.domain.application.dto.request.ApplicationResponseDto;
+import com.PickOne.domain.application.dto.response.ApplicationResponseDto;
 import com.PickOne.global.common.enums.Instrument;
 import com.PickOne.global.common.enums.Mbti;
 import com.PickOne.global.common.enums.Proficiency;
