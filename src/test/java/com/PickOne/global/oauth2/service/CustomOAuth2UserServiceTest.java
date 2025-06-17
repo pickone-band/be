@@ -92,21 +92,22 @@ class CustomOAuth2UserServiceTest {
             when(passwordEncoder.encode(any())).thenReturn("encoded-password");
 
             when(userJpaRepository.save(any(UserEntity.class))).thenAnswer(invocation -> {
-                UserEntity userToSave = invocation.getArgument(0);
-                return new UserEntity(
-                        userToSave.getEmail(),
-                        userToSave.getPassword(),
-                        userToSave.getNickname(),
-                        userToSave.getProfileImage(),
-                        Role.USER,
-                        true,   // isPublic
-                        false,  // isOauth
-                        List.of(new com.PickOne.domain.user.model.domain.Instrument("Drum")),
-                        List.of(new Genre("Pop")),
-                        Gender.FEMALE,
-                        LocalDate.of(1993, 5, 15)
-                );
+                UserEntity u = invocation.getArgument(0);
+                return UserEntity.builder()
+                        .email(u.getEmail())
+                        .password(u.getPassword())
+                        .nickname(u.getNickname())
+                        .profileImage(u.getProfileImage())
+                        .role(Role.USER)
+                        .isPublic(true)
+                        .isOauth(true)
+                        .gender(Gender.FEMALE)
+                        .birthDate(LocalDate.of(1993, 5, 15))
+                        .mbti(null)
+                        .genres(List.of())
+                        .build();
             });
+
 
             when(jwtService.generateAccessToken(any())).thenReturn(UUID.randomUUID().toString());
             when(jwtService.generateRefreshToken(any())).thenReturn(UUID.randomUUID().toString());

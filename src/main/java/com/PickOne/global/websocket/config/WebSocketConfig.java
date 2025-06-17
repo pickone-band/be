@@ -1,13 +1,12 @@
 package com.PickOne.global.websocket.config;
 
+import com.PickOne.global.websocket.intercepter.WebSocketAuthIntercepter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
-
-import com.PickOne.global.websocket.interceptor.WebSocketAuthInterceptor;
 
 import lombok.RequiredArgsConstructor;
 
@@ -16,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final WebSocketAuthInterceptor webSocketAuthInterceptor;
+    private final WebSocketAuthIntercepter webSocketAuthIntercepter;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -41,6 +40,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         // 인증 및 권한 부여를 위한 인터셉터 추가
-        registration.interceptors(webSocketAuthInterceptor);
+        registration.interceptors(webSocketAuthIntercepter);
     }
 }

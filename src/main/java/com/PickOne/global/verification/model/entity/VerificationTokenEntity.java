@@ -1,11 +1,9 @@
 package com.PickOne.global.verification.model.entity;
 
-import com.PickOne.global.verification.model.domain.VerificationToken;
-import com.PickOne.global.common.entity.BaseEntity;
+import com.PickOne.domain.user.model.entity.UserEntity;
+import com.PickOne.global.verification.model.domain.VerificationType;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -13,37 +11,53 @@ import java.time.LocalDateTime;
 @Table(name = "verification_tokens")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class VerificationTokenEntity extends BaseEntity {
+public class VerificationTokenEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 64)
-    private String token;
-
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "token_type", nullable = false)
-    private VerificationToken.TokenType tokenType;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserEntity user;
 
     @Column(nullable = false)
-    private LocalDateTime expiryDate;
+    private String email;
 
-    // 도메인 모델로 변환
-    public VerificationToken toDomain() {
-        return new VerificationToken(token, userId, tokenType, getCreatedAt(), expiryDate);
+    @Column(nullable = false, unique = true)
+    private String token;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private VerificationType type;
+
+    @Column(nullable = false)
+    private LocalDateTime expiredAt;
+
+    @Column(nullable = false)
+    private boolean isUsed;
+
+    public boolean isExpired() {
+        return LocalDateTime.now().isAfter(this.expiredAt);
     }
 
-    // 도메인 모델에서 엔티티 생성
-    public static VerificationTokenEntity fromDomain(VerificationToken token) {
-        VerificationTokenEntity entity = new VerificationTokenEntity();
-        entity.token = token.getToken();
-        entity.userId = token.getUserId();
-        entity.tokenType = token.getTokenType();
-        entity.expiryDate = token.getExpiryDate();
-        return entity;
+    public void markAsUsed() {
+        this.isUsed = true;
+    }
+
+    // 외부는 반드시 builder 사용
+    @Builder
+    private VerificationTokenEntity(UserEntity user,
+                                    String email,
+                                    String token,
+                                    VerificationType type,
+                                    LocalDateTime expiredAt,
+                                    boolean isUsed) {
+        this.user = user;
+        this.email = email;
+        this.token = token;
+        this.type = type;
+        this.expiredAt = expiredAt;
+        this.isUsed = isUsed;
     }
 }

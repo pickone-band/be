@@ -46,19 +46,19 @@ public class ApplicationServiceTest {
     @Test
     void 멤버_지원_테스트() {
         // given
-        UserEntity testUser = new UserEntity(
-                "apply-test@example.com",
-                Password.ofEncoded("encoded-password"),
-                "테스트유저",
-                "https://example.com/profile.jpg",
-                Role.USER,
-                true,
-                false,
-                List.of(new com.PickOne.domain.user.model.domain.Instrument("Guitar")),
-                List.of(new com.PickOne.domain.user.model.domain.Genre("Rock")),
-                Gender.MALE,  // 예시값, 실제 성별 입력 필요
-                LocalDate.of(1995, 1, 1)  // 예시 생년월일
-        );
+        UserEntity testUser = UserEntity.builder()
+                .email("apply-test@example.com")
+                .password("encoded-password")
+                .nickname("테스트유저")
+                .profileImage("https://example.com/profile.jpg")
+                .role(Role.USER)
+                .isPublic(true)
+                .isOauth(false)
+                .gender(Gender.MALE)
+                .birthDate(LocalDate.of(1995, 1, 1))
+                .mbti(Mbti.ENFP)
+                .genres(List.of())
+                .build();
 
         UserEntity savedUser = userJpaRepository.save(testUser);
 
@@ -91,19 +91,20 @@ public class ApplicationServiceTest {
     @Test
     void 멤버_지원_조회_테스트() {
         // given
-        UserEntity testUser = new UserEntity(
-                "view-test@example.com",
-                Password.ofEncoded("encoded-password"),
-                "테스트유저",
-                "https://example.com/profile.jpg",
-                Role.USER,
-                true,
-                false,
-                List.of(new com.PickOne.domain.user.model.domain.Instrument("Guitar")),
-                List.of(new com.PickOne.domain.user.model.domain.Genre("Rock")),
-                Gender.MALE,  // 예시값, 실제 성별 입력 필요
-                LocalDate.of(1995, 1, 1)  // 예시 생년월일
-        );
+        UserEntity testUser = UserEntity.builder()
+                .email("apply-test@example.com")
+                .password("encoded-password")
+                .nickname("테스트유저")
+                .profileImage("https://example.com/profile.jpg")
+                .role(Role.USER)
+                .isPublic(true)
+                .isOauth(false)
+                .gender(Gender.MALE)
+                .birthDate(LocalDate.of(1995, 1, 1))
+                .mbti(Mbti.ENFP)
+                .genres(List.of())
+                .build();
+
         UserEntity savedUser = userJpaRepository.save(testUser);  // ← userRepository → authRepository 로 변경
 
         UserEntity userEntity = userJpaRepository.findByEmail(savedUser.getEmail())
@@ -139,19 +140,20 @@ public class ApplicationServiceTest {
     @Test
     void 멤버_지원글_수정_테스트() {
         // given
-        UserEntity testUser = new UserEntity(
-                "edit-test@example.com",
-                Password.ofEncoded("encoded-password"),
-                "수정테스트유저",
-                "https://example.com/profile.jpg",
-                Role.USER,
-                true,
-                false,
-                List.of(new com.PickOne.domain.user.model.domain.Instrument("Bass")),
-                List.of(new com.PickOne.domain.user.model.domain.Genre("Jazz")),
-                Gender.FEMALE,
-                LocalDate.of(1997, 5, 15)
-        );
+        UserEntity testUser = UserEntity.builder()
+                .email("apply-test@example.com")
+                .password("encoded-password")
+                .nickname("테스트유저")
+                .profileImage("https://example.com/profile.jpg")
+                .role(Role.USER)
+                .isPublic(true)
+                .isOauth(false)
+                .gender(Gender.MALE)
+                .birthDate(LocalDate.of(1995, 1, 1))
+                .mbti(Mbti.ENFP)
+                .genres(List.of())
+                .build();
+
         UserEntity savedUser = userJpaRepository.save(testUser);
 
         Recruitment recruitment = Recruitment.builder()

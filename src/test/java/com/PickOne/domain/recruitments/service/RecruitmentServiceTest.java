@@ -8,18 +8,21 @@ import com.PickOne.domain.recruitments.dto.request.GenreRequestDto;
 import com.PickOne.domain.recruitments.dto.request.InstrumentProficiencyDto;
 import com.PickOne.domain.recruitments.dto.request.RecruitmentRequestDto;
 import com.PickOne.domain.recruitments.dto.response.RecruitmentResponseDto;
+import com.PickOne.domain.user.model.domain.Gender;
+import com.PickOne.domain.user.model.domain.Role;
 import com.PickOne.global.common.enums.Genre;
 import com.PickOne.global.common.enums.Instrument;
 import com.PickOne.global.common.enums.Proficiency;
 import com.PickOne.domain.recruitments.model.Status;
 import com.PickOne.domain.recruitments.model.Type;
 import com.PickOne.domain.recruitments.model.Visibility;
-import com.PickOne.domain.user.model.domain.Password;
 import com.PickOne.domain.user.model.entity.UserEntity;
 import com.PickOne.domain.user.repository.UserJpaRepository;
 import com.PickOne.global.exception.BusinessException;
 import com.PickOne.global.exception.ErrorCode;
 import jakarta.transaction.Transactional;
+
+import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -148,18 +151,18 @@ class RecruitmentServiceTest {
     }
 
     private UserEntity createTestUser(String email, String nickname) {
-        return new UserEntity(
-                email,
-                Password.ofEncoded("encoded-password"),
-                nickname,
-                "https://img.example.com",
-                com.PickOne.domain.user.model.domain.Role.USER,
-                true,   // isPublic
-                false,  // isOauth
-                List.of(new com.PickOne.domain.user.model.domain.Instrument("ELECTRIC_GUITAR")),
-                List.of(new com.PickOne.domain.user.model.domain.Genre("ROCK")),
-                com.PickOne.domain.user.model.domain.Gender.MALE,           // 기본값
-                java.time.LocalDate.of(1995, 1, 1)                           // 기본 생년월일
-        );
+        return UserEntity.builder()
+                .email(email)
+                .password("encoded-password")
+                .nickname(nickname)
+                .profileImage("https://img.example.com")
+                .role(Role.USER)
+                .isPublic(true)
+                .isOauth(false)
+                .gender(Gender.MALE)
+                .birthDate(LocalDate.of(1995, 1, 1))
+                .mbti(null)
+                .genres(List.of())
+                .build();
     }
 }

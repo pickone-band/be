@@ -1,6 +1,6 @@
 package com.PickOne.global.security.model.entity;
 
-import com.PickOne.domain.user.model.domain.User;
+import com.PickOne.domain.user.model.entity.UserEntity;
 import lombok.Getter;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.GrantedAuthority;
@@ -13,26 +13,28 @@ import java.util.Map;
 @Getter
 public class UserPrincipal implements UserDetails, OAuth2User {
 
-    private final User user;
+    private final UserEntity user;
     private final Map<String, Object> attributes;
 
-    // 일반 로그인 생성자
-    public UserPrincipal(User user) {
+    public UserPrincipal(UserEntity user) {
         this(user, Collections.emptyMap());
     }
 
-    // OAuth2 로그인 생성자
-    public UserPrincipal(User user, Map<String, Object> attributes) {
+    public UserPrincipal(UserEntity user, Map<String, Object> attributes) {
         this.user = user;
         this.attributes = attributes;
     }
 
-    public static UserPrincipal from(User user) {
+    public static UserPrincipal from(UserEntity user) {
         return new UserPrincipal(user);
     }
 
-    public static UserPrincipal from(User user, Map<String, Object> attributes) {
+    public static UserPrincipal from(UserEntity user, Map<String, Object> attributes) {
         return new UserPrincipal(user, attributes);
+    }
+
+    public static UserPrincipal fromEntity(UserEntity entity) {
+        return new UserPrincipal(entity);
     }
 
     @Override
@@ -42,12 +44,12 @@ public class UserPrincipal implements UserDetails, OAuth2User {
 
     @Override
     public String getPassword() {
-        return user.getPassword().getValue();
+        return user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return user.getEmail().getValue();
+        return user.getEmail();
     }
 
     @Override public boolean isAccountNonExpired() { return true; }
@@ -62,7 +64,7 @@ public class UserPrincipal implements UserDetails, OAuth2User {
 
     @Override
     public String getName() {
-        return user.getEmail().getValue();
+        return user.getEmail();
     }
 
     public Long getUserId() {

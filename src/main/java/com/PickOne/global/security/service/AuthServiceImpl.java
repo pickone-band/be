@@ -4,7 +4,6 @@ import com.PickOne.domain.consent.model.entity.ConsentEntity;
 import com.PickOne.domain.consent.repository.ConsentJpaRepository;
 import com.PickOne.domain.term.model.entity.TermEntity;
 import com.PickOne.domain.term.service.TermService;
-import com.PickOne.domain.user.mapper.UserMapper;
 import com.PickOne.domain.user.model.domain.*;
 import com.PickOne.domain.user.model.entity.UserEntity;
 import com.PickOne.domain.user.repository.UserJpaRepository;
@@ -36,7 +35,7 @@ public class AuthServiceImpl implements AuthService {
   private final ConsentJpaRepository consentJpaRepository;
   private final UserJpaRepository userJpaRepository;
   private final PasswordEncoder passwordEncoder;
-  private final JwtService jwtService;
+  private final TokenProvider tokenProvider;
   private final RefreshTokenRepository refreshTokenRepository;
   private final TokenBlacklistRepository tokenBlacklistRepository;
 
@@ -46,35 +45,39 @@ public class AuthServiceImpl implements AuthService {
     String email = request.email();
     String nickname = request.nickname();
 
-    // 중복 검사
     if (userJpaRepository.findByEmail(email).isPresent()) {
       throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
     }
     if (userJpaRepository.findByNickname(nickname).isPresent()) {
       throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
     }
-    UserEntity user = new UserEntity(
-            request.email(),
-            Password.ofRaw(request.password(), passwordEncoder),
-            request.nickname(),
-            null,
-            Role.USER,
-            true,
-            false,
-            List.of(),
-            List.of(),
-            request.gender(),
-            request.birthDate()
-    );
+
+    UserEntity user = UserEntity.builder()
+            .email(request.email())
+            .password(passwordEncoder.encode(request.password()))
+            .nickname(request.nickname())
+            .profileImage(null)
+            .role(Role.USER)
+            .isPublic(true)
+            .isOauth(false)
+            .gender(request.gender())
+            .birthDate(request.birthDate())
+            .mbti(null) // 회원가입에서 아직 받지 않음
+            .genres(List.of()) // 기본 빈 장르
+            .build();
+
+
+// 비밀번호 비교도 직접 호출
+    if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+      throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+    }
 
     userJpaRepository.save(user);
-
-
 
     validateRequiredTerms(request.agreements());
     saveUserConsents(user, request.agreements());
 
-    return issueTokens(UserMapper.toDomain(user));
+    return issueTokens(user); // <- 변경
   }
 
   @Override
@@ -82,37 +85,39 @@ public class AuthServiceImpl implements AuthService {
     UserEntity user = userJpaRepository.findByEmail(request.email())
             .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
 
-    if (!user.getPassword().matches(request.password(), passwordEncoder)) {
+    if (!passwordEncoder.matches(request.password(), user.getPassword())) {
       throw new BusinessException(ErrorCode.INVALID_PASSWORD);
     }
 
-    return issueTokens(UserMapper.toDomain(user));
+    return issueTokens(user);
   }
 
   @Override
   public AuthResult refresh(String refreshToken) {
-    if (!jwtService.validateRefreshToken(refreshToken)) {
+    if (!tokenProvider.validateRefreshToken(refreshToken)) {
       throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
     }
 
-    String email = jwtService.extractUsername(refreshToken);
+    String email = tokenProvider.extractUsername(refreshToken);
     UserEntity user = userJpaRepository.findByEmail(email)
             .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
 
-    return issueTokens(UserMapper.toDomain(user));
+    return issueTokens(user); // <- 변경
   }
 
   @Override
   public void logout(String accessToken) {
-    jwtService.blacklistToken(accessToken);
+    tokenProvider.blacklistToken(accessToken);
   }
 
-  private AuthResult issueTokens(User user) {
-    String accessToken = jwtService.generateAccessToken(UserPrincipal.from(user));
-    String refreshToken = jwtService.generateRefreshToken(UserPrincipal.from(user));
-    refreshTokenRepository.save(user.getEmail().getValue(), refreshToken, jwtService.getRefreshTokenExpiration());
+  private AuthResult issueTokens(UserEntity userEntity) { // <- User → UserEntity
+    UserPrincipal principal = UserPrincipal.from(userEntity);
+    String accessToken = tokenProvider.generateAccessToken(principal);
+    String refreshToken = tokenProvider.generateRefreshToken(principal);
 
-    return new AuthResult(accessToken, refreshToken, user.getEmail().getValue());
+    refreshTokenRepository.save(userEntity.getEmail(), refreshToken, tokenProvider.getRefreshTokenExpiration());
+
+    return new AuthResult(accessToken, refreshToken, userEntity.getEmail());
   }
 
   private void validateRequiredTerms(List<ConsentAgreementDto> agreements) {
@@ -130,7 +135,6 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private void saveUserConsents(UserEntity user, List<ConsentAgreementDto> agreements) {
-
     for (ConsentAgreementDto dto : agreements) {
       TermEntity term = termService.getById(dto.termId());
       ConsentEntity consent = new ConsentEntity(

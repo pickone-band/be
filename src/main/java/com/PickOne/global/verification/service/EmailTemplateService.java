@@ -1,7 +1,6 @@
 package com.PickOne.global.verification.service;
 
-
-import com.PickOne.global.verification.model.domain.EmailMessage;
+import com.PickOne.global.verification.dto.EmailMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -31,8 +30,7 @@ public class EmailTemplateService {
         context.setVariable("baseUrl", baseUrl);
 
         String body = templateEngine.process("email/verification", context);
-
-        return EmailMessage.of(to, subject, body, true);
+        return new EmailMessage(to, subject, body, true);
     }
 
     public EmailMessage createPasswordResetEmail(String to, String token) {
@@ -46,8 +44,7 @@ public class EmailTemplateService {
         context.setVariable("baseUrl", baseUrl);
 
         String body = templateEngine.process("email/password-reset", context);
-
-        return EmailMessage.of(to, subject, body, true);
+        return new EmailMessage(to, subject, body, true);
     }
 
     public EmailMessage createWelcomeEmail(String to) {
@@ -59,7 +56,6 @@ public class EmailTemplateService {
         context.setVariable("baseUrl", baseUrl);
 
         String body = templateEngine.process("email/welcome", context);
-
-        return EmailMessage.of(to, subject, body, true);
+        return new EmailMessage(to, subject, body, true);
     }
 }

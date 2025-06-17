@@ -1,6 +1,8 @@
 package com.PickOne.domain.notification.dto;
 
-import com.PickOne.domain.notification.model.domain.Notification;
+import com.PickOne.domain.notification.model.domain.NotificationStatus;
+import com.PickOne.domain.notification.model.domain.NotificationType;
+
 import java.time.LocalDateTime;
 
 /**
@@ -10,28 +12,10 @@ import java.time.LocalDateTime;
 public record NotificationDto(
         String id,
         Long recipientId,
-        String type,
+        NotificationType type,
+        String title,
         String content,
-        String status,
-        String refEntityType,
-        String refEntityId,
+        NotificationStatus status,
         LocalDateTime createdAt,
         LocalDateTime readAt
-) {
-    /**
-     * 도메인 객체로부터 DTO 생성
-     */
-    public static NotificationDto fromDomain(Notification notification) {
-        return new NotificationDto(
-                notification.getId(),
-                notification.getRecipientId(),
-                notification.getType().name(),
-                notification.getContent(),
-                notification.getStatus().name(),
-                notification.getRefEntityType(),
-                notification.getRefEntityId(),
-                notification.getCreatedAt(),
-                notification.getReadAt()
-        );
-    }
-}
+) {}

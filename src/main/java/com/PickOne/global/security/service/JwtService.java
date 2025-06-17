@@ -1,10 +1,14 @@
 package com.PickOne.global.security.service;
 
 
+import com.PickOne.domain.user.model.entity.UserEntity;
+import com.PickOne.domain.user.repository.UserJpaRepository;
+import com.PickOne.global.exception.BusinessException;
+import com.PickOne.global.exception.ErrorCode;
 import com.PickOne.global.security.model.entity.UserPrincipal;
 import com.PickOne.global.security.repository.TokenBlacklistRepository;
+import com.PickOne.global.security.config.SecurityConstants;
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
@@ -13,20 +17,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.security.Key;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class JwtService {
+public class JwtService implements TokenProvider{
 
   @Value("${jwt.secret}")
   private String secretKey;
@@ -41,20 +42,25 @@ public class JwtService {
 
   private final TokenBlacklistRepository tokenBlacklistRepository;
   private final CustomUserDetailsService userDetailsService;
+  private final UserJpaRepository userJpaRepository;
 
+  @Override
   public String generateAccessToken(UserPrincipal userDetails) {
     return generateToken(
             createClaims(userDetails), userDetails.getUsername(), accessTokenExpiration);
   }
 
+  @Override
   public String generateRefreshToken(UserPrincipal userDetails) {
     return generateToken(new HashMap<>(), userDetails.getUsername(), refreshTokenExpiration);
   }
 
+  @Override
   public String extractUsername(String token) {
     return extractClaim(token, Claims::getSubject);
   }
 
+  @Override
   public boolean validateRefreshToken(String refreshToken) {
     try {
       Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(refreshToken);
@@ -70,41 +76,40 @@ public class JwtService {
     return claims.get("userId", Long.class);
   }
 
+  @Override
   public boolean isTokenBlacklisted(String token) {
-    return !tokenBlacklistRepository.isBlacklisted(token);
+    return tokenBlacklistRepository.isBlacklisted(token);
   }
 
+  @Override
   public void blacklistToken(String token) {
     Date expiration = extractExpiration(token);
     long ttl = expiration.getTime() - System.currentTimeMillis();
     tokenBlacklistRepository.addToBlacklist(token, ttl);
   }
 
+  @Override
   public Authentication getAuthentication(String token) {
     Claims claims = extractAllClaims(token);
     String email = claims.getSubject();
 
-    try {
-      UserPrincipal userPrincipal = (UserPrincipal) userDetailsService.loadUserByUsername(email);
-      return new UsernamePasswordAuthenticationToken(
-              userPrincipal, null, userPrincipal.getAuthorities());
-    } catch (Exception e) {
-      log.error("인증 정보 생성 중 오류: {}", e.getMessage());
+    UserEntity userEntity = userJpaRepository.findByEmail(email)
+            .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
 
-      List<String> authorities = claims.get("authorities", List.class);
-      List<GrantedAuthority> grantedAuthorities =
-              authorities != null
-                      ? authorities.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList())
-                      : new ArrayList<>();
+    UserPrincipal userPrincipal = UserPrincipal.from(userEntity);
 
-      return new UsernamePasswordAuthenticationToken(email, null, grantedAuthorities);
-    }
+    return new UsernamePasswordAuthenticationToken(
+            userPrincipal,
+            null,
+            userPrincipal.getAuthorities()
+    );
   }
 
+  @Override
   public String resolveToken(HttpServletRequest request) {
-    String bearerToken = request.getHeader("Authorization");
-    if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-      return bearerToken.substring(7);
+    String bearerToken = request.getHeader(SecurityConstants.AUTH_HEADER);
+    if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(SecurityConstants.TOKEN_PREFIX)) {
+      return bearerToken.substring(SecurityConstants.TOKEN_PREFIX.length());
     }
     return null;
   }

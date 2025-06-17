@@ -87,7 +87,12 @@ public enum ErrorCode {
 
     UNAUTHORIZED_RECRUITMENT_ACCESS(HttpStatus.FORBIDDEN,9002, "해당 모집글에 대한 권한이 없습니다."),
     DUPLICATE_APPLICATION(HttpStatus.FORBIDDEN,9101,"이미 지원한 모집글입니다."),
-    APPLICATION_INFO_NOT_FOUND(HttpStatus.NOT_FOUND,9201,"해당 모집글에 대한 신청글을 찾을 수 없습니다.");
+    APPLICATION_INFO_NOT_FOUND(HttpStatus.NOT_FOUND,9201,"해당 모집글에 대한 신청글을 찾을 수 없습니다."),
+
+    ALREADY_READ(HttpStatus.BAD_REQUEST, 9102, "이미 읽은 메시지입니다."),
+    CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, 9103, "존재하지 않는 채팅방입니다."),
+    CHAT_ROOM_ACCESS_DENIED(HttpStatus.FORBIDDEN, 9104, "채팅방에 참여하지 않은 유저입니다."),
+    CHAT_ROOM_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, 9102, "채팅방을 삭제할 권한이 없습니다.");
 
     private final HttpStatus status; // HTTP 상태 코드
     private final int code; // 고유 오류 코드
