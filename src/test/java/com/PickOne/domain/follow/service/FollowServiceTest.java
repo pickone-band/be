@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -35,6 +36,8 @@ class FollowServiceTest {
 
     @Mock
     private UserFollowJpaRepository userFollowJpaRepository;
+
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     UserEntity userA;
     UserEntity userB;
