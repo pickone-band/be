@@ -62,4 +62,14 @@ public class NotificationEventListener {
                 content
         );
     }
+
+    @EventListener
+    public void handleFollowedUser(FollowedUserEvent event) {
+        notificationService.sendNotification(
+                event.getFollowedUserId(),
+                NotificationType.FOLLOWED_USER,
+                "새 팔로워 발생",
+                "새로운 사용자가 당신을 팔로우했습니다."
+        );
+    }
 }

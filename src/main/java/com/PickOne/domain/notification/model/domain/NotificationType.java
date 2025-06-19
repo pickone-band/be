@@ -18,7 +18,7 @@ public enum NotificationType {
     APPLICATION_REJECTED("지원이 거절되었습니다"),
 
     // 사용자 활동
-    FOLLOWED("새 팔로워가 생겼습니다"),
+    FOLLOWED_USER("팔로우 알림"),
 
     // 시스템
     SYSTEM_ANNOUNCEMENT("시스템 공지사항");

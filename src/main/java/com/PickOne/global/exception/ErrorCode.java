@@ -83,7 +83,11 @@ public enum ErrorCode {
     ALREADY_READ(HttpStatus.BAD_REQUEST, 9301, "이미 읽은 메시지입니다."),
     CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, 9302, "존재하지 않는 채팅방입니다."),
     CHAT_ROOM_ACCESS_DENIED(HttpStatus.FORBIDDEN, 9303, "채팅방에 참여하지 않은 유저입니다."),
-    CHAT_ROOM_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, 9304, "채팅방을 삭제할 권한이 없습니다.");
+    CHAT_ROOM_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, 9304, "채팅방을 삭제할 권한이 없습니다."),
+
+    CANNOT_FOLLOW_SELF(HttpStatus.BAD_REQUEST, 3101, "자신을 팔로우할 수 없습니다."),
+    ALREADY_FOLLOWING(HttpStatus.BAD_REQUEST, 3102, "이미 팔로우한 사용자입니다."),
+    FOLLOW_RELATION_NOT_FOUND(HttpStatus.NOT_FOUND, 3103, "팔로우 관계를 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final int code;
