@@ -1,5 +1,6 @@
-package com.PickOne.domain.application.dto.request;
+package com.PickOne.domain.application.dto.response;
 
+import com.PickOne.domain.application.model.ApplicationStatus;
 import com.PickOne.global.common.enums.Instrument;
 import com.PickOne.global.common.enums.Mbti;
 import com.PickOne.global.common.enums.Proficiency;
@@ -26,4 +27,5 @@ public class ApplicationResponseDto {
     private Mbti mbti;                      // MBTI
     private Instrument instrument;          // 악기
     private Proficiency proficiency;        // 능숙도
+    private ApplicationStatus status;       // 지원현황
 }

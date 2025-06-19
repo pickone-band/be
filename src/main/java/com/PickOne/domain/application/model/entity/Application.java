@@ -85,5 +85,9 @@ public class Application {
         this.proficiency = applicationRequestDto.getProficiency();
     }
 
+    public void changeStatus(ApplicationStatus newStatus) {
+        this.status = newStatus;
+    }
+
 
 }
