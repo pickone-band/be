@@ -1,5 +1,6 @@
 package com.PickOne.domain.user.model.entity;
 
+import com.PickOne.domain.follow.model.entity.UserFollow;
 import com.PickOne.domain.user.model.domain.*;
 import com.PickOne.global.common.entity.BaseEntity;
 import com.PickOne.global.common.enums.Genre;
@@ -67,6 +68,12 @@ public class UserEntity extends BaseEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserInstrumentEntity> userInstruments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserFollow> followings = new ArrayList<>();
+
+    @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserFollow> followers = new ArrayList<>();
 
     @Builder
     private UserEntity(
