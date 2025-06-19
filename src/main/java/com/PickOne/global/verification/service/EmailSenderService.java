@@ -1,11 +1,15 @@
 package com.PickOne.global.verification.service;
 
 import com.PickOne.global.verification.dto.EmailMessage;
+import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import static io.lettuce.core.pubsub.PubSubOutput.Type.message;
 
 @Service
 @Slf4j
@@ -30,13 +34,15 @@ public class EmailSenderService {
         }
 
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(emailMessage.to());
-            message.setSubject(emailMessage.subject());
-            message.setText(emailMessage.body());
-            message.setFrom(fromEmail);
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, false, "UTF-8");
 
-            mailSender.send(message);
+            helper.setTo(emailMessage.to());
+            helper.setSubject(emailMessage.subject());
+            helper.setText(emailMessage.body(), true);
+            helper.setFrom(fromEmail);
+
+            mailSender.send(mimeMessage);
 
             log.info("{}로 이메일이 성공적으로 발송되었습니다.", emailMessage.to());
 
