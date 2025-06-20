@@ -75,6 +75,9 @@ public class UserEntity extends BaseEntity {
     @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserFollow> followers = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserMusicEntity> userMusics = new ArrayList<>();
+
     @Builder
     private UserEntity(
             String email,

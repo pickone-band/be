@@ -1,7 +1,12 @@
 package com.PickOne.global.oauth2.service;
 
+import com.PickOne.domain.music.dto.MusicInfo;
+import com.PickOne.domain.music.repository.UserMusicJpaRepository;
+import com.PickOne.domain.music.service.GoogleMusicService;
+import com.PickOne.domain.music.service.SpotifyMusicService;
 import com.PickOne.domain.user.model.domain.Role;
 import com.PickOne.domain.user.model.entity.UserEntity;
+import com.PickOne.domain.user.model.entity.UserMusicEntity;
 import com.PickOne.domain.user.repository.UserJpaRepository;
 import com.PickOne.global.oauth2.model.domain.OAuth2Provider;
 import com.PickOne.global.oauth2.model.domain.OAuth2UserInfo;
@@ -33,6 +38,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final SpotifyMusicService spotifyMusicService;
+    private final GoogleMusicService googleMusicService;
+    private final UserMusicJpaRepository userMusicJpaRepository;
 
     protected OAuth2User loadOAuth2User(OAuth2UserRequest userRequest) {
         return super.loadUser(userRequest);
@@ -52,9 +60,15 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 provider.name(), userInfo.getId()
         );
 
+        String providerAccessToken = userRequest.getAccessToken().getTokenValue();
+        String providerRefreshToken = (String) userRequest.getAdditionalParameters().get("refresh_token");
+
         UserEntity user;
         if (connectionOpt.isPresent()) {
-            user = userJpaRepository.findById(connectionOpt.get().getUserId())
+            UserConnectionEntity connection = connectionOpt.get();
+            connection.updateTokens(providerAccessToken, providerRefreshToken);
+            userConnectionRepository.save(connection);
+            user = userJpaRepository.findById(connection.getUserId())
                     .orElseThrow(() -> new IllegalStateException("User not found"));
         } else {
             user = userJpaRepository.findByEmail(userInfo.getEmail())
@@ -80,6 +94,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .providerUserId(userInfo.getId())
                     .email(userInfo.getEmail())
                     .nickname(userInfo.getNickname())
+                    .accessToken(providerAccessToken)
+                    .refreshToken(providerRefreshToken)
                     .userId(user.getId())
                     .build();
             userConnectionRepository.save(connection);
@@ -90,7 +106,29 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String refreshToken = tokenProvider.generateRefreshToken(principal);
         refreshTokenRepository.save(user.getEmail(), refreshToken, tokenProvider.getRefreshTokenExpiration());
 
+        saveCurrentMusicForUser(user, providerAccessToken, provider);
+
         return principal;
+    }
+
+    public void saveCurrentMusicForUser(UserEntity user, String accessToken, OAuth2Provider provider) {
+        MusicInfo track = switch (provider) {
+            case SPOTIFY -> spotifyMusicService.getCurrentlyPlaying(accessToken);
+            case GOOGLE -> googleMusicService.getCurrentlyPlaying(accessToken);
+            default -> null;
+        };
+
+        if (track != null) {
+            UserMusicEntity music = UserMusicEntity.builder()
+                    .title(track.title())
+                    .artist(track.artist())
+                    .album(track.album())
+                    .imageUrl(track.imageUrl())
+                    .trackUrl(track.trackUrl())
+                    .user(user)
+                    .build();
+            userMusicJpaRepository.save(music);
+        }
     }
 }
 
