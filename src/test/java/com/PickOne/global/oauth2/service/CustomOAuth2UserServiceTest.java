@@ -1,8 +1,13 @@
 package com.PickOne.global.oauth2.service;
 
+import com.PickOne.domain.music.dto.MusicInfo;
+import com.PickOne.domain.music.repository.UserMusicJpaRepository;
+import com.PickOne.domain.music.service.GoogleMusicService;
+import com.PickOne.domain.music.service.SpotifyMusicService;
 import com.PickOne.domain.user.model.domain.*;
 import com.PickOne.domain.user.model.entity.UserEntity;
 import com.PickOne.domain.user.repository.UserJpaRepository;
+
 import com.PickOne.global.oauth2.model.domain.OAuth2Provider;
 import com.PickOne.global.oauth2.model.domain.OAuth2UserInfo;
 import com.PickOne.global.oauth2.model.entity.UserConnectionEntity;
@@ -22,10 +27,7 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
@@ -38,18 +40,32 @@ class CustomOAuth2UserServiceTest {
     private PasswordEncoder passwordEncoder;
     private JwtService jwtService;
     private RefreshTokenRepository refreshTokenRepository;
+    private SpotifyMusicService spotifyMusicService;
+    private GoogleMusicService googleMusicService;
+    private UserMusicJpaRepository userMusicJpaRepository;
     private CustomOAuth2UserService service;
 
     @BeforeEach
     void setUp() {
-
         userJpaRepository = mock(UserJpaRepository.class);
         userConnectionRepository = mock(UserConnectionRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
         jwtService = mock(JwtService.class);
         refreshTokenRepository = mock(RefreshTokenRepository.class);
+        spotifyMusicService = mock(SpotifyMusicService.class);
+        googleMusicService = mock(GoogleMusicService.class);
+        userMusicJpaRepository = mock(UserMusicJpaRepository.class);
 
-        service = new CustomOAuth2UserService(userJpaRepository, userConnectionRepository, passwordEncoder, jwtService, refreshTokenRepository) {
+        service = new CustomOAuth2UserService(
+                userJpaRepository,
+                userConnectionRepository,
+                passwordEncoder,
+                jwtService,
+                refreshTokenRepository,
+                spotifyMusicService,
+                googleMusicService,
+                userMusicJpaRepository
+        ) {
             @Override
             protected OAuth2User loadOAuth2User(OAuth2UserRequest userRequest) {
                 return new DefaultOAuth2User(
@@ -78,6 +94,9 @@ class CustomOAuth2UserServiceTest {
         when(userInfo.getId()).thenReturn(providerId);
         when(userInfo.getEmail()).thenReturn(email);
         when(userInfo.getNickname()).thenReturn(name);
+        when(userInfo.getGender()).thenReturn(Gender.FEMALE);
+        when(userInfo.getBirthDate()).thenReturn(LocalDate.of(1993, 5, 15));
+        when(userInfo.getProfileImageUrl()).thenReturn("img");
 
         try (MockedStatic<OAuth2UserInfo> mockedStatic = mockStatic(OAuth2UserInfo.class)) {
             mockedStatic.when(() -> OAuth2UserInfo.of(OAuth2Provider.GOOGLE, Map.of(
@@ -101,17 +120,18 @@ class CustomOAuth2UserServiceTest {
                         .role(Role.USER)
                         .isPublic(true)
                         .isOauth(true)
-                        .gender(Gender.FEMALE)
-                        .birthDate(LocalDate.of(1993, 5, 15))
+                        .gender(u.getGender())
+                        .birthDate(u.getBirthDate())
                         .mbti(null)
                         .genres(List.of())
                         .build();
             });
 
-
             when(jwtService.generateAccessToken(any())).thenReturn(UUID.randomUUID().toString());
             when(jwtService.generateRefreshToken(any())).thenReturn(UUID.randomUUID().toString());
-            when(jwtService.getRefreshTokenExpiration()).thenReturn(10000L); // <-- Long 리턴 보장
+            when(jwtService.getRefreshTokenExpiration()).thenReturn(10000L);
+            when(googleMusicService.getCurrentlyPlaying(anyString()))
+                    .thenReturn(new MusicInfo("title", "artist", "album", "img", "url"));
 
             // when
             OAuth2User result = service.loadUser(userRequest);
@@ -119,7 +139,8 @@ class CustomOAuth2UserServiceTest {
             // then
             assertThat(result).isInstanceOf(UserPrincipal.class);
             verify(userConnectionRepository).save(any(UserConnectionEntity.class));
-            verify(refreshTokenRepository).save(eq(email), any(String.class), any(Long.class)); // 타입 명시
+            verify(refreshTokenRepository).save(eq(email), any(String.class), any(Long.class));
+            verify(userMusicJpaRepository).save(any());
         }
     }
 

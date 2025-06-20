@@ -29,12 +29,21 @@ public class UserConnectionEntity {
 
     private String nickname;
 
+    private String accessToken;
+
+    private String refreshToken;
+
     @Column(nullable = false)
     private Long userId;
 
+    public void updateTokens(String accessToken, String refreshToken) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+    }
+
     public static UserConnectionEntity of(OAuth2Provider provider, String providerUserId,
                                           String email, String nickname, Long userId) {
-        return new UserConnectionEntity(null, provider, providerUserId, email, nickname, userId);
+        return new UserConnectionEntity(null, provider, providerUserId, email, nickname, null, null, userId);
     }
 
 }
