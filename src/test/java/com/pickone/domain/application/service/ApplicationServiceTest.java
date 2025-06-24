@@ -26,7 +26,7 @@ import java.util.List;
 
 @SpringBootTest
 @Transactional
-public class PickOneApplicationServiceTest {
+public class ApplicationServiceTest {
 
     @MockBean
     private ClientRegistrationRepository clientRegistrationRepository;

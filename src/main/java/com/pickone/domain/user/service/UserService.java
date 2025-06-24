@@ -104,17 +104,4 @@ public class UserService {
     return userQueryDslRepository.searchUsers(condition, pageable);
   }
 
-  @Transactional(readOnly = true)
-  public Page<UserEntity> findUsersByInstrument(String rawInstrument, Pageable pageable) {
-    Instrument instrument = Instrument.valueOf(rawInstrument);
-    log.info("악기로 사용자 검색: instrument={}", instrument);
-    return userQueryDslRepository.searchByInstrument(instrument, pageable);
-  }
-
-  @Transactional(readOnly = true)
-  public Page<UserEntity> findUsersByGenre(String rawGenre, Pageable pageable) {
-    Genre genre = Genre.valueOf(rawGenre);
-    log.info("장르로 사용자 검색: genre={}", genre);
-    return userQueryDslRepository.searchByGenre(genre, pageable);
-  }
 }
