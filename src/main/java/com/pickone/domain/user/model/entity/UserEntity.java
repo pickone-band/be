@@ -149,10 +149,10 @@ public class UserEntity extends BaseEntity {
 
   public void updateInstruments(List<UserInstrumentEntity> newInstruments) {
     if (newInstruments != null) {
+      this.userInstruments.clear(); // ✅ 기존 악기 제거 (orphanRemoval 작동)
       for (UserInstrumentEntity instrument : newInstruments) {
-        instrument.setUser(this);
+        instrument.setUser(this); // ✅ 연관관계 설정 + 리스트에 자동 추가됨
       }
-      this.userInstruments = List.copyOf(newInstruments);
     }
   }
 }
