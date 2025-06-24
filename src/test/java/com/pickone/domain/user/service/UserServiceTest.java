@@ -3,9 +3,12 @@ package com.pickone.domain.user.service;
 import com.pickone.domain.user.dto.UserUpdateRequestDto;
 import com.pickone.domain.user.model.domain.Gender;
 import com.pickone.domain.user.model.domain.Role;
+import com.pickone.global.common.enums.Instrument;
 import com.pickone.domain.user.model.entity.UserEntity;
+import com.pickone.domain.user.model.entity.UserInstrumentEntity;
 import com.pickone.domain.user.repository.UserJpaRepository;
 import com.pickone.global.common.enums.Genre;
+import com.pickone.global.common.enums.Proficiency;
 import com.pickone.global.exception.BusinessException;
 import com.pickone.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
@@ -108,6 +111,45 @@ class UserServiceTest {
         assertThat(entity.getGenres()).containsExactly(Genre.JAZZ);
         assertThat(entity.getUserInstruments()).isEmpty();
     }
+
+    @Test
+    @DisplayName("회원 정보 수정 - 악기 정보 수정 성공")
+    void updateUser_instruments_success() {
+        // given
+        Long userId = 1L;
+        UserEntity entity = createMockUserEntity(userId);
+
+        // 기존 악기 1개 등록
+        UserInstrumentEntity oldInstrument = UserInstrumentEntity.builder()
+            .instrument(Instrument.ACOUSTIC_GUITAR)
+            .proficiency(Proficiency.BEGINNER)
+            .build();
+        oldInstrument.setUser(entity);
+
+        when(userJpaRepository.findById(userId)).thenReturn(Optional.of(entity));
+
+        // 새로운 악기 정보
+        UserUpdateRequestDto request = new UserUpdateRequestDto(
+            null,
+            null,
+            null,
+            null,
+            null,
+            List.of(new UserUpdateRequestDto.UserInstrumentInfo(Instrument.DRUMS, Proficiency.ADVANCED))
+        );
+
+        // when
+        userService.updateUser(userId, request);
+
+        // then
+        assertThat(entity.getUserInstruments()).hasSize(1);
+
+        UserInstrumentEntity updated = entity.getUserInstruments().get(0);
+        assertThat(updated.getInstrument()).isEqualTo(Instrument.DRUMS);
+        assertThat(updated.getProficiency()).isEqualTo(Proficiency.ADVANCED);
+        assertThat(updated.getUser()).isEqualTo(entity);
+    }
+
 
     @Test
     @DisplayName("회원 삭제 - 성공")
