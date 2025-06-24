@@ -3,7 +3,6 @@ package com.pickone.domain.follow.controller;
 import com.pickone.domain.follow.dto.FollowRequest;
 import com.pickone.domain.follow.service.FollowService;
 import com.pickone.domain.user.dto.UserResponseDto;
-import com.pickone.domain.user.model.entity.UserEntity;
 import com.pickone.global.exception.BaseResponse;
 import com.pickone.global.exception.SuccessCode;
 import io.swagger.v3.oas.annotations.Operation;

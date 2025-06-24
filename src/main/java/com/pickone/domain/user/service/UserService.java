@@ -7,7 +7,6 @@ import com.pickone.domain.user.model.entity.UserInstrumentEntity;
 import com.pickone.domain.user.repository.UserJpaRepository;
 import com.pickone.domain.user.repository.UserQueryDslRepository;
 import com.pickone.global.common.enums.Genre;
-import com.pickone.global.common.enums.Instrument;
 import com.pickone.global.exception.BusinessException;
 import com.pickone.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
