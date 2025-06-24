@@ -12,8 +12,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 @Configuration
-@EnableMongoRepositories(basePackages = {"com.PickOne.domain.messaging.repository",
-    "com.PickOne.domain.notification.repository"})
+@EnableMongoRepositories(basePackages = {"com.pickone.domain.messaging.repository",
+    "com.pickone.domain.notification.repository"})
 public class MongoConfig extends AbstractMongoClientConfiguration {
 
   @Value("${spring.data.mongodb.uri}")
