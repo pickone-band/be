@@ -2,16 +2,19 @@ package com.pickone.global.common.config;
 
 import com.pickone.domain.term.model.entity.TermEntity;
 import com.pickone.domain.term.repository.TermJpaRepository;
+import com.pickone.domain.user.model.domain.Gender;
 import com.pickone.domain.user.model.domain.Role;
 import com.pickone.domain.user.model.entity.UserEntity;
 import com.pickone.domain.user.repository.UserJpaRepository;
-import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.data.mongodb.core.query.Term;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Collections;
 
 @Slf4j
 @Component
@@ -24,7 +27,11 @@ public class TermsAndAdminInitializer implements CommandLineRunner {
 
   @Override
   public void run(String... args) {
-    // 약관 초기화
+    initializeTerms();
+    initializeAdmin();
+  }
+
+  private void initializeTerms() {
     if (termRepository.count() == 0) {
       TermEntity term = new TermEntity(
           null,
@@ -37,16 +44,24 @@ public class TermsAndAdminInitializer implements CommandLineRunner {
       termRepository.save(term);
       log.info("✅ 약관 초기화 완료");
     }
+  }
 
-    // 운영자 계정 초기화
+  private void initializeAdmin() {
     String adminEmail = "admin@example.com";
     if (userRepository.findByEmail(adminEmail).isEmpty()) {
       UserEntity admin = UserEntity.builder()
           .email(adminEmail)
           .password(passwordEncoder.encode("admin1234"))
           .nickname("운영자")
-          .role(Role.ADMIN) // enum 타입일 경우
+          .role(Role.ADMIN)
+          .isPublic(true)
+          .isOauth(false)
+          .isVerified(true)
+          .gender(Gender.MALE)
+          .birthDate(LocalDate.of(1990, 1, 1))
+          .genres(Collections.emptyList())
           .build();
+
       userRepository.save(admin);
       log.info("✅ 운영자 계정 생성 완료: {}", adminEmail);
     }
