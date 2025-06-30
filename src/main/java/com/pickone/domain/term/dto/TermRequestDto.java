@@ -6,11 +6,15 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
-public record TermRequestDto(@NotBlank String title, @NotBlank String content,
-                             @NotBlank String version,
-                             @NotNull Boolean required, @NotNull LocalDateTime effectiveDate) {
+public record TermRequestDto(
+    @NotBlank String title,
+    @NotBlank String content,
+    @NotBlank String version,
+    @NotNull Boolean required,
+    @NotNull LocalDateTime effectiveDate
+) {
 
   public TermEntity toEntity() {
-    return new TermEntity(null, title, content, version, required, effectiveDate);
+    return TermEntity.create(title, content, version, required, effectiveDate);
   }
 }

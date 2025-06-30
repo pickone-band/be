@@ -34,7 +34,7 @@ public class EmailVerificationService {
   @Transactional
   public void sendVerificationEmail(UserEntity user) {
     log.info("이메일 인증 요청 발송: userId={}", user.getId());
-    // 기존 토큰 제거 및 새 토큰 저장
+
     tokenRepository.findByUser_IdAndType(user.getId(), VerificationType.REGISTER)
         .ifPresent(token -> {
           log.debug("기존 인증 토큰 제거: {}", token.getToken());
@@ -43,7 +43,7 @@ public class EmailVerificationService {
 
     VerificationTokenEntity token = VerificationTokenEntity.builder()
         .user(user)
-        .email(user.getEmail())
+        .email(user.getProfile().getEmail())
         .token(UUID.randomUUID().toString())
         .type(VerificationType.REGISTER)
         .expiredAt(LocalDateTime.now().plusHours(24))
@@ -53,14 +53,14 @@ public class EmailVerificationService {
     tokenRepository.save(token);
 
     EmailMessage emailMessage = new EmailMessage(
-        user.getEmail(),
+        user.getProfile().getEmail(),
         "PickOne 회원가입 이메일 인증",
-        emailTemplateService.createVerificationEmail(user.getEmail(), token.getToken()).body(),
+        emailTemplateService.createVerificationEmail(user.getProfile().getEmail(), token.getToken()).body(),
         true
     );
 
     emailSenderService.sendEmail(emailMessage);
-    log.info("인증 이메일 발송 완료: userId={}, email={}", user.getId(), user.getEmail());
+    log.info("인증 이메일 발송 완료: userId={}, email={}", user.getId(), user.getProfile().getEmail());
   }
 
   @Transactional
@@ -75,7 +75,7 @@ public class EmailVerificationService {
 
     VerificationTokenEntity token = VerificationTokenEntity.builder()
         .user(user)
-        .email(user.getEmail())
+        .email(user.getProfile().getEmail())
         .token(UUID.randomUUID().toString())
         .type(VerificationType.RESET_PASSWORD)
         .expiredAt(LocalDateTime.now().plusHours(1))
@@ -85,57 +85,43 @@ public class EmailVerificationService {
     tokenRepository.save(token);
 
     EmailMessage emailMessage = new EmailMessage(
-        user.getEmail(),
+        user.getProfile().getEmail(),
         "PickOne 비밀번호 재설정",
-        emailTemplateService.createPasswordResetEmail(user.getEmail(), token.getToken()).body(),
+        emailTemplateService.createPasswordResetEmail(user.getProfile().getEmail(), token.getToken()).body(),
         true
     );
 
     emailSenderService.sendEmail(emailMessage);
-    log.info("비밀번호 재설정 이메일 발송 완료: userId={}, email={}", user.getId(), user.getEmail());
+    log.info("비밀번호 재설정 이메일 발송 완료: userId={}, email={}", user.getId(), user.getProfile().getEmail());
   }
 
   @Transactional
   public boolean verifyEmail(String token) {
-    log.info("이메일 인증 토큰 검증 시작");
-
     VerificationTokenEntity verificationToken = tokenRepository.findByToken(token)
-        .orElseThrow(() -> {
-          log.warn("잘못된 이메일 인증 토큰");
-          return new BusinessException(ErrorCode.INVALID_TOKEN);
-        });
+        .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
 
     if (verificationToken.getType() != VerificationType.REGISTER) {
-      log.warn("인증 타입 불일치");
       throw new BusinessException(ErrorCode.INVALID_TOKEN);
     }
-
     if (verificationToken.isExpired()) {
-      log.warn("이메일 인증 토큰 만료: {}", token);
       tokenRepository.delete(verificationToken);
       throw new BusinessException(ErrorCode.EXPIRED_TOKEN);
     }
 
     UserEntity user = verificationToken.getUser();
-    user.verify();
+    user.verifyEmail();
     userJpaRepository.save(user);
     tokenRepository.delete(verificationToken);
 
-    EmailMessage welcomeEmail = new EmailMessage(
-        user.getEmail(),
-        "PickOne 가입을 환영합니다!",
-        emailTemplateService.createWelcomeEmail(user.getEmail()).body(),
-        true
-    );
-
-    emailSenderService.sendEmail(welcomeEmail);
-    log.info("이메일 인증 완료 및 환영 메일 발송: userId={}", user.getId());
+    // 이메일 발송 등 부가작업
     return true;
   }
+
 
   @Transactional
   public UserEntity validatePasswordResetToken(String token) {
     log.info("비밀번호 재설정 토큰 검증 요청");
+
     VerificationTokenEntity verificationToken = tokenRepository.findByToken(token)
         .orElseThrow(() -> {
           log.warn("유효하지 않은 비밀번호 재설정 토큰");

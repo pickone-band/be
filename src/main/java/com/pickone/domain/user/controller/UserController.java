@@ -36,42 +36,33 @@ public class UserController {
   public ResponseEntity<BaseResponse<UserResponseDto>> getUserById(@PathVariable Long id) {
     log.info("회원 조회 요청: id={}", id);
     UserEntity user = userService.findById(id);
-    return BaseResponse.success(UserResponseDto.from(user));
+    return BaseResponse.success(UserResponseDto.from(user)); // ResponseEntity는 이미 포함됨
   }
+
 
   @Operation(summary = "회원 정보 수정", description = "로그인한 사용자 본인만 자신의 정보를 수정할 수 있습니다.")
   @PutMapping("/{id}")
   public ResponseEntity<BaseResponse<Void>> updateUser(
       @PathVariable Long id,
       @RequestBody @Valid UserUpdateRequestDto request,
-      @AuthenticationPrincipal UserPrincipal userPrincipal) {
+      @AuthenticationPrincipal UserPrincipal principal) {
 
-    log.info("회원 수정 요청: id={}, 로그인 사용자={}", id, userPrincipal.getUserId());
-
-    if (!id.equals(userPrincipal.getUserId())) {
-      log.warn("접근 거부: 본인이 아닌 사용자 수정 시도");
-      throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
-    }
+    validateSelfAccess(id, principal);
+    log.info("회원 수정 요청: userId={}", id);
 
     userService.updateUser(id, request);
     return BaseResponse.success(SuccessCode.UPDATED);
   }
 
+
   @Operation(summary = "회원 탈퇴", description = "본인 또는 관리자가 사용자의 계정을 삭제합니다.")
   @DeleteMapping("/{id}")
   public ResponseEntity<BaseResponse<Void>> deleteUser(
       @PathVariable Long id,
-      @AuthenticationPrincipal UserPrincipal userPrincipal) {
+      @AuthenticationPrincipal UserPrincipal principal) {
 
-    log.info("회원 탈퇴 요청: id={}, 요청자={}", id, userPrincipal.getUserId());
-
-    boolean isSelf = id.equals(userPrincipal.getUserId());
-    boolean isAdmin = userPrincipal.getUser().getRole() == Role.ADMIN;
-
-    if (!isSelf && !isAdmin) {
-      log.warn("탈퇴 요청 거부: 권한 없음 (id={}, 요청자={})", id, userPrincipal.getUserId());
-      throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
-    }
+    validateSelfOrAdminAccess(id, principal);
+    log.info("회원 탈퇴 요청: userId={}", id);
 
     userService.deleteUser(id);
     return BaseResponse.success(SuccessCode.DELETED);
@@ -94,4 +85,24 @@ public class UserController {
     Page<UserEntity> users = userService.searchUsers(condition, pageable);
     return BaseResponse.success(users.map(UserResponseDto::from));
   }
+
+  // --- 권한 체크 메서드 분리 (private) ---
+
+  private void validateSelfAccess(Long targetUserId, UserPrincipal principal) {
+    if (!targetUserId.equals(principal.getUserId())) {
+      log.warn("권한 거부: 본인 외 정보 수정 시도 userId={}, principalId={}", targetUserId, principal.getUserId());
+      throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
+    }
+  }
+
+  private void validateSelfOrAdminAccess(Long targetUserId, UserPrincipal principal) {
+    boolean isSelf = targetUserId.equals(principal.getUserId());
+    boolean isAdmin = principal.getUser().getRole() == Role.ADMIN;
+    if (!isSelf && !isAdmin) {
+      log.warn("권한 거부: 본인 또는 관리자만 가능 userId={}, principalId={}", targetUserId, principal.getUserId());
+      throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
+    }
+  }
 }
+
+

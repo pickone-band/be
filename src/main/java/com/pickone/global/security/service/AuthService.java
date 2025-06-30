@@ -1,9 +1,9 @@
 package com.pickone.global.security.service;
 
+import com.pickone.domain.user.dto.SignupRequestDto;
 import com.pickone.global.security.dto.AuthResult;
 import com.pickone.global.security.dto.ChangePasswordRequest;
 import com.pickone.global.security.dto.LoginRequest;
-import com.pickone.global.security.dto.SignupRequestDto;
 
 public interface AuthService {
     AuthResult signup(SignupRequestDto request);

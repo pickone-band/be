@@ -2,15 +2,18 @@ package com.pickone.domain.term.model.entity;
 
 import com.pickone.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "terms")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@Table(name = "terms", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"title", "version"})
+})
 public class TermEntity extends BaseEntity {
 
   @Id
@@ -31,4 +34,16 @@ public class TermEntity extends BaseEntity {
 
   @Column(nullable = false)
   private LocalDateTime effectiveDate;
+
+  private TermEntity(String title, String content, String version, boolean required, LocalDateTime effectiveDate) {
+    this.title = title;
+    this.content = content;
+    this.version = version;
+    this.required = required;
+    this.effectiveDate = effectiveDate;
+  }
+
+  public static TermEntity create(String title, String content, String version, boolean required, LocalDateTime effectiveDate) {
+    return new TermEntity(title, content, version, required, effectiveDate);
+  }
 }

@@ -1,5 +1,9 @@
 package com.pickone.global.oauth2.service;
 
+import com.pickone.domain.user.model.vo.UserAuthInfo;
+import com.pickone.domain.user.model.vo.UserPreference;
+import com.pickone.domain.user.model.vo.UserProfile;
+import com.pickone.domain.user.model.vo.UserStatus;
 import com.pickone.global.music.dto.MusicInfo;
 import com.pickone.global.music.repository.UserMusicJpaRepository;
 import com.pickone.global.music.service.GoogleMusicService;
@@ -84,21 +88,22 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         } else {
             log.info("신규 사용자 또는 소셜 연결 없음, 사용자 생성 여부 확인: email={}", userInfo.getEmail());
 
-            user = userJpaRepository.findByEmail(userInfo.getEmail())
+            user = userJpaRepository.findByProfile_Email(userInfo.getEmail())
                 .orElseGet(() -> {
                     log.info("신규 사용자 생성: email={}", userInfo.getEmail());
                     UserEntity newUser = UserEntity.builder()
-                        .email(userInfo.getEmail())
-                        .password(passwordEncoder.encode("oauth2TempPass" + userInfo.getEmail()))
-                        .nickname(userInfo.getNickname())
-                        .profileImage(userInfo.getProfileImageUrl())
+                        .profile(UserProfile.of(
+                            userInfo.getEmail(),
+                            passwordEncoder.encode("oauth2TempPass" + userInfo.getEmail()),
+                            userInfo.getNickname(),
+                            null,
+                            userInfo.getGender(),
+                            null,
+                            null))
+                        .status(UserStatus.init())
+                        .preference(UserPreference.ofNullable(List.of()))
+                        .authInfo(UserAuthInfo.of(true))
                         .role(Role.USER)
-                        .isPublic(true)
-                        .isOauth(true)
-                        .gender(userInfo.getGender())
-                        .birthDate(userInfo.getBirthDate())
-                        .genres(List.of())
-                        .mbti(null)
                         .build();
                     return userJpaRepository.save(newUser);
                 });
@@ -121,7 +126,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String accessToken = tokenProvider.generateAccessToken(principal);
         String refreshToken = tokenProvider.generateRefreshToken(principal);
 
-        refreshTokenRepository.save(user.getEmail(), refreshToken, tokenProvider.getRefreshTokenExpiration());
+        refreshTokenRepository.save(user.getProfile().getEmail(), refreshToken, tokenProvider.getRefreshTokenExpiration());
         log.info("JWT 토큰 발급 완료: accessToken=..., refreshToken 저장 완료");
 
         saveCurrentMusicForUser(user, providerAccessToken, provider);

@@ -40,18 +40,16 @@ class EmailVerificationServiceTest {
 
     @BeforeEach
     void setup() {
-        user = UserEntity.builder()
-                .email("test@example.com")
-                .password("encoded-password")
-                .nickname("tester")
-                .role(Role.USER)
-                .isPublic(true)
-                .isOauth(false)
-                .gender(Gender.MALE)
-                .birthDate(LocalDate.of(1995, 1, 1))
-                .mbti(Mbti.INFP)
-                .genres(List.of(Genre.JAZZ, Genre.REGGAE))
-                .build();
+      user = UserEntity.of(
+          "test@example.com",
+          "encoded-password",
+          "tester",
+          Gender.MALE,
+          LocalDate.of(1995, 1, 1),
+          Mbti.INFP,
+          List.of(Genre.JAZZ, Genre.REGGAE)
+      );
+
 
     }
 
@@ -79,7 +77,7 @@ class EmailVerificationServiceTest {
         VerificationTokenEntity token = VerificationTokenEntity.builder()
                 .token(UUID.randomUUID().toString())
                 .type(VerificationType.RESET_PASSWORD)
-                .email(user.getEmail())
+                .email(user.getProfile().getEmail())
                 .expiredAt(LocalDateTime.now().minusMinutes(1))
                 .user(user)
                 .isUsed(false)
@@ -96,7 +94,7 @@ class EmailVerificationServiceTest {
                 .token("token-to-delete")
                 .user(user)
                 .type(VerificationType.RESET_PASSWORD)
-                .email(user.getEmail())
+                .email(user.getProfile().getEmail())
                 .expiredAt(LocalDateTime.now().plusHours(1))
                 .isUsed(false)
                 .build();

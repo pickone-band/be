@@ -1,5 +1,6 @@
 package com.pickone.global.security.controller;
 
+import com.pickone.domain.user.dto.SignupRequestDto;
 import com.pickone.global.exception.BaseResponse;
 import com.pickone.global.exception.SuccessCode;
 import com.pickone.global.security.dto.*;

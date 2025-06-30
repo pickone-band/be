@@ -150,19 +150,15 @@ class RecruitmentServiceTest {
         assertEquals(ErrorCode.UNAUTHORIZED_RECRUITMENT_ACCESS, exception.getErrorCode());
     }
 
-    private UserEntity createTestUser(String email, String nickname) {
-        return UserEntity.builder()
-                .email(email)
-                .password("encoded-password")
-                .nickname(nickname)
-                .profileImage("https://img.example.com")
-                .role(Role.USER)
-                .isPublic(true)
-                .isOauth(false)
-                .gender(Gender.MALE)
-                .birthDate(LocalDate.of(1995, 1, 1))
-                .mbti(null)
-                .genres(List.of())
-                .build();
-    }
+  private UserEntity createTestUser(String email, String nickname) {
+    return UserEntity.of(
+        email,
+        "encoded-password",
+        nickname,
+        Gender.MALE,
+        LocalDate.of(1995, 1, 1),
+        null,           // Mbti: 테스트에서 null 가능 (또는 원하는 값으로)
+        List.of()       // genres
+    );
+  }
 }
