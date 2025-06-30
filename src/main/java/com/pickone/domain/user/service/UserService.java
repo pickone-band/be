@@ -1,106 +1,67 @@
 package com.pickone.domain.user.service;
 
+import com.pickone.domain.user.dto.SignupRequestDto;
 import com.pickone.domain.user.dto.UserSearchConditionDto;
 import com.pickone.domain.user.dto.UserUpdateRequestDto;
 import com.pickone.domain.user.model.entity.UserEntity;
-import com.pickone.domain.user.model.entity.UserInstrumentEntity;
 import com.pickone.domain.user.repository.UserJpaRepository;
-import com.pickone.domain.user.repository.UserQueryDslRepository;
-import com.pickone.global.common.enums.Genre;
-import com.pickone.global.exception.BusinessException;
-import com.pickone.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class UserService {
 
+  private final UserReader userReader;
+  private final UserUpdater userUpdater;
+  private final UserCreator userCreator;
+  private final UserJoinService userJoinService;
+  private final UserInstrumentService userInstrumentService;
+  private final UserPreferenceService userPreferenceService;
+  private final UserPasswordChanger userPasswordChanger;
   private final UserJpaRepository userJpaRepository;
-  private final UserQueryDslRepository userQueryDslRepository;
-  private final PasswordEncoder passwordEncoder;
 
   @Transactional(readOnly = true)
   public UserEntity findById(Long id) {
-    log.info("사용자 조회: id={}", id);
-    return userJpaRepository.findById(id)
-        .orElseThrow(() -> {
-          log.warn("사용자 정보 없음: id={}", id);
-          return new BusinessException(ErrorCode.USER_INFO_NOT_FOUND);
-        });
+    return userReader.findById(id);
   }
 
   @Transactional(readOnly = true)
   public UserEntity findByEmail(String email) {
-    log.info("이메일로 사용자 조회: {}", email);
-    return userJpaRepository.findByEmail(email)
-        .orElseThrow(() -> {
-          log.warn("이메일로 사용자 조회 실패: {}", email);
-          return new BusinessException(ErrorCode.USER_INFO_NOT_FOUND);
-        });
+    return userReader.findByEmail(email);
   }
 
   @Transactional
-  public void updateUser(Long id, UserUpdateRequestDto dto) {
-    log.info("사용자 정보 수정 시작: id={}", id);
-    UserEntity user = findById(id);
-
-    user.updateNickname(dto.getNickname());
-    user.updateProfileImage(dto.getProfileImageUrl());
-    user.updateVisibility(dto.getIsPublic());
-    user.updateMbti(dto.getMbti());
-
-    if (dto.getGenres() != null) {
-      List<Genre> genres = new ArrayList<>(dto.getGenres());
-      user.updateGenres(genres);
-    }
-
-    if (dto.getInstruments() != null) {
-      List<UserInstrumentEntity> instrumentEntities = dto.getInstruments().stream()
-          .map(i -> UserInstrumentEntity.builder()
-              .instrument(i.instrument())
-              .proficiency(i.proficiency())
-              .build())
-          .collect(Collectors.toList());
-      user.updateInstruments(instrumentEntities);
-    }
-
-    log.info("사용자 정보 수정 완료: id={}", id);
+  public UserEntity createUser(SignupRequestDto dto) {
+    return userCreator.createUser(dto);
   }
 
   @Transactional
-  public void updatePassword(Long id, String rawPassword) {
-    log.info("비밀번호 변경 요청: id={}", id);
-    UserEntity user = findById(id);
-    String encoded = passwordEncoder.encode(rawPassword);
-    user.updatePassword(encoded);
+  public void joinUser(SignupRequestDto dto) {
+    userJoinService.join(dto);
+  }
+
+  @Transactional
+  public void updateUser(Long userId, UserUpdateRequestDto dto) {
+    userUpdater.updateUser(userId, dto);
+  }
+
+  @Transactional
+  public void changePassword(Long userId, String rawPassword) {
+    userPasswordChanger.changePassword(userId, rawPassword);
   }
 
   @Transactional
   public void deleteUser(Long id) {
-    log.info("사용자 삭제 요청: id={}", id);
-    if (!userJpaRepository.existsById(id)) {
-      log.warn("삭제 실패: 사용자 없음 id={}", id);
-      throw new BusinessException(ErrorCode.USER_INFO_NOT_FOUND);
-    }
-    userJpaRepository.deleteById(id);
-    log.info("사용자 삭제 완료: id={}", id);
+    UserEntity user = userReader.findById(id);
+    userJpaRepository.delete(user);
   }
 
   @Transactional(readOnly = true)
   public Page<UserEntity> searchUsers(UserSearchConditionDto condition, Pageable pageable) {
-    log.info("사용자 검색 실행: condition={}, pageable={}", condition, pageable);
-    return userQueryDslRepository.searchUsers(condition, pageable);
+    return userReader.searchUsers(condition, pageable);
   }
-
 }

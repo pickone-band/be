@@ -31,6 +31,8 @@ public enum ErrorCode {
     ALREADY_ACTIVE(HttpStatus.BAD_REQUEST, 2202, "이미 활성 상태의 회원입니다."),
     DUPLICATE_PHONE_NUMBER(HttpStatus.BAD_REQUEST, 2301, "이미 사용 중인 전화번호입니다."),
     PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, 2302, "해당 프로필 정보를 찾을 수 없습니다."),
+    INVALID_PASSWORD_FORMAT(HttpStatus.BAD_REQUEST,2303,"비밀번호 형식이 올바르지 않습니다."),
+
 
     // ✅ OAuth2 / 소셜 로그인
     DUPLICATE_SOCIAL_ACCOUNT(HttpStatus.BAD_REQUEST, 2401, "이미 연결된 소셜 계정입니다."),
@@ -43,10 +45,12 @@ public enum ErrorCode {
     // ✅ 약관
     DUPLICATE_TERM_VERSION(HttpStatus.BAD_REQUEST, 2501, "이미 존재하는 약관 버전입니다."),
     TERM_NOT_FOUND(HttpStatus.NOT_FOUND, 2502, "해당 약관 정보를 찾을 수 없습니다."),
-    INACTIVE_TERM(HttpStatus.BAD_REQUEST, 2503, "비활성화된 약관입니다."),
-    ALREADY_AGREED(HttpStatus.BAD_REQUEST, 2601, "이미 동의된 약관입니다."),
-    MEMBER_TERM_NOT_FOUND(HttpStatus.NOT_FOUND, 2602, "해당 회원약관 정보를 찾을 수 없습니다."),
+    REQUIRED_TERM_NOT_CONSENTED(HttpStatus.BAD_REQUEST, 2604, "필수 약관에 대한 동의가 필요합니다."),
+    CONSENT_NOT_FOUND(HttpStatus.NOT_FOUND, 2605, "해당 동의 내역을 찾을 수 없습니다."),
+    CONSENT_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, 2606, "이미 등록된 약관 동의 내역입니다."),
+    INVALID_CONSENT_OPERATION(HttpStatus.BAD_REQUEST, 2607, "잘못된 동의 처리 요청입니다."),
     REQUIRED_TERM_NOT_AGREED(HttpStatus.BAD_REQUEST, 2603, "필수 약관에 동의해야 합니다."),
+    TERM_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, 2504, "이미 등록된 약관입니다."),
 
     // ✅ 인증 및 로그인
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, 4001, "비밀번호가 일치하지 않습니다."),

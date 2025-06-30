@@ -5,7 +5,12 @@ import com.pickone.domain.term.repository.TermJpaRepository;
 import com.pickone.domain.user.model.domain.Gender;
 import com.pickone.domain.user.model.domain.Role;
 import com.pickone.domain.user.model.entity.UserEntity;
+import com.pickone.domain.user.model.vo.UserAuthInfo;
+import com.pickone.domain.user.model.vo.UserPreference;
+import com.pickone.domain.user.model.vo.UserProfile;
+import com.pickone.domain.user.model.vo.UserStatus;
 import com.pickone.domain.user.repository.UserJpaRepository;
+import com.pickone.global.common.enums.Mbti;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -33,8 +38,7 @@ public class TermsAndAdminInitializer implements CommandLineRunner {
 
   private void initializeTerms() {
     if (termRepository.count() == 0) {
-      TermEntity term = new TermEntity(
-          null,
+      TermEntity term = TermEntity.create(
           "서비스 이용약관",
           "서비스 이용에 대한 약관입니다.",
           "v1.0",
@@ -46,20 +50,32 @@ public class TermsAndAdminInitializer implements CommandLineRunner {
     }
   }
 
+
   private void initializeAdmin() {
     String adminEmail = "admin@example.com";
-    if (userRepository.findByEmail(adminEmail).isEmpty()) {
+    if (userRepository.findByProfile_Email(adminEmail).isEmpty()) {
       UserEntity admin = UserEntity.builder()
-          .email(adminEmail)
-          .password(passwordEncoder.encode("admin1234"))
-          .nickname("운영자")
+          .profile(
+              UserProfile.of(
+                  adminEmail,
+                  passwordEncoder.encode("admin1234"),
+                  "운영자",
+                  LocalDate.of(1990, 1, 1),
+                  Gender.MALE,
+                  Mbti.ENFJ, // 혹은 기본값
+                  null // 프로필 이미지 등
+              )
+          )
+          .status(
+              UserStatus.init().activate().verify() // 활성화, 인증 상태 true로 세팅
+          )
+          .preference(
+              UserPreference.ofNullable(Collections.emptyList())
+          )
+          .authInfo(
+              UserAuthInfo.of(false) // 예: oauth false, 추가 인증정보 true
+          )
           .role(Role.ADMIN)
-          .isPublic(true)
-          .isOauth(false)
-          .isVerified(true)
-          .gender(Gender.MALE)
-          .birthDate(LocalDate.of(1990, 1, 1))
-          .genres(Collections.emptyList())
           .build();
 
       userRepository.save(admin);

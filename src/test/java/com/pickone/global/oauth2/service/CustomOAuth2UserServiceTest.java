@@ -107,25 +107,21 @@ class CustomOAuth2UserServiceTest {
 
             when(userConnectionRepository.findByProviderAndProviderUserId("GOOGLE", providerId))
                     .thenReturn(Optional.empty());
-            when(userJpaRepository.findByEmail(email)).thenReturn(Optional.empty());
+            when(userJpaRepository.findByProfile_Email(email)).thenReturn(Optional.empty());
             when(passwordEncoder.encode(any())).thenReturn("encoded-password");
 
-            when(userJpaRepository.save(any(UserEntity.class))).thenAnswer(invocation -> {
-                UserEntity u = invocation.getArgument(0);
-                return UserEntity.builder()
-                        .email(u.getEmail())
-                        .password(u.getPassword())
-                        .nickname(u.getNickname())
-                        .profileImage(u.getProfileImage())
-                        .role(Role.USER)
-                        .isPublic(true)
-                        .isOauth(true)
-                        .gender(u.getGender())
-                        .birthDate(u.getBirthDate())
-                        .mbti(null)
-                        .genres(List.of())
-                        .build();
-            });
+          when(userJpaRepository.save(any(UserEntity.class))).thenAnswer(invocation -> {
+            UserEntity u = invocation.getArgument(0);
+            return UserEntity.of(
+                u.getProfile().getEmail(),
+                u.getProfile().getPassword(),
+                u.getProfile().getNickname(),
+                u.getProfile().getGender(),
+                u.getProfile().getBirthDate(), // profile에서 꺼내야 하는 경우, getBirthDate()가 어디에 있는지 확인
+                null,      // mbti
+                List.of()  // genres
+            );
+          });
 
             when(jwtService.generateAccessToken(any())).thenReturn(UUID.randomUUID().toString());
             when(jwtService.generateRefreshToken(any())).thenReturn(UUID.randomUUID().toString());

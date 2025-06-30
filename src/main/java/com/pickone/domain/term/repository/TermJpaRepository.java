@@ -8,4 +8,5 @@ import java.util.List;
 public interface TermJpaRepository extends JpaRepository<TermEntity, Long> {
 
   List<TermEntity> findByRequiredTrue();
+  boolean existsByTitleAndVersion(String title, String version);
 }

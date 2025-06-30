@@ -29,63 +29,92 @@ public class UserQueryDslRepositoryImpl implements UserQueryDslRepository {
 
     BooleanBuilder where = new BooleanBuilder();
 
-    // 1. 키워드 검색 (nickname, email)
+    // VO 내부 필드 접근: 프로필 닉네임, 이메일
     if (hasText(cond.getKeyword())) {
-      where.and(userEntity.nickname.containsIgnoreCase(cond.getKeyword())
-          .or(userEntity.email.containsIgnoreCase(cond.getKeyword())));
+      where.and(userEntity.profile.nickname.containsIgnoreCase(cond.getKeyword())
+          .or(userEntity.profile.email.containsIgnoreCase(cond.getKeyword())));
     }
 
-    // 2. 공개 여부 필터
+    // 공개 여부: UserStatus VO 내 필드 (가정: status.isPublic)
     if (Boolean.TRUE.equals(cond.getOnlyPublic())) {
-      where.and(userEntity.isPublic.isTrue());
+      where.and(userEntity.status.isPublic.isTrue());
     }
 
-    // 3. 단일 enum 필드 (mbti, gender, role)
+    // 단일 enum 필드 (mbti, gender, role)
     if (cond.getGender() != null) {
-      where.and(userEntity.gender.eq(cond.getGender()));
+      where.and(userEntity.profile.gender.eq(cond.getGender()));
     }
     if (cond.getRole() != null) {
       where.and(userEntity.role.eq(cond.getRole()));
     }
     if (cond.getMbti() != null) {
-      where.and(userEntity.mbti.eq(cond.getMbti()));
+      where.and(userEntity.profile.mbti.eq(cond.getMbti()));
     }
 
-    // 4. 악기 필터 (다중) → userInstruments 조인 필요
+    // 악기 필터 (다중)
     if (cond.getInstruments() != null && !cond.getInstruments().isEmpty()) {
       where.and(userInstrumentEntity.instrument.in(cond.getInstruments()));
     }
 
-    // 5. 장르 필터 (다중)
+    // 장르 필터 (다중) — List<Genre> genres VO 내부
     if (cond.getGenres() != null && !cond.getGenres().isEmpty()) {
-      where.and(userEntity.genres.any().in(cond.getGenres()));
+      where.and(userEntity.preference.genres.any().in(cond.getGenres()));
     }
 
-    // 6. 나이 또는 생년월일 범위
+    // 나이 또는 생년월일 범위 — birthDate는 UserProfile VO 내 필드
     LocalDate today = LocalDate.now();
     if (cond.getMinAge() != null) {
-      where.and(userEntity.birthDate.loe(today.minusYears(cond.getMinAge())));
+      where.and(userEntity.profile.birthDate.loe(today.minusYears(cond.getMinAge())));
     }
     if (cond.getMaxAge() != null) {
-      where.and(userEntity.birthDate.goe(today.minusYears(cond.getMaxAge() + 1).plusDays(1)));
+      where.and(userEntity.profile.birthDate.goe(today.minusYears(cond.getMaxAge() + 1).plusDays(1)));
     }
     if (cond.getBirthDateFrom() != null) {
-      where.and(userEntity.birthDate.goe(cond.getBirthDateFrom()));
+      where.and(userEntity.profile.birthDate.goe(cond.getBirthDateFrom()));
     }
     if (cond.getBirthDateTo() != null) {
-      where.and(userEntity.birthDate.loe(cond.getBirthDateTo()));
+      where.and(userEntity.profile.birthDate.loe(cond.getBirthDateTo()));
     }
 
     // 실제 쿼리 실행
     List<UserEntity> content = query.selectDistinct(userEntity).from(userEntity)
-        .leftJoin(userEntity.userInstruments, userInstrumentEntity).fetchJoin()
+        .leftJoin(userEntity.instruments, userInstrumentEntity).fetchJoin()
         .where(where)
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())
         .fetch();
 
     Long count = query.select(userEntity.countDistinct()).from(userEntity)
-        .leftJoin(userEntity.userInstruments, userInstrumentEntity)
+        .leftJoin(userEntity.instruments, userInstrumentEntity)
+        .where(where)
+        .fetchOne();
+
+    return PageableExecutionUtils.getPage(content, pageable, () -> count != null ? count : 0L);
+  }
+
+  public Page<UserEntity> searchByKeywordAndPublic(String keyword, Boolean onlyPublic, Pageable pageable) {
+    BooleanBuilder where = new BooleanBuilder();
+
+    if (keyword != null && !keyword.isBlank()) {
+      where.and(
+          userEntity.profile.nickname.containsIgnoreCase(keyword)
+              .or(userEntity.profile.email.containsIgnoreCase(keyword))
+      );
+    }
+
+    if (Boolean.TRUE.equals(onlyPublic)) {
+      where.and(userEntity.status.isPublic.isTrue());
+    }
+
+    // 실제 쿼리 실행
+    List<UserEntity> content = query.selectFrom(userEntity)
+        .where(where)
+        .offset(pageable.getOffset())
+        .limit(pageable.getPageSize())
+        .fetch();
+
+    Long count = query.select(userEntity.count())
+        .from(userEntity)
         .where(where)
         .fetchOne();
 

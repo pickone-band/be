@@ -19,7 +19,7 @@ public class CustomUserDetailsService implements UserDetailsService {
   @Override
   public UserDetails loadUserByUsername(String email) {
     log.debug("UserDetails 조회 요청: email={}", email);
-    return userJpaRepository.findByEmail(email)
+    return userJpaRepository.findByProfile_Email(email)
         .map(UserPrincipal::from)
         .orElseThrow(() -> {
           log.warn("UserDetails 조회 실패: email={}", email);

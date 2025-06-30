@@ -1,17 +1,16 @@
 package com.pickone.domain.user.model.entity;
 
-import com.pickone.domain.follow.model.entity.UserFollow;
 import com.pickone.domain.user.model.domain.*;
+import com.pickone.domain.user.model.vo.UserAuthInfo;
+import com.pickone.domain.user.model.vo.UserPreference;
+import com.pickone.domain.user.model.vo.UserProfile;
+import com.pickone.domain.user.model.vo.UserStatus;
 import com.pickone.global.common.entity.BaseEntity;
 import com.pickone.global.common.enums.Genre;
 import com.pickone.global.common.enums.Mbti;
-import com.pickone.global.exception.BusinessException;
-import com.pickone.global.exception.ErrorCode;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,134 +24,86 @@ public class UserEntity extends BaseEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(nullable = false, unique = true)
-  private String email;
+  @Embedded
+  private UserProfile profile;
 
-  @Column(nullable = false)
-  private String password;
+  @Embedded
+  private UserStatus status;
 
-  @Column(nullable = false, unique = true)
-  private String nickname;
+  @Embedded
+  private UserPreference preference;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  private Gender gender;
-
-  @Column(name = "birth_date", nullable = false)
-  private LocalDate birthDate;
-
-  @Column(name = "profile_image")
-  private String profileImage;
+  @Embedded
+  private UserAuthInfo authInfo;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private Role role;
 
-  @Column(name = "is_public", nullable = false)
-  private boolean isPublic;
-
-  @Column(name = "is_verified", nullable = false)
-  private boolean isVerified = false;
-
-  @Column(name = "is_oauth", nullable = false)
-  private boolean isOauth;
-
-  @Column(name = "is_active", nullable = false)
-  private boolean isActive = true;
-
-  @Column(name = "is_locked", nullable = false)
-  private boolean isLocked = false;
-
-  @Column(name = "credentials_expired_at")
-  private LocalDateTime credentialsExpiredAt;
-
-  @Enumerated(EnumType.STRING)
-  @Column
-  private Mbti mbti;
-
-  @ElementCollection(fetch = FetchType.LAZY)
-  @CollectionTable(name = "user_genres", joinColumns = @JoinColumn(name = "user_id"))
-  @Column(name = "genre")
-  @Enumerated(EnumType.STRING)
-  private List<Genre> genres;
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<UserInstrumentEntity> instruments = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<UserInstrumentEntity> userInstruments = new ArrayList<>();
-
-  @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<UserFollow> followings = new ArrayList<>();
-
-  @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<UserFollow> followers = new ArrayList<>();
-
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<UserMusicEntity> userMusics = new ArrayList<>();
+  private List<UserMusicEntity> musics = new ArrayList<>();
 
   @Builder
-  private UserEntity(String email, String password, String nickname, String profileImage, Role role,
-      boolean isPublic, boolean isOauth, boolean isVerified, Gender gender, LocalDate birthDate,
-      Mbti mbti, List<Genre> genres) {
-    this.email = email;
-    this.password = password;
-    this.nickname = nickname;
-    this.profileImage = profileImage;
+  private UserEntity(UserProfile profile, UserStatus status,
+      UserPreference preference, UserAuthInfo authInfo,
+      Role role) {
+    this.profile = profile;
+    this.status = status;
+    this.preference = preference;
+    this.authInfo = authInfo;
     this.role = role;
-    this.isPublic = isPublic;
-    this.isOauth = isOauth;
-    this.isVerified = isVerified;
-    this.gender = gender;
-    this.birthDate = birthDate;
-    this.mbti = mbti;
-    this.genres = genres;
   }
 
-  public void verify() {
-    if (this.isVerified) {
-      throw new BusinessException(ErrorCode.ALREADY_VERIFIED);
-    }
-    this.isVerified = true;
+  public static UserEntity of(
+      String email,
+      String encodedPassword,
+      String nickname,
+      Gender gender,
+      LocalDate birthDate,
+      Mbti mbti,
+      List<Genre> genres
+  ) {
+    return new UserEntity(
+        UserProfile.of(email, encodedPassword, nickname, birthDate, gender, mbti, null),
+        UserStatus.init(),
+        UserPreference.ofNullable(genres),
+        UserAuthInfo.of(false),
+        Role.USER
+    );
   }
 
-  public void updatePassword(String encodedPassword) {
-    this.password = encodedPassword;
+  public void updatePassword(String encodedNewPassword) {
+    this.profile = this.profile.updatePassword(encodedNewPassword);
   }
 
-  public void updateNickname(String nickname) {
-      if (nickname != null) {
-          this.nickname = nickname;
-      }
+  public void updatePreference(UserPreference newPreference) {
+    this.preference = newPreference;
   }
 
-  public void updateProfileImage(String profileImage) {
-      if (profileImage != null) {
-          this.profileImage = profileImage;
-      }
+  public void updateProfile(String nickname, String profileImage, Mbti mbti) {
+    this.profile = this.profile.update(nickname, profileImage, mbti);
   }
 
-  public void updateVisibility(Boolean isPublic) {
-      if (isPublic != null) {
-          this.isPublic = isPublic;
-      }
-  }
+  public void setInstruments(List<UserInstrumentEntity> newInstruments) {
+    // 기존 instruments에 대해 user 참조 끊기
+    this.instruments.forEach(instr -> instr.setUser(null));
+    this.instruments.clear();
 
-  public void updateMbti(Mbti mbti) {
-      if (mbti != null) {
-          this.mbti = mbti;
-      }
-  }
-
-  public void updateGenres(List<Genre> genres) {
-    if (genres != null) {
-      this.genres = List.copyOf(genres);
-    }
-  }
-
-  public void updateInstruments(List<UserInstrumentEntity> newInstruments) {
     if (newInstruments != null) {
-      this.userInstruments.clear(); // ✅ 기존 악기 제거 (orphanRemoval 작동)
-      for (UserInstrumentEntity instrument : newInstruments) {
-        instrument.setUser(this); // ✅ 연관관계 설정 + 리스트에 자동 추가됨
-      }
+      newInstruments.forEach(instr -> instr.setUser(this));
+      this.instruments.addAll(newInstruments);
     }
   }
+  public void verifyEmail() {
+    this.status = this.status.verify();
+  }
+
+
+  public void deactivate() {
+    this.status = this.status.deactivate(); // UserStatus에 deactivate() 메서드 구현 필요
+  }
+
 }

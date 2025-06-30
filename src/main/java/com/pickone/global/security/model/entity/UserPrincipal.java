@@ -42,33 +42,33 @@ public class UserPrincipal implements UserDetails, OAuth2User {
 
   @Override
   public String getPassword() {
-    return user.getPassword();
+    return user.getProfile().getPassword();
   }
 
   @Override
   public String getUsername() {
-    return user.getEmail();
+    return user.getProfile().getEmail();
   }
 
   @Override
   public boolean isAccountNonExpired() {
-    return user.isActive(); // 탈퇴 여부
+    return user.getStatus().isActive();
   }
 
   @Override
   public boolean isAccountNonLocked() {
-    return !user.isLocked(); // 계정 잠금
+    return !user.getStatus().isLocked();
   }
 
   @Override
   public boolean isCredentialsNonExpired() {
-    return user.getCredentialsExpiredAt() == null ||
-        user.getCredentialsExpiredAt().isAfter(LocalDateTime.now());
+    LocalDateTime expiredAt = user.getStatus().getCredentialsExpiredAt();
+    return expiredAt == null || expiredAt.isAfter(LocalDateTime.now());
   }
 
   @Override
   public boolean isEnabled() {
-    return user.isVerified();
+    return user.getStatus().isVerified();
   }
 
   @Override
@@ -78,7 +78,7 @@ public class UserPrincipal implements UserDetails, OAuth2User {
 
   @Override
   public String getName() {
-    return user.getEmail();
+    return user.getProfile().getEmail();
   }
 
   public Long getUserId() {

@@ -11,7 +11,7 @@ public class ChatRoomDtoMapper {
 
   public ChatRoomDetailDto toDetailDto(ChatRoomEntity room, List<ChatRoomUserEntity> users) {
     List<String> nicknames = users.stream()
-        .map(cu -> cu.getUser().getNickname())
+        .map(cu -> cu.getUser().getProfile().getNickname())
         .toList();
     return new ChatRoomDetailDto(room.getId(), room.getName(), nicknames);
   }

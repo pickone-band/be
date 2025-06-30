@@ -23,4 +23,6 @@ public interface UserQueryDslRepository {
     UserSearchConditionDto cond = UserSearchConditionDto.builder().genres(List.of(genre)).build();
     return searchUsers(cond, pageable);
   }
+
+  Page<UserEntity> searchByKeywordAndPublic(String keyword, Boolean onlyPublic, Pageable pageable);
 }

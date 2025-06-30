@@ -1,7 +1,8 @@
 package com.pickone.domain.consent.service;
 
-import com.pickone.domain.consent.dto.request.ConsentRequestDto;
+import com.pickone.domain.consent.dto.ConsentTermtDto;
 import com.pickone.domain.consent.model.entity.ConsentEntity;
+import com.pickone.domain.consent.policy.ConsentPolicy;
 import com.pickone.domain.consent.repository.ConsentJpaRepository;
 import com.pickone.domain.term.model.entity.TermEntity;
 import com.pickone.domain.term.repository.TermJpaRepository;
@@ -13,125 +14,139 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
+import org.mockito.*;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("ConsentService 단위 테스트")
 class ConsentServiceTest {
 
-    @Mock private ConsentJpaRepository consentRepository;
-    @Mock private UserJpaRepository userRepository;
-    @Mock private TermJpaRepository termRepository;
+  @Mock private UserJpaRepository userRepository;
+  @Mock private ConsentJpaRepository consentRepository;
+  @Mock private TermJpaRepository termRepository;
+  @Mock private ConsentPolicy consentPolicy;
 
-    @InjectMocks
-    private ConsentService consentService;
+  @InjectMocks private ConsentService consentService;
 
-    private final Long userId = 1L;
-    private final Long termId = 1L;
+  private UserEntity mockUser;
+  private TermEntity mockTerm;
+  private ConsentEntity mockConsent;
 
-    private ConsentRequestDto requestDto;
+  @BeforeEach
+  void setUp() {
+    mockUser = mock(UserEntity.class);
+    mockTerm = mock(TermEntity.class);
+    mockConsent = mock(ConsentEntity.class);
+  }
 
-    @BeforeEach
-    void setUp() {
-        requestDto = new ConsentRequestDto(termId, true);
-    }
+  @Test
+  @DisplayName("단일 동의 저장 성공")
+  void saveConsent_success() {
+    when(userRepository.findById(1L)).thenReturn(Optional.of(mockUser));
+    when(termRepository.findById(2L)).thenReturn(Optional.of(mockTerm));
+    when(consentRepository.save(any(ConsentEntity.class))).thenReturn(mockConsent);
 
-    @Test
-    @DisplayName("동의 저장 성공")
-    void saveConsent_success() {
-        // given
-        UserEntity user = mock(UserEntity.class);
-        TermEntity term = mock(TermEntity.class);
+    ConsentEntity result = consentService.saveConsent(1L, 2L, true);
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(termRepository.findById(termId)).thenReturn(Optional.of(term));
-        when(consentRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+    assertThat(result).isNotNull();
+    verify(userRepository).findById(1L);
+    verify(termRepository).findById(2L);
+    verify(consentRepository).save(any(ConsentEntity.class));
+  }
 
-        // when
-        ConsentEntity result = consentService.saveConsent(userId, termId, requestDto);
+  @Test
+  @DisplayName("단일 동의 저장 실패 - 유저 없음")
+  void saveConsent_userNotFound() {
+    when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // then
-        assertEquals(user, result.getUser());
-        assertEquals(term, result.getTerm());
-        assertTrue(result.isConsented());
-        assertNotNull(result.getConsentDate());
-    }
+    BusinessException ex = assertThrows(
+        BusinessException.class,
+        () -> consentService.saveConsent(1L, 2L, true)
+    );
+    assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.USER_INFO_NOT_FOUND);
+  }
 
-    @Test
-    @DisplayName("존재하지 않는 사용자로 저장 시도시 예외 발생")
-    void saveConsent_userNotFound() {
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+  @Test
+  @DisplayName("단일 동의 저장 실패 - 약관 없음")
+  void saveConsent_termNotFound() {
+    when(userRepository.findById(1L)).thenReturn(Optional.of(mockUser));
+    when(termRepository.findById(2L)).thenReturn(Optional.empty());
 
-        BusinessException ex = assertThrows(
-                BusinessException.class,
-                () -> consentService.saveConsent(userId, termId, requestDto)
-        );
+    BusinessException ex = assertThrows(
+        BusinessException.class,
+        () -> consentService.saveConsent(1L, 2L, true)
+    );
+    assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.TERM_NOT_FOUND);
+  }
 
-        assertEquals(ErrorCode.USER_INFO_NOT_FOUND, ex.getErrorCode());
-    }
+  @Test
+  @DisplayName("복수 동의 저장 성공")
+  void saveAll_success() {
+    ConsentTermtDto dto1 = new ConsentTermtDto(10L, true);
+    ConsentTermtDto dto2 = new ConsentTermtDto(20L, false);
 
-    @Test
-    @DisplayName("존재하지 않는 약관으로 저장 시도시 예외 발생")
-    void saveConsent_termNotFound() {
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mock(UserEntity.class)));
-        when(termRepository.findById(termId)).thenReturn(Optional.empty());
+    TermEntity term1 = mock(TermEntity.class);
+    TermEntity term2 = mock(TermEntity.class);
 
-        BusinessException ex = assertThrows(
-                BusinessException.class,
-                () -> consentService.saveConsent(userId, termId, requestDto)
-        );
+    when(termRepository.findById(10L)).thenReturn(Optional.of(term1));
+    when(termRepository.findById(20L)).thenReturn(Optional.of(term2));
 
-        assertEquals(ErrorCode.TERM_NOT_FOUND, ex.getErrorCode());
-    }
+    // save는 void or 반환값 불필요, just verify
+    consentService.saveAll(mockUser, List.of(dto1, dto2));
 
-    @Test
-    @DisplayName("사용자 동의 목록 조회")
-    void getUserConsents() {
-        ConsentEntity c1 = mock(ConsentEntity.class);
-        ConsentEntity c2 = mock(ConsentEntity.class);
+    verify(termRepository).findById(10L);
+    verify(termRepository).findById(20L);
+    verify(consentRepository, times(2)).save(any(ConsentEntity.class));
+  }
 
-        when(consentRepository.findByUserId(userId)).thenReturn(List.of(c1, c2));
+  @Test
+  @DisplayName("유저의 전체 동의 내역 조회")
+  void getUserConsents_success() {
+    when(consentRepository.findByUserId(1L)).thenReturn(List.of(mockConsent));
 
-        List<ConsentEntity> results = consentService.getUserConsents(userId);
+    List<ConsentEntity> consents = consentService.getUserConsents(1L);
 
-        assertEquals(2, results.size());
-    }
+    assertThat(consents).hasSize(1);
+    verify(consentRepository).findByUserId(1L);
+  }
 
-    @Test
-    @DisplayName("동의 여부: 이미 동의한 경우 true 반환")
-    void hasConsented_true() {
-        ConsentEntity consent = mock(ConsentEntity.class);
-        when(consent.isConsented()).thenReturn(true);
+  @Test
+  @DisplayName("동의여부 정책 검사 위임")
+  void hasConsented_delegatesToPolicy() {
+    when(consentPolicy.hasConsented(1L, 2L)).thenReturn(true);
 
-        when(consentRepository.findByUserIdAndTermId(userId, termId))
-                .thenReturn(Optional.of(consent));
+    boolean result = consentService.hasConsented(1L, 2L);
 
-        assertTrue(consentService.hasConsented(userId, termId));
-    }
+    assertThat(result).isTrue();
+    verify(consentPolicy).hasConsented(1L, 2L);
+  }
 
-    @Test
-    @DisplayName("동의 여부: 동의 이력이 없는 경우 false 반환")
-    void hasConsented_false() {
-        when(consentRepository.findByUserIdAndTermId(userId, termId))
-                .thenReturn(Optional.empty());
+  @Test
+  @DisplayName("동의 삭제 성공")
+  void deleteConsent_success() {
+    when(consentRepository.findByUserIdAndTermId(1L, 2L)).thenReturn(Optional.of(mockConsent));
 
-        assertFalse(consentService.hasConsented(userId, termId));
-    }
+    consentService.deleteConsent(1L, 2L);
 
-    @Test
-    @DisplayName("동의 삭제가 정상적으로 호출됨")
-    void deleteConsent() {
-        consentService.deleteConsent(userId, termId);
-        verify(consentRepository).deleteByUserIdAndTermId(userId, termId);
-    }
+    verify(consentRepository).findByUserIdAndTermId(1L, 2L);
+    verify(consentRepository).delete(mockConsent);
+  }
+
+  @Test
+  @DisplayName("동의 삭제 실패 - 엔티티 없음")
+  void deleteConsent_notFound() {
+    when(consentRepository.findByUserIdAndTermId(1L, 2L)).thenReturn(Optional.empty());
+
+    BusinessException ex = assertThrows(
+        BusinessException.class,
+        () -> consentService.deleteConsent(1L, 2L)
+    );
+    assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.CONSENT_NOT_FOUND);
+  }
 }

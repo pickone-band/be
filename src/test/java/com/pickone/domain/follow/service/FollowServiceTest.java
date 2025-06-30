@@ -6,6 +6,8 @@ import com.pickone.domain.user.model.domain.Gender;
 import com.pickone.domain.user.model.domain.Role;
 import com.pickone.domain.user.model.entity.UserEntity;
 import com.pickone.domain.user.repository.UserJpaRepository;
+import com.pickone.global.common.enums.Genre;
+import com.pickone.global.common.enums.Mbti;
 import com.pickone.global.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -44,31 +46,26 @@ class FollowServiceTest {
 
     @BeforeEach
     void setUp() {
-        userA = UserEntity.builder()
-                .email("a@example.com")
-                .password("pass")
-                .nickname("A")
-                .gender(Gender.MALE)
-                .birthDate(LocalDate.of(1990, 1, 1))
-                .role(Role.USER)
-                .isPublic(true)
-                .isOauth(false)
-                .isVerified(true)
-                .genres(List.of())
-                .build();
+      userA = UserEntity.of(
+          "a@example.com",         // email
+          "encoded-password",      // encodedPassword
+          "A",                     // nickname
+          Gender.MALE,             // gender
+          LocalDate.of(1990, 1, 1),// birthDate
+          Mbti.INTJ,               // mbti
+          List.of(Genre.ACOUSTIC)  // genres (필요시 빈 리스트 가능)
+      );
 
-        userB = UserEntity.builder()
-                .email("b@example.com")
-                .password("pass")
-                .nickname("B")
-                .gender(Gender.FEMALE)
-                .birthDate(LocalDate.of(1995, 2, 2))
-                .role(Role.USER)
-                .isPublic(true)
-                .isOauth(false)
-                .isVerified(true)
-                .genres(List.of())
-                .build();
+      userB = UserEntity.of(
+          "b@example.com",
+          "encoded-password",
+          "B",
+          Gender.FEMALE,
+          LocalDate.of(1995, 2, 2),
+          Mbti.ENFP,
+          List.of(Genre.POP)
+      );
+
     }
 
     @Test
@@ -140,7 +137,7 @@ class FollowServiceTest {
         List<UserEntity> result = followService.getFollowers(2L);
 
         assertEquals(1, result.size());
-        assertEquals("A", result.get(0).getNickname());
+        assertEquals("A", result.get(0).getProfile().getNickname());
     }
 
     @Test
@@ -154,7 +151,7 @@ class FollowServiceTest {
         List<UserEntity> result = followService.getFollowings(1L);
 
         assertEquals(1, result.size());
-        assertEquals("B", result.get(0).getNickname());
+        assertEquals("B", result.get(0).getProfile().getNickname());
     }
 
     @Test

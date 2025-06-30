@@ -98,7 +98,7 @@ public class JwtService implements TokenProvider {
     Claims claims = extractAllClaims(token);
     String email = claims.getSubject();
 
-    UserEntity userEntity = userJpaRepository.findByEmail(email)
+    UserEntity userEntity = userJpaRepository.findByProfile_Email(email)
         .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
 
     UserPrincipal userPrincipal = UserPrincipal.from(userEntity);

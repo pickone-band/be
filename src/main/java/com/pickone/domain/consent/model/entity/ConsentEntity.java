@@ -23,6 +23,10 @@ public class ConsentEntity extends BaseEntity {
   @JoinColumn(name = "users_id", nullable = false)
   private UserEntity user;
 
+  public void setUser(UserEntity user) {
+    this.user = user;
+  }
+
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "terms_id", nullable = false)
   private TermEntity term;
@@ -32,4 +36,17 @@ public class ConsentEntity extends BaseEntity {
 
   @Column(nullable = false)
   private LocalDateTime consentDate;
+
+  @Builder
+  private ConsentEntity(
+      UserEntity user,
+      TermEntity term,
+      boolean consented,
+      LocalDateTime consentDate
+  ) {
+    this.user = user;
+    this.term = term;
+    this.consented = consented;
+    this.consentDate = consentDate;
+  }
 }

@@ -48,23 +48,19 @@ public class ApplicationServiceTest {
     @Test
     void 멤버_지원_테스트() {
         // given
-        UserEntity testUser = UserEntity.builder()
-                .email("apply-test@example.com")
-                .password("encoded-password")
-                .nickname("테스트유저")
-                .profileImage("https://example.com/profile.jpg")
-                .role(Role.USER)
-                .isPublic(true)
-                .isOauth(false)
-                .gender(Gender.MALE)
-                .birthDate(LocalDate.of(1995, 1, 1))
-                .mbti(Mbti.ENFP)
-                .genres(List.of())
-                .build();
+      UserEntity testUser = UserEntity.of(
+          "apply-test@example.com",
+          "encoded-password",
+          "테스트유저",
+          Gender.MALE,
+          LocalDate.of(1995, 1, 1),
+          Mbti.ENFP,
+          List.of()
+      );
+      UserEntity savedUser = userJpaRepository.save(testUser);
 
-        UserEntity savedUser = userJpaRepository.save(testUser);
 
-        UserEntity userEntity = userJpaRepository.findByEmail(savedUser.getEmail())
+        UserEntity userEntity = userJpaRepository.findByProfile_Email(savedUser.getProfile().getEmail())
                 .orElseThrow(() -> new RuntimeException("UserEntity not found"));
 
         Recruitment recruitment = Recruitment.builder()
@@ -93,23 +89,18 @@ public class ApplicationServiceTest {
     @Test
     void 멤버_지원_조회_테스트() {
         // given
-        UserEntity testUser = UserEntity.builder()
-                .email("apply-test@example.com")
-                .password("encoded-password")
-                .nickname("테스트유저")
-                .profileImage("https://example.com/profile.jpg")
-                .role(Role.USER)
-                .isPublic(true)
-                .isOauth(false)
-                .gender(Gender.MALE)
-                .birthDate(LocalDate.of(1995, 1, 1))
-                .mbti(Mbti.ENFP)
-                .genres(List.of())
-                .build();
-
+      UserEntity testUser = UserEntity.of(
+          "apply-test@example.com",
+          "encoded-password",
+          "테스트유저",
+          Gender.MALE,
+          LocalDate.of(1995, 1, 1),
+          Mbti.ENFP,
+          List.of()
+      );
         UserEntity savedUser = userJpaRepository.save(testUser);  // ← userRepository → authRepository 로 변경
 
-        UserEntity userEntity = userJpaRepository.findByEmail(savedUser.getEmail())
+        UserEntity userEntity = userJpaRepository.findByProfile_Email(savedUser.getProfile().getEmail())
                 .orElseThrow(() -> new RuntimeException("UserEntity not found"));
         // 모집글 등록
         Recruitment recruitment = Recruitment.builder()
@@ -142,19 +133,15 @@ public class ApplicationServiceTest {
     @Test
     void 멤버_지원글_수정_테스트() {
         // given
-        UserEntity testUser = UserEntity.builder()
-                .email("apply-test@example.com")
-                .password("encoded-password")
-                .nickname("테스트유저")
-                .profileImage("https://example.com/profile.jpg")
-                .role(Role.USER)
-                .isPublic(true)
-                .isOauth(false)
-                .gender(Gender.MALE)
-                .birthDate(LocalDate.of(1995, 1, 1))
-                .mbti(Mbti.ENFP)
-                .genres(List.of())
-                .build();
+      UserEntity testUser = UserEntity.of(
+          "apply-test@example.com",
+          "encoded-password",
+          "테스트유저",
+          Gender.MALE,
+          LocalDate.of(1995, 1, 1),
+          Mbti.ENFP,
+          List.of()
+      );
 
         UserEntity savedUser = userJpaRepository.save(testUser);
 

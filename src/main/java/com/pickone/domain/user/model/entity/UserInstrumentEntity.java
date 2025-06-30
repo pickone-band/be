@@ -39,9 +39,18 @@ public class UserInstrumentEntity extends BaseEntity {
 
   public void setUser(UserEntity user) {
     this.user = user;
-    if (!user.getUserInstruments().contains(this)) {
-      user.getUserInstruments().add(this);
+    if (!user.getInstruments().contains(this)) {
+      user.getInstruments().add(this);
     }
   }
 
+  public static UserInstrumentEntity create(UserEntity user, Instrument instrument, Proficiency proficiency) {
+    UserInstrumentEntity entity = new UserInstrumentEntity(instrument, proficiency);
+    entity.setUser(user); // 양방향 연관관계 설정
+    return entity;
+  }
+
+  public void updateProficiency(Proficiency newLevel) {
+    this.proficiency = newLevel;
+  }
 }

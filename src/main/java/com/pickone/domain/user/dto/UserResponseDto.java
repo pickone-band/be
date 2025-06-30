@@ -7,7 +7,13 @@ public record UserResponseDto(Long id, String email, String nickname, String pro
                               String role) {
 
   public static UserResponseDto from(UserEntity user) {
-    return new UserResponseDto(user.getId(), user.getEmail(), user.getNickname(),
-        user.getProfileImage(), user.isPublic(), user.getRole().name());
+    return new UserResponseDto(
+        user.getId(),
+        user.getProfile().getEmail(),
+        user.getProfile().getNickname(),
+        user.getProfile().getProfileImage(),
+        user.getStatus().isPublic(),
+        user.getRole().name()
+    );
   }
 }
