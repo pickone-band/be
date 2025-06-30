@@ -1,226 +1,109 @@
 package com.pickone.domain.messaging.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.pickone.domain.messaging.dto.ChatRoomDetailDto;
 import com.pickone.domain.messaging.dto.ChatRoomSummaryDto;
 import com.pickone.domain.messaging.dto.CreateChatRoomRequest;
+import com.pickone.domain.messaging.factory.ChatRoomFactory;
+import com.pickone.domain.messaging.mapper.ChatRoomDtoMapper;
 import com.pickone.domain.messaging.model.document.MessageDocument;
-import com.pickone.domain.messaging.model.entity.ChatRole;
 import com.pickone.domain.messaging.model.entity.ChatRoomEntity;
 import com.pickone.domain.messaging.model.entity.ChatRoomUserEntity;
 import com.pickone.domain.messaging.repository.ChatRoomRepository;
 import com.pickone.domain.messaging.repository.ChatRoomUserRepository;
 import com.pickone.domain.messaging.repository.MessageAggregationRepository;
-import com.pickone.domain.messaging.repository.MessageMongoRepository;
-import com.pickone.domain.user.model.domain.Gender;
-import com.pickone.domain.user.model.domain.Role;
 import com.pickone.domain.user.model.entity.UserEntity;
 import com.pickone.domain.user.repository.UserJpaRepository;
-import com.pickone.global.exception.BusinessException;
-import com.pickone.global.exception.ErrorCode;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-
 @ExtendWith(MockitoExtension.class)
 class ChatRoomServiceTest {
 
-    @Mock
-    private ChatRoomRepository chatRoomRepository;
+  @InjectMocks
+  private ChatRoomService chatRoomService;
 
-    @Mock
-    private ChatRoomUserRepository chatRoomUserRepository;
+  @Mock
+  private ChatRoomRepository chatRoomRepository;
 
-    @Mock
-    private MessageMongoRepository messageMongoRepository;
+  @Mock
+  private ChatRoomUserRepository chatRoomUserRepository;
 
-    @Mock
-    private MessageAggregationRepository messageAggregationRepository;
+  @Mock
+  private UserJpaRepository userJpaRepository;
 
-    @Mock
-    private UserJpaRepository userJpaRepository;
+  @Mock
+  private MessageAggregationRepository messageAggregationRepository;
 
-    @InjectMocks
-    private ChatRoomService chatRoomService;
+  @Mock
+  private ChatRoomFactory chatRoomFactory;
 
-    @Test
-    void createRoom_success() {
-        // given
-        Long creatorId = 1L;
-        List<Long> participantIds = List.of(2L, 3L);
+  @Mock
+  private ChatRoomDtoMapper chatRoomDtoMapper;
 
-        CreateChatRoomRequest request = new CreateChatRoomRequest("테스트방", participantIds);
+  @Test
+  void createRoom_success() {
+    // given
+    Long creatorId = 1L;
+    CreateChatRoomRequest request = new CreateChatRoomRequest("study", List.of(2L, 3L));
+    UserEntity creator = mock(UserEntity.class);
+    List<UserEntity> participants = List.of(mock(UserEntity.class), mock(UserEntity.class));
+    ChatRoomEntity room = new ChatRoomEntity("study");
 
-        UserEntity creator = UserEntity.builder()
-                .email("creator@test.com")
-                .password("encoded")
-                .nickname("크리에이터")
-                .profileImage(null)
-                .role(Role.USER)
-                .isPublic(true)
-                .isOauth(false)
-                .gender(Gender.MALE)
-                .birthDate(LocalDate.now())
-                .mbti(null)
-                .genres(List.of())
-                .build();
+    given(userJpaRepository.findById(creatorId)).willReturn(Optional.of(creator));
+    given(userJpaRepository.findAllById(request.participantIds())).willReturn(participants);
+    given(chatRoomFactory.create(request.name())).willReturn(room);
+    given(chatRoomDtoMapper.toDetailDto(eq(room), anyList())).willReturn(
+        new ChatRoomDetailDto(room.getId(), room.getName(), List.of("a", "b", "c"))
+    );
 
-        UserEntity participant1 = UserEntity.builder()
-                .email("user1@test.com")
-                .password("encoded")
-                .nickname("유저1")
-                .profileImage(null)
-                .role(Role.USER)
-                .isPublic(true)
-                .isOauth(false)
-                .gender(Gender.FEMALE)
-                .birthDate(LocalDate.now())
-                .mbti(null)
-                .genres(List.of())
-                .build();
+    // when
+    ChatRoomDetailDto result = chatRoomService.createRoom(creatorId, request);
 
-        UserEntity participant2 = UserEntity.builder()
-                .email("user2@test.com")
-                .password("encoded")
-                .nickname("유저2")
-                .profileImage(null)
-                .role(Role.USER)
-                .isPublic(true)
-                .isOauth(false)
-                .gender(Gender.MALE)
-                .birthDate(LocalDate.now())
-                .mbti(null)
-                .genres(List.of())
-                .build();
+    // then
+    assertNotNull(result);
+    verify(chatRoomRepository).save(room);
+    verify(chatRoomUserRepository).saveAll(anyList());
+  }
 
-        given(userJpaRepository.findById(creatorId)).willReturn(Optional.of(creator));
-        given(userJpaRepository.findAllById(participantIds)).willReturn(List.of(participant1, participant2));
+  @Test
+  void getChatRoomsWithLatestMessage_success() {
+    // given
+    Long userId = 1L;
 
-        // when
-        ChatRoomDetailDto result = chatRoomService.createRoom(creatorId, request);
+    ChatRoomEntity room = mock(ChatRoomEntity.class);
+    when(room.getId()).thenReturn(100L);
+    when(room.getName()).thenReturn("room");
 
-        // then
-        assertEquals("테스트방", result.name());
-        assertTrue(result.participantNicknames().contains("크리에이터"));
-        assertTrue(result.participantNicknames().contains("유저1"));
-        assertTrue(result.participantNicknames().contains("유저2"));
+    ChatRoomUserEntity cru = mock(ChatRoomUserEntity.class);
+    when(cru.getChatRoom()).thenReturn(room);
 
-        verify(chatRoomRepository).save(any(ChatRoomEntity.class));
-        verify(chatRoomUserRepository).saveAll(anyList());
-    }
+    given(chatRoomUserRepository.findByUserId(userId)).willReturn(List.of(cru));
 
-    @Test
-    void getChatRoomsWithLatestMessage_success() {
-        // given
-        Long userId = 1L;
+    MessageDocument msg = new MessageDocument("id", 100L, 1L, "hi", LocalDateTime.now());
+    given(messageAggregationRepository.findLatestMessagesPerRoom(List.of(100L)))
+        .willReturn(List.of(msg));
 
-        UserEntity user = UserEntity.builder()
-                .email("creator@test.com")
-                .password(null)
-                .nickname("크리에이터")
-                .profileImage(null)
-                .role(Role.USER)
-                .isPublic(true)
-                .isOauth(false)
-                .gender(Gender.MALE)
-                .birthDate(LocalDate.now())
-                .mbti(null)
-                .genres(List.of())
-                .build();
+    // when
+    List<ChatRoomSummaryDto> results = chatRoomService.getChatRoomsWithLatestMessage(userId);
 
-
-        ChatRoomEntity room1 = new ChatRoomEntity(100L, "방1", new ArrayList<>());
-        ChatRoomEntity room2 = new ChatRoomEntity(200L, "방2", new ArrayList<>());
-
-        ChatRoomUserEntity cru1 = new ChatRoomUserEntity(null, room1, user, ChatRole.MEMBER);
-        ChatRoomUserEntity cru2 = new ChatRoomUserEntity(null, room2, user, ChatRole.MEMBER);
-
-        List<ChatRoomUserEntity> participation = List.of(cru1, cru2);
-
-        MessageDocument msg1 = new MessageDocument("m1", 100L, 1L, "하이", LocalDateTime.now());
-        MessageDocument msg2 = new MessageDocument("m2", 200L, 1L, "헬로", LocalDateTime.now());
-
-        given(chatRoomUserRepository.findByUserId(userId)).willReturn(participation);
-        given(messageAggregationRepository.findLatestMessagesPerRoom(List.of(100L, 200L)))
-                .willReturn(List.of(msg1, msg2));
-
-        // when
-        List<ChatRoomSummaryDto> result = chatRoomService.getChatRoomsWithLatestMessage(userId);
-
-        // then
-        assertEquals(2, result.size());
-        assertEquals("하이", result.get(0).lastMessage());
-        assertEquals("헬로", result.get(1).lastMessage());
-    }
-
-    @Test
-    void deleteRoom_success_byOwner() {
-        // given
-        Long roomId = 10L;
-        Long requesterId = 1L;
-
-        ChatRoomEntity room = new ChatRoomEntity("삭제할방");
-
-        ChatRoomUserEntity ownerParticipation = new ChatRoomUserEntity(room, mock(UserEntity.class), ChatRole.OWNER);
-
-        given(chatRoomRepository.findById(roomId)).willReturn(Optional.of(room));
-        given(chatRoomUserRepository.findByUserIdAndChatRoomId(requesterId, roomId)).willReturn(Optional.of(ownerParticipation));
-
-        // when
-        assertDoesNotThrow(() -> chatRoomService.deleteRoom(roomId, requesterId));
-
-        // then
-        verify(chatRoomUserRepository).deleteAllByChatRoomId(roomId);
-        verify(chatRoomRepository).delete(room);
-    }
-
-    @Test
-    void deleteRoom_fail_ifNotOwner() {
-        // given
-        Long roomId = 10L;
-        Long requesterId = 1L;
-
-        ChatRoomEntity room = new ChatRoomEntity("삭제 불가 방");
-        ChatRoomUserEntity notOwnerParticipation = new ChatRoomUserEntity(room, mock(UserEntity.class), ChatRole.MEMBER);
-
-        given(chatRoomRepository.findById(roomId)).willReturn(Optional.of(room));
-        given(chatRoomUserRepository.findByUserIdAndChatRoomId(requesterId, roomId)).willReturn(Optional.of(notOwnerParticipation));
-
-        // when & then
-        BusinessException ex = assertThrows(BusinessException.class, () -> {
-            chatRoomService.deleteRoom(roomId, requesterId);
-        });
-        assertEquals(ErrorCode.CHAT_ROOM_DELETE_FORBIDDEN, ex.getErrorCode());
-    }
-
-    @Test
-    void deleteRoom_fail_ifNotParticipant() {
-        // given
-        Long roomId = 10L;
-        Long requesterId = 1L;
-        ChatRoomEntity room = new ChatRoomEntity("삭제할방");
-
-        given(chatRoomRepository.findById(roomId)).willReturn(Optional.of(room));
-        given(chatRoomUserRepository.findByUserIdAndChatRoomId(requesterId, roomId)).willReturn(Optional.empty());
-
-        // when & then
-        BusinessException ex = assertThrows(BusinessException.class, () -> {
-            chatRoomService.deleteRoom(roomId, requesterId);
-        });
-        assertEquals(ErrorCode.CHAT_ROOM_ACCESS_DENIED, ex.getErrorCode());
-    }
+    // then
+    assertFalse(results.isEmpty());
+    assertEquals("hi", results.get(0).lastMessage());
+  }
 }

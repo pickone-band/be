@@ -20,7 +20,10 @@ public class MessageDocument {
   private String content;
   private LocalDateTime sentAt;
 
-  public static MessageDocument create(Long roomId, Long senderId, String content) {
-    return new MessageDocument(null, roomId, senderId, content, LocalDateTime.now());
+  public MessageDocument(Long roomId, Long senderId, String content, LocalDateTime sentAt) {
+    this.roomId = roomId;
+    this.senderId = senderId;
+    this.content = content;
+    this.sentAt = sentAt;
   }
 }

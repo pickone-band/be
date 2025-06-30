@@ -5,6 +5,7 @@ import com.pickone.domain.messaging.model.document.MessageDocument;
 import java.util.List;
 
 public interface MessageAggregationRepository {
-
   List<MessageDocument> findLatestMessagesPerRoom(List<Long> roomIds);
+
+  List<MessageDocument> findAllByRoomId(Long roomId);
 }

@@ -15,11 +15,18 @@ public class MessageReadStatusDocument {
   @Id
   private String id;
 
+  private Long roomId;
   private String messageId;
   private Long userId;
+  private boolean isRead;
   private LocalDateTime readAt;
 
-  public static MessageReadStatusDocument create(String messageId, Long userId) {
-    return new MessageReadStatusDocument(null, messageId, userId, LocalDateTime.now());
+  public MessageReadStatusDocument(Long roomId, String messageId, Long userId, boolean isRead, LocalDateTime readAt) {
+    this.roomId = roomId;
+    this.messageId = messageId;
+    this.userId = userId;
+    this.isRead = isRead;
+    this.readAt = readAt;
   }
+
 }
