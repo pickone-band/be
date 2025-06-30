@@ -52,7 +52,7 @@ public class UserEntity extends BaseEntity {
   private boolean isPublic;
 
   @Column(name = "is_verified", nullable = false)
-  private boolean isVerified;
+  private boolean isVerified = false;
 
   @Column(name = "is_oauth", nullable = false)
   private boolean isOauth;

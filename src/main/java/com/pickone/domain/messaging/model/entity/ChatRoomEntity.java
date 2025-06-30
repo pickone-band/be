@@ -29,7 +29,4 @@ public class ChatRoomEntity {
     this.name = name;
   }
 
-  public void changeName(String newName) {
-    this.name = newName;
-  }
 }

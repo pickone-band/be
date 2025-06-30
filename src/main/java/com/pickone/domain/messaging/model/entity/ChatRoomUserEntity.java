@@ -33,10 +33,6 @@ public class ChatRoomUserEntity {
     this.role = role;
   }
 
-  public boolean isAdminOrOwner() {
-    return role == ChatRole.OWNER || role == ChatRole.ADMIN;
-  }
-
   public boolean isOwner() {
     return role == ChatRole.OWNER;
   }

@@ -19,7 +19,10 @@ public class MessageReadStatusDocument {
   private Long userId;
   private LocalDateTime readAt;
 
-  public static MessageReadStatusDocument create(String messageId, Long userId) {
-    return new MessageReadStatusDocument(null, messageId, userId, LocalDateTime.now());
+  public MessageReadStatusDocument(String messageId, Long userId, LocalDateTime readAt) {
+    this.messageId = messageId;
+    this.userId = userId;
+    this.readAt = readAt;
   }
+
 }
