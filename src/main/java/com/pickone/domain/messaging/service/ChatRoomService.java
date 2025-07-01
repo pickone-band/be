@@ -5,27 +5,23 @@ import com.pickone.domain.messaging.dto.ChatRoomSummaryDto;
 import com.pickone.domain.messaging.dto.CreateChatRoomRequest;
 import com.pickone.domain.messaging.factory.ChatRoomFactory;
 import com.pickone.domain.messaging.mapper.ChatRoomDtoMapper;
-import com.pickone.domain.messaging.model.document.MessageDocument;
 import com.pickone.domain.messaging.model.entity.ChatRole;
 import com.pickone.domain.messaging.model.entity.ChatRoomEntity;
 import com.pickone.domain.messaging.model.entity.ChatRoomUserEntity;
+import com.pickone.domain.messaging.model.document.MessageDocument;
 import com.pickone.domain.messaging.repository.ChatRoomRepository;
 import com.pickone.domain.messaging.repository.ChatRoomUserRepository;
 import com.pickone.domain.messaging.repository.MessageAggregationRepository;
-import com.pickone.domain.messaging.repository.MessageMongoRepository;
 import com.pickone.domain.user.model.entity.UserEntity;
 import com.pickone.domain.user.repository.UserJpaRepository;
 import com.pickone.global.exception.BusinessException;
 import com.pickone.global.exception.ErrorCode;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @RequiredArgsConstructor
 @Service

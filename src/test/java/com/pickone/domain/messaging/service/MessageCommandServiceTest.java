@@ -1,65 +1,138 @@
 package com.pickone.domain.messaging.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-
 import com.pickone.domain.messaging.dto.MessageDto;
 import com.pickone.domain.messaging.dto.SendMessageRequest;
 import com.pickone.domain.messaging.model.document.MessageDocument;
-import com.pickone.domain.messaging.policy.MessageSendPolicy;
+import com.pickone.domain.messaging.model.policy.MessageSendPolicy;
 import com.pickone.domain.messaging.repository.MessageMongoRepository;
 import com.pickone.domain.messaging.repository.MessageReadStatusMongoRepository;
-import java.time.LocalDateTime;
+import com.pickone.domain.notification.event.MessageSentEvent;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.*;
 import org.springframework.context.ApplicationEventPublisher;
 
-@ExtendWith(MockitoExtension.class)
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 class MessageCommandServiceTest {
 
-  @InjectMocks
-  private MessageCommandService messageCommandService;
+  @Mock private MessageMongoRepository messageRepository;
+  @Mock private MessageReadStatusMongoRepository readStatusRepository;
+  @Mock private MessageSendPolicy messageSendPolicy;
+  @Mock private ApplicationEventPublisher eventPublisher;
 
-  @Mock
-  private MessageMongoRepository messageRepository;
+  @InjectMocks private MessageCommandService sut;
 
-  @Mock
-  private MessageReadStatusMongoRepository readStatusRepository;
-
-  @Mock
-  private MessageSendPolicy messageSendPolicy;
-
-  @Mock
-  private ApplicationEventPublisher eventPublisher;
+  @BeforeEach
+  void setUp() {
+    MockitoAnnotations.openMocks(this);
+  }
 
   @Test
-  void sendMessage_정상동작() {
-    // given
-    Long senderId = 1L;
-    SendMessageRequest request = new SendMessageRequest(100L, "hello");
+  @DisplayName("정상적으로 메시지 전송 (단톡방)")
+  void sendMessage_success() {
+    Long senderId = 1L, roomId = 100L;
+    String content = "hello world";
+    SendMessageRequest req = new SendMessageRequest(roomId, content);
 
-    // policy 검증이 예외 없이 통과되도록 설정
-    // (void method는 doNothing().when(...) 사용)
-    // 또는 생략 가능 (예외 안 던지는 한은)
+    // 정책: 보낼 수 있는지 검증
+    doNothing().when(messageSendPolicy).validateCanSend(senderId, roomId);
 
-    MessageDocument saved = new MessageDocument(
-        "m1", request.roomId(), senderId, request.content(), LocalDateTime.now()
-    );
+    // 정책: 수신자 목록 (단톡방, 여러 명)
+    List<Long> recipientIds = List.of(2L, 3L);
+    when(messageSendPolicy.getRecipientIds(roomId, senderId)).thenReturn(recipientIds);
 
-    given(messageRepository.save(any(MessageDocument.class))).willReturn(saved);
+    MessageDocument message = mock(MessageDocument.class);
 
-    // when
-    MessageDto result = messageCommandService.sendMessage(senderId, request);
+    // Argument matcher 일관 적용: eq/any
+    try (MockedStatic<MessageDocument> msgStatic = mockStatic(MessageDocument.class)) {
+      msgStatic.when(() -> MessageDocument.of(
+          eq(roomId), eq(senderId), eq(null), eq(content), any(LocalDateTime.class)
+      )).thenReturn(message);
 
-    // then
-    assertNotNull(result);
-    assertEquals(request.roomId(), result.roomId());
-    assertEquals(senderId, result.senderId());
-    assertEquals(request.content(), result.content());
+      when(message.getContent()).thenReturn(content);
+
+      when(messageRepository.save(message)).thenReturn(message);
+
+      MessageDto dto = mock(MessageDto.class);
+      try (MockedStatic<MessageDto> dtoStatic = mockStatic(MessageDto.class)) {
+        dtoStatic.when(() -> MessageDto.of(message)).thenReturn(dto);
+
+        // when
+        MessageDto result = sut.sendMessage(senderId, req);
+
+        // then
+        assertThat(result).isSameAs(dto);
+
+        verify(messageSendPolicy).validateCanSend(senderId, roomId);
+        verify(messageSendPolicy).getRecipientIds(roomId, senderId);
+        verify(messageRepository).save(message);
+        verify(eventPublisher).publishEvent(any(MessageSentEvent.class));
+      }
+    }
+  }
+
+  @Test
+  @DisplayName("1:1 메시지 전송 시 receiverId가 설정됨")
+  void sendMessage_directMessage_receiverIdSet() {
+    Long senderId = 1L, roomId = 100L;
+    String content = "hi";
+    SendMessageRequest req = new SendMessageRequest(roomId, content);
+
+    doNothing().when(messageSendPolicy).validateCanSend(senderId, roomId);
+
+    // 수신자가 1명인 경우 (1:1)
+    List<Long> recipientIds = List.of(2L);
+    when(messageSendPolicy.getRecipientIds(roomId, senderId)).thenReturn(recipientIds);
+
+    MessageDocument message = mock(MessageDocument.class);
+
+    try (MockedStatic<MessageDocument> msgStatic = mockStatic(MessageDocument.class)) {
+      msgStatic.when(() -> MessageDocument.of(
+          eq(roomId), eq(senderId), eq(2L), eq(content), any(LocalDateTime.class)
+      )).thenReturn(message);
+
+      when(message.getContent()).thenReturn(content);
+
+      when(messageRepository.save(message)).thenReturn(message);
+
+      MessageDto dto = mock(MessageDto.class);
+      try (MockedStatic<MessageDto> dtoStatic = mockStatic(MessageDto.class)) {
+        dtoStatic.when(() -> MessageDto.of(message)).thenReturn(dto);
+
+        MessageDto result = sut.sendMessage(senderId, req);
+
+        assertThat(result).isSameAs(dto);
+
+        verify(messageSendPolicy).validateCanSend(senderId, roomId);
+        verify(messageSendPolicy).getRecipientIds(roomId, senderId);
+        verify(messageRepository).save(message);
+        verify(eventPublisher).publishEvent(any(MessageSentEvent.class));
+      }
+    }
+  }
+
+  @Test
+  @DisplayName("정책 위반 시 예외 발생")
+  void sendMessage_policyViolation() {
+    Long senderId = 1L, roomId = 100L;
+    String content = "forbidden";
+    SendMessageRequest req = new SendMessageRequest(roomId, content);
+
+    doThrow(new IllegalStateException("Not allowed"))
+        .when(messageSendPolicy).validateCanSend(senderId, roomId);
+
+    assertThatThrownBy(() -> sut.sendMessage(senderId, req))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("Not allowed");
+
+    verify(messageSendPolicy).validateCanSend(senderId, roomId);
+    verify(messageSendPolicy, never()).getRecipientIds(anyLong(), anyLong());
+    verifyNoInteractions(messageRepository, eventPublisher);
   }
 }

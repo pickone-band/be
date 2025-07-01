@@ -1,33 +1,29 @@
 package com.pickone.domain.follow.model.entity;
 
-import com.pickone.domain.user.model.entity.UserEntity;
+import com.pickone.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
+@Table(
+    name = "user_follow",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"fromUserId", "toUserId"})
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "user_follow")
-public class UserFollow {
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+public class UserFollow extends BaseEntity {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "follower_id", nullable = false)
-  private UserEntity follower; // 팔로우를 거는 사람
+  @Column(nullable = false)
+  private Long fromUserId;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "following_id", nullable = false)
-  private UserEntity following; // 팔로우 당하는 사람
+  @Column(nullable = false)
+  private Long toUserId;
 
-  @Builder
-  public UserFollow(UserEntity follower, UserEntity following) {
-    this.follower = follower;
-    this.following = following;
+  public static UserFollow of(Long fromUserId, Long toUserId) {
+    return new UserFollow(null, fromUserId, toUserId);
   }
 }

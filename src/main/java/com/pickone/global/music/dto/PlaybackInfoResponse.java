@@ -3,10 +3,8 @@ package com.pickone.global.music.dto;
 import java.util.List;
 
 public record PlaybackInfoResponse(
-    MusicInfo currentTrack,
-    List<PlaylistInfo> playlists,
+    MusicInfoDto currentTrack,
+    List<PlaylistInfoDto> playlists,
     String deviceName,
-    boolean isActiveDevice
-) {
-
-}
+    boolean isActive
+) {}

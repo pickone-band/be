@@ -2,51 +2,38 @@ package com.pickone.domain.consent.model.entity;
 
 import com.pickone.domain.term.model.entity.TermEntity;
 import com.pickone.domain.user.model.entity.UserEntity;
-import com.pickone.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "consents")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-public class ConsentEntity extends BaseEntity {
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "consent",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "term_id"})
+)
+public class ConsentEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "users_id", nullable = false)
+  @JoinColumn(name = "user_id", nullable = false)
   private UserEntity user;
 
-  public void setUser(UserEntity user) {
-    this.user = user;
-  }
-
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "terms_id", nullable = false)
+  @JoinColumn(name = "term_id", nullable = false)
   private TermEntity term;
 
   @Column(nullable = false)
-  private boolean consented;
+  private Boolean consented;
 
   @Column(nullable = false)
-  private LocalDateTime consentDate;
+  private LocalDateTime consentedAt;
 
-  @Builder
-  private ConsentEntity(
-      UserEntity user,
-      TermEntity term,
-      boolean consented,
-      LocalDateTime consentDate
-  ) {
-    this.user = user;
-    this.term = term;
-    this.consented = consented;
-    this.consentDate = consentDate;
+  public static ConsentEntity of(UserEntity user, TermEntity term, Boolean consented, LocalDateTime consentedAt) {
+    return new ConsentEntity(null, user, term, consented, consentedAt);
   }
 }

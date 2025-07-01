@@ -1,13 +1,14 @@
 package com.pickone.global.security.service;
 
-
 import com.pickone.domain.user.model.entity.UserEntity;
 import com.pickone.domain.user.repository.UserJpaRepository;
 import com.pickone.global.exception.BusinessException;
 import com.pickone.global.exception.ErrorCode;
 import com.pickone.global.security.model.entity.UserPrincipal;
+import com.pickone.global.security.repository.RefreshTokenRepository;
 import com.pickone.global.security.repository.TokenBlacklistRepository;
 import com.pickone.global.security.config.SecurityConstants;
+import com.pickone.global.security.token.TokenProvider;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,65 +33,36 @@ public class JwtService implements TokenProvider {
   @Value("${jwt.secret}")
   private String secretKey;
 
-  @Getter
   @Value("${jwt.access-token-expiration}")
   private long accessTokenExpiration;
 
-  @Getter
   @Value("${jwt.refresh-token-expiration}")
   private long refreshTokenExpiration;
 
   private final TokenBlacklistRepository tokenBlacklistRepository;
+  private final RefreshTokenRepository refreshTokenRepository;
   private final UserJpaRepository userJpaRepository;
 
   @Override
   public String generateAccessToken(UserPrincipal userDetails) {
-    return generateToken(
-        createClaims(userDetails), userDetails.getUsername(), accessTokenExpiration);
+    return generateToken(createClaims(userDetails), userDetails.getUsername(), accessTokenExpiration);
   }
 
   @Override
   public String generateRefreshToken(UserPrincipal userDetails) {
-    return generateToken(new HashMap<>(), userDetails.getUsername(), refreshTokenExpiration);
+    String refreshToken = generateToken(new HashMap<>(), userDetails.getUsername(), refreshTokenExpiration);
+    refreshTokenRepository.save(userDetails.getUsername(), refreshToken, refreshTokenExpiration);
+    return refreshToken;
   }
 
   @Override
-  public String extractUsername(String token) {
-    return extractClaim(token, Claims::getSubject);
+  public long getAccessTokenExpiration() {
+    return accessTokenExpiration;
   }
 
   @Override
-  public boolean validateRefreshToken(String refreshToken) {
-    try {
-      Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(refreshToken);
-      boolean valid = isTokenBlacklisted(refreshToken);
-      if (!valid) {
-        log.warn("블랙리스트에 등록된 토큰");
-      }
-      return valid;
-    } catch (JwtException e) {
-      log.error("유효하지 않은 리프레시 토큰: {}", e.getMessage());
-      return false;
-    }
-  }
-
-
-  public Long getUserIdFromToken(String token) {
-    Claims claims = extractAllClaims(token);
-    return claims.get("userId", Long.class);
-  }
-
-  @Override
-  public boolean isTokenBlacklisted(String token) {
-    return !tokenBlacklistRepository.isBlacklisted(token);
-  }
-
-  @Override
-  public void blacklistToken(String token) {
-    Date expiration = extractExpiration(token);
-    long ttl = expiration.getTime() - System.currentTimeMillis();
-    log.info("토큰 블랙리스트 추가: ttl={}ms", ttl);
-    tokenBlacklistRepository.addToBlacklist(token, ttl);
+  public long getRefreshTokenExpiration() {
+    return refreshTokenExpiration;
   }
 
   @Override
@@ -98,7 +70,7 @@ public class JwtService implements TokenProvider {
     Claims claims = extractAllClaims(token);
     String email = claims.getSubject();
 
-    UserEntity userEntity = userJpaRepository.findByProfile_Email(email)
+    UserEntity userEntity = userJpaRepository.findByProfileEmail(email)
         .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
 
     UserPrincipal userPrincipal = UserPrincipal.from(userEntity);
@@ -111,19 +83,55 @@ public class JwtService implements TokenProvider {
   }
 
   @Override
+  public boolean validateRefreshToken(String refreshToken) {
+    try {
+      Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(refreshToken);
+      boolean valid = refreshTokenRepository.existsByToken(refreshToken) && isTokenBlacklisted(
+          refreshToken);
+      if (!valid) {
+        log.warn("리프레시 토큰이 블랙리스트 또는 저장소에 없음");
+      }
+      return valid;
+    } catch (JwtException e) {
+      log.error("유효하지 않은 리프레시 토큰: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  @Override
+  public String extractUsername(String token) {
+    return extractClaim(token, Claims::getSubject);
+  }
+
+  @Override
   public String resolveToken(HttpServletRequest request) {
     String bearerToken = request.getHeader(SecurityConstants.AUTH_HEADER);
-    if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(
-        SecurityConstants.TOKEN_PREFIX)) {
+    if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(SecurityConstants.TOKEN_PREFIX)) {
       return bearerToken.substring(SecurityConstants.TOKEN_PREFIX.length());
     }
     return null;
   }
 
+  @Override
+  public void blacklistToken(String token) {
+    Date expiration = extractExpiration(token);
+    long ttl = expiration.getTime() - System.currentTimeMillis();
+    log.info("토큰 블랙리스트 추가: ttl={}ms", ttl);
+    tokenBlacklistRepository.addToBlacklist(token, ttl);
+  }
+
+  @Override
+  public boolean isTokenBlacklisted(String token) {
+    return !tokenBlacklistRepository.isBlacklisted(token);
+  }
+
+  // ===== 내부 JWT/Claims 유틸 =====
+
   private Map<String, Object> createClaims(UserPrincipal userDetails) {
     Map<String, Object> claims = new HashMap<>();
-    claims.put("userId", userDetails.getUser().getId());
-    claims.put("authorities", Collections.emptyList());
+    claims.put("userId", userDetails.getId());
+    claims.put("role", userDetails.getRole().name());
+    // authorities, 프로필, 추가 커스텀 claim 필요시 확장
     return claims;
   }
 
@@ -176,4 +184,10 @@ public class JwtService implements TokenProvider {
     }
     return data;
   }
+
+  public Long getUserIdFromToken(String token) {
+    return extractClaim(token, claims -> claims.get("userId", Long.class));
+  }
+
+  // ===== 추가적으로 필요하면 여기에 보조 기능 구현 =====
 }

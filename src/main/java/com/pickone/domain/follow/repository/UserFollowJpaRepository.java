@@ -1,19 +1,15 @@
 package com.pickone.domain.follow.repository;
 
 import com.pickone.domain.follow.model.entity.UserFollow;
-import com.pickone.domain.user.model.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface UserFollowJpaRepository extends JpaRepository<UserFollow, Long> {
-
-  boolean existsByFollowerAndFollowing(UserEntity follower, UserEntity following);
-
-  Optional<UserFollow> findByFollowerAndFollowing(UserEntity follower, UserEntity following);
-
-  List<UserFollow> findAllByFollower(UserEntity follower);
-
-  List<UserFollow> findAllByFollowing(UserEntity following);
+  Optional<UserFollow> findByFromUserIdAndToUserId(Long fromUserId, Long toUserId);
+  List<UserFollow> findByFromUserId(Long fromUserId);
+  List<UserFollow> findByToUserId(Long toUserId);
+  boolean existsByFromUserIdAndToUserId(Long fromUserId, Long toUserId);
+  void deleteByFromUserIdAndToUserId(Long fromUserId, Long toUserId);
 }

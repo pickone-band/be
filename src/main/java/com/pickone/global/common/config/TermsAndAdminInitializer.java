@@ -50,33 +50,26 @@ public class TermsAndAdminInitializer implements CommandLineRunner {
     }
   }
 
-
   private void initializeAdmin() {
     String adminEmail = "admin@example.com";
-    if (userRepository.findByProfile_Email(adminEmail).isEmpty()) {
-      UserEntity admin = UserEntity.builder()
-          .profile(
-              UserProfile.of(
-                  adminEmail,
-                  passwordEncoder.encode("admin1234"),
-                  "운영자",
-                  LocalDate.of(1990, 1, 1),
-                  Gender.MALE,
-                  Mbti.ENFJ, // 혹은 기본값
-                  null // 프로필 이미지 등
-              )
-          )
-          .status(
-              UserStatus.init().activate().verify() // 활성화, 인증 상태 true로 세팅
-          )
-          .preference(
-              UserPreference.ofNullable(Collections.emptyList())
-          )
-          .authInfo(
-              UserAuthInfo.of(false) // 예: oauth false, 추가 인증정보 true
-          )
-          .role(Role.ADMIN)
-          .build();
+    if (userRepository.findByProfileEmail(adminEmail).isEmpty()) {
+      // 비밀번호 인코딩 분리
+      String encodedPassword = passwordEncoder.encode("admin1234");
+
+      // UserEntity.of(...) 정적 팩토리 사용
+      UserEntity admin = UserEntity.of(
+          adminEmail,                       // email
+          encodedPassword,                  // password
+          "운영자",                         // nickname
+          Gender.MALE,                      // gender
+          LocalDate.of(1990, 1, 1),         // birthDate
+          Mbti.ENFJ,                        // mbti
+          Collections.emptyList()           // genres
+      );
+
+      // 필요시 권한, 상태 등 추가 세팅
+      admin.verify(); // 인증 처리
+      admin.lock();   // 필요시 잠금, 아니면 생략
 
       userRepository.save(admin);
       log.info("✅ 운영자 계정 생성 완료: {}", adminEmail);

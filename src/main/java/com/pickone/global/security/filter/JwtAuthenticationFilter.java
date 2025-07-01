@@ -1,6 +1,6 @@
 package com.pickone.global.security.filter;
 
-import com.pickone.global.security.service.TokenProvider;
+import com.pickone.global.security.token.TokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

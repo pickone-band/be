@@ -1,31 +1,18 @@
 package com.pickone.domain.user.model.vo;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
-import java.time.LocalDateTime;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Embeddable
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class SecurityInfo {
-
   @Column(nullable = false)
-  private boolean isOauth;
+  private boolean twoFactorEnabled;
+  private String twoFactorSecret;
 
-  @Column(nullable = false)
-  private boolean isVerified;
-
-  private LocalDateTime credentialsExpiredAt;
-
-  public boolean isCredentialExpired() {
-    return credentialsExpiredAt != null && credentialsExpiredAt.isBefore(LocalDateTime.now());
-  }
-
-  public SecurityInfo verify() {
-    return new SecurityInfo(isOauth, true, credentialsExpiredAt);
+  public static SecurityInfo of(boolean twoFactorEnabled, String twoFactorSecret) {
+    return new SecurityInfo(twoFactorEnabled, twoFactorSecret);
   }
 }

@@ -2,36 +2,25 @@ package com.pickone.domain.term.repository.impl;
 
 import com.pickone.domain.term.model.entity.TermEntity;
 import com.pickone.domain.term.repository.TermQueryRepository;
-import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
-
-import static com.pickone.domain.term.model.entity.QTermEntity.termEntity;
 
 @Repository
 @RequiredArgsConstructor
 public class TermQueryRepositoryImpl implements TermQueryRepository {
+  private final EntityManager em;
 
-  private final JPAQueryFactory queryFactory;
-
+  // 최신 버전 약관만 조회
   @Override
-  public List<TermEntity> findRequiredTermsEffectiveAfter(LocalDateTime threshold) {
-    return queryFactory.selectFrom(termEntity)
-        .where(
-            termEntity.required.isTrue(),
-            termEntity.effectiveDate.after(threshold)
-        )
-        .orderBy(termEntity.effectiveDate.desc())
-        .fetch();
-  }
-
-  @Override
-  public List<TermEntity> findByTitleKeyword(String keyword) {
-    return queryFactory.selectFrom(termEntity)
-        .where(termEntity.title.containsIgnoreCase(keyword))
-        .fetch();
+  public List<TermEntity> findLatestTerms() {
+    // (예시) 버전 기준으로 최신 약관 목록 쿼리
+    return em.createQuery(
+        "SELECT t FROM TermEntity t WHERE t.effectiveDate = " +
+            "(SELECT MAX(te.effectiveDate) FROM TermEntity te WHERE te.title = t.title)",
+        TermEntity.class
+    ).getResultList();
   }
 }

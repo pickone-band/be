@@ -1,40 +1,32 @@
 package com.pickone.domain.user.model.entity;
 
-import com.pickone.domain.user.model.domain.*;
-import com.pickone.domain.user.model.vo.UserAuthInfo;
-import com.pickone.domain.user.model.vo.UserPreference;
-import com.pickone.domain.user.model.vo.UserProfile;
-import com.pickone.domain.user.model.vo.UserStatus;
+import com.pickone.domain.user.model.domain.Gender;
+import com.pickone.domain.user.model.domain.Role;
+import com.pickone.domain.user.model.vo.*;
 import com.pickone.global.common.entity.BaseEntity;
 import com.pickone.global.common.enums.Genre;
 import com.pickone.global.common.enums.Mbti;
 import jakarta.persistence.*;
-import java.time.LocalDate;
 import lombok.*;
+
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Getter
-@Table(name = "users")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserEntity extends BaseEntity {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Embedded
-  private UserProfile profile;
-
-  @Embedded
-  private UserStatus status;
-
-  @Embedded
-  private UserPreference preference;
-
-  @Embedded
-  private UserAuthInfo authInfo;
+  @Embedded private UserProfile profile;
+  @Embedded private UserStatus status;
+  @Embedded private UserPreference preference;
+  @Embedded private UserAuthInfo authInfo;
+  @Embedded private SecurityInfo securityInfo;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
@@ -44,66 +36,50 @@ public class UserEntity extends BaseEntity {
   private List<UserInstrumentEntity> instruments = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<UserMusicEntity> musics = new ArrayList<>();
-
-  @Builder
-  private UserEntity(UserProfile profile, UserStatus status,
-      UserPreference preference, UserAuthInfo authInfo,
-      Role role) {
-    this.profile = profile;
-    this.status = status;
-    this.preference = preference;
-    this.authInfo = authInfo;
-    this.role = role;
-  }
+  private List<UserMusicEntity> musicList = new ArrayList<>();
 
   public static UserEntity of(
-      String email,
-      String encodedPassword,
-      String nickname,
-      Gender gender,
-      LocalDate birthDate,
-      Mbti mbti,
-      List<Genre> genres
+      String email, String password, String nickname,
+      Gender gender, LocalDate birthDate, Mbti mbti, List<?> genres
   ) {
     return new UserEntity(
-        UserProfile.of(email, encodedPassword, nickname, birthDate, gender, mbti, null),
+        null,
+        UserProfile.of(nickname, email, birthDate, gender, mbti),
         UserStatus.init(),
-        UserPreference.ofNullable(genres),
-        UserAuthInfo.of(false),
-        Role.USER
+        UserPreference.from((List) genres),
+        UserAuthInfo.of(password, null, null),
+        SecurityInfo.of(false, null),
+        Role.USER,
+        new ArrayList<>(),
+        new ArrayList<>()
     );
   }
 
-  public void updatePassword(String encodedNewPassword) {
-    this.profile = this.profile.updatePassword(encodedNewPassword);
+  public void updateProfile(String nickname, LocalDate birthDate, Gender gender, Mbti mbti) {
+    this.profile = UserProfile.of(nickname, this.profile.getEmail(), birthDate, gender, mbti);
   }
 
-  public void updatePreference(UserPreference newPreference) {
-    this.preference = newPreference;
+  public void changePassword(String newPassword) {
+    this.authInfo = UserAuthInfo.of(newPassword, this.authInfo.getProvider(), this.authInfo.getProviderId());
   }
 
-  public void updateProfile(String nickname, String profileImage, Mbti mbti) {
-    this.profile = this.profile.update(nickname, profileImage, mbti);
-  }
-
-  public void setInstruments(List<UserInstrumentEntity> newInstruments) {
-    // 기존 instruments에 대해 user 참조 끊기
-    this.instruments.forEach(instr -> instr.setUser(null));
-    this.instruments.clear();
-
-    if (newInstruments != null) {
-      newInstruments.forEach(instr -> instr.setUser(this));
-      this.instruments.addAll(newInstruments);
-    }
-  }
-  public void verifyEmail() {
+  public void verify() {
     this.status = this.status.verify();
   }
 
-
-  public void deactivate() {
-    this.status = this.status.deactivate(); // UserStatus에 deactivate() 메서드 구현 필요
+  public void lock() {
+    this.status = this.status.lock();
   }
 
+  public void setInstruments(List<UserInstrumentEntity> instrumentEntities) {
+    this.instruments.clear();
+    this.instruments.addAll(instrumentEntities);
+    for (UserInstrumentEntity i : instrumentEntities) {
+      i.setUser(this);
+    }
+  }
+
+  public void updatePreference(List<Genre> genres) {
+    this.preference = UserPreference.from(genres);
+  }
 }

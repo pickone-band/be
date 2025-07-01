@@ -35,7 +35,7 @@ public class ApplicationController {
             @AuthenticationPrincipal UserPrincipal user,
             @RequestBody ApplicationRequestDto requestDto) {
 
-        Long applyId=applicationService.applyToRecruitment(user.getUserId(), recruitmentId, requestDto);
+        Long applyId=applicationService.applyToRecruitment(user.getId(), recruitmentId, requestDto);
         return BaseResponse.success(applyId);
     }
 
@@ -45,7 +45,7 @@ public class ApplicationController {
     public ResponseEntity<BaseResponse<ApplicationResponseDto>> getMyApplications(
             @PathVariable Long recruitmentId,
             @AuthenticationPrincipal UserPrincipal user){
-        ApplicationResponseDto applicationResponseDto= applicationService.getMyApplication(user.getUserId(),recruitmentId);
+        ApplicationResponseDto applicationResponseDto= applicationService.getMyApplication(user.getId(),recruitmentId);
         return BaseResponse.success(applicationResponseDto);
     }
 
@@ -56,7 +56,7 @@ public class ApplicationController {
             @PathVariable Long recruitmentId,
             @AuthenticationPrincipal UserPrincipal user,
             @RequestBody ApplicationRequestDto requestDto){
-        applicationService.modifyApplication(user.getUserId(),recruitmentId,requestDto);
+        applicationService.modifyApplication(user.getId(),recruitmentId,requestDto);
         return BaseResponse.success();
     }
 
@@ -66,7 +66,7 @@ public class ApplicationController {
     public ResponseEntity<BaseResponse<Void>> cancelMyApplications(
             @PathVariable Long recruitmentId,
             @AuthenticationPrincipal UserPrincipal user){
-        applicationService.cancelMyApplication(user.getUserId(),recruitmentId);
+        applicationService.cancelMyApplication(user.getId(),recruitmentId);
         return BaseResponse.success();
     }
 
