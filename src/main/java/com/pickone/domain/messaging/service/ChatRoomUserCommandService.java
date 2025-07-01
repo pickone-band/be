@@ -3,7 +3,7 @@ package com.pickone.domain.messaging.service;
 import com.pickone.domain.messaging.model.entity.ChatRole;
 import com.pickone.domain.messaging.model.entity.ChatRoomEntity;
 import com.pickone.domain.messaging.model.entity.ChatRoomUserEntity;
-import com.pickone.domain.messaging.policy.OwnershipPolicy;
+import com.pickone.domain.messaging.model.policy.OwnershipPolicy;
 import com.pickone.domain.messaging.repository.ChatRoomRepository;
 import com.pickone.domain.messaging.repository.ChatRoomUserRepository;
 import com.pickone.domain.user.model.entity.UserEntity;

@@ -1,159 +1,107 @@
 package com.pickone.global.oauth2.service;
 
-import com.pickone.global.music.dto.MusicInfo;
-import com.pickone.global.music.repository.UserMusicJpaRepository;
-import com.pickone.global.music.service.GoogleMusicService;
-import com.pickone.global.music.service.SpotifyMusicService;
-import com.pickone.domain.user.model.domain.*;
 import com.pickone.domain.user.model.entity.UserEntity;
 import com.pickone.domain.user.repository.UserJpaRepository;
-
-import com.pickone.global.oauth2.model.domain.OAuth2Provider;
+import com.pickone.domain.user.service.UserCommandService;
 import com.pickone.global.oauth2.model.domain.OAuth2UserInfo;
-import com.pickone.global.oauth2.model.entity.UserConnectionEntity;
-import com.pickone.global.oauth2.repository.UserConnectionRepository;
 import com.pickone.global.security.model.entity.UserPrincipal;
-import com.pickone.global.security.repository.RefreshTokenRepository;
-import com.pickone.global.security.service.JwtService;
-
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.mockito.*;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class CustomOAuth2UserServiceTest {
 
-    private UserJpaRepository userJpaRepository;
-    private UserConnectionRepository userConnectionRepository;
-    private PasswordEncoder passwordEncoder;
-    private JwtService jwtService;
-    private RefreshTokenRepository refreshTokenRepository;
-    private SpotifyMusicService spotifyMusicService;
-    private GoogleMusicService googleMusicService;
-    private UserMusicJpaRepository userMusicJpaRepository;
-    private CustomOAuth2UserService service;
+  @InjectMocks
+  private CustomOAuth2UserService sut;
 
-    @BeforeEach
-    void setUp() {
-        userJpaRepository = mock(UserJpaRepository.class);
-        userConnectionRepository = mock(UserConnectionRepository.class);
-        passwordEncoder = mock(PasswordEncoder.class);
-        jwtService = mock(JwtService.class);
-        refreshTokenRepository = mock(RefreshTokenRepository.class);
-        spotifyMusicService = mock(SpotifyMusicService.class);
-        googleMusicService = mock(GoogleMusicService.class);
-        userMusicJpaRepository = mock(UserMusicJpaRepository.class);
+  @Mock private UserCommandService userCommandService;
+  @Mock private UserJpaRepository userRepository;
+  @Mock private OAuth2User mockOAuth2User;
 
-        service = new CustomOAuth2UserService(
-                userJpaRepository,
-                userConnectionRepository,
-                passwordEncoder,
-                jwtService,
-                refreshTokenRepository,
-                spotifyMusicService,
-                googleMusicService,
-                userMusicJpaRepository
-        ) {
-            @Override
-            protected OAuth2User loadOAuth2User(OAuth2UserRequest userRequest) {
-                return new DefaultOAuth2User(
-                        List.of(() -> "ROLE_USER"),
-                        Map.of("sub", "oauth-sub-id", "email", "test@example.com", "name", "Tester"),
-                        "sub"
-                );
-            }
-        };
-    }
+  @BeforeEach
+  void setUp() {
+    MockitoAnnotations.openMocks(this);
+    sut = Mockito.spy(sut);
+  }
 
-    @Test
-    void loadUser_newUser_createsUserAndConnection() {
-        // given
-        String providerId = "oauth-sub-id";
-        String email = "test@example.com";
-        String name = "Tester";
+  @Test
+  @DisplayName("loadUser: 기존 유저가 존재하면 해당 유저 반환")
+  void loadUser_existingUser() {
+    OAuth2UserRequest userRequest = mockOAuth2UserRequest("spotify");
+    when(mockOAuth2User.getAttributes()).thenReturn(spotifyAttributes());
+    doReturn(mockOAuth2User).when(sut).loadOAuth2User(any());
 
-        ClientRegistration registration = MockClientRegistration.google();
-        OAuth2AccessToken accessToken = new OAuth2AccessToken(
-                OAuth2AccessToken.TokenType.BEARER, "fake-token", null, null
-        );
-        OAuth2UserRequest userRequest = new OAuth2UserRequest(registration, accessToken);
+    UserEntity existingUser = UserFixture.createOAuth2User("user@example.com", "기존유저");
+    when(userRepository.findByProfileEmail("user@example.com")).thenReturn(Optional.of(existingUser));
 
-        OAuth2UserInfo userInfo = mock(OAuth2UserInfo.class);
-        when(userInfo.getId()).thenReturn(providerId);
-        when(userInfo.getEmail()).thenReturn(email);
-        when(userInfo.getNickname()).thenReturn(name);
-        when(userInfo.getGender()).thenReturn(Gender.FEMALE);
-        when(userInfo.getBirthDate()).thenReturn(LocalDate.of(1993, 5, 15));
-        when(userInfo.getProfileImageUrl()).thenReturn("img");
+    UserPrincipal result = (UserPrincipal) sut.loadUser(userRequest);
 
-        try (MockedStatic<OAuth2UserInfo> mockedStatic = mockStatic(OAuth2UserInfo.class)) {
-            mockedStatic.when(() -> OAuth2UserInfo.of(OAuth2Provider.GOOGLE, Map.of(
-                    "sub", providerId,
-                    "email", email,
-                    "name", name
-            ))).thenReturn(userInfo);
+    assertThat(result).isNotNull();
+    assertThat(result.getEmail()).isEqualTo("user@example.com");
+  }
 
-            when(userConnectionRepository.findByProviderAndProviderUserId("GOOGLE", providerId))
-                    .thenReturn(Optional.empty());
-            when(userJpaRepository.findByProfile_Email(email)).thenReturn(Optional.empty());
-            when(passwordEncoder.encode(any())).thenReturn("encoded-password");
+  @Test
+  @DisplayName("loadUser: 유저가 없으면 회원가입 후 반환")
+  void loadUser_newUser_signup() {
+    OAuth2UserRequest userRequest = mockOAuth2UserRequest("spotify");
+    when(mockOAuth2User.getAttributes()).thenReturn(spotifyAttributes());
+    doReturn(mockOAuth2User).when(sut).loadOAuth2User(any());
 
-          when(userJpaRepository.save(any(UserEntity.class))).thenAnswer(invocation -> {
-            UserEntity u = invocation.getArgument(0);
-            return UserEntity.of(
-                u.getProfile().getEmail(),
-                u.getProfile().getPassword(),
-                u.getProfile().getNickname(),
-                u.getProfile().getGender(),
-                u.getProfile().getBirthDate(), // profile에서 꺼내야 하는 경우, getBirthDate()가 어디에 있는지 확인
-                null,      // mbti
-                List.of()  // genres
-            );
-          });
+    when(userRepository.findByProfileEmail("user@example.com")).thenReturn(Optional.empty());
 
-            when(jwtService.generateAccessToken(any())).thenReturn(UUID.randomUUID().toString());
-            when(jwtService.generateRefreshToken(any())).thenReturn(UUID.randomUUID().toString());
-            when(jwtService.getRefreshTokenExpiration()).thenReturn(10000L);
-            when(googleMusicService.getCurrentlyPlaying(anyString()))
-                    .thenReturn(new MusicInfo("title", "artist", "album", "img", "url"));
+    UserEntity newUser = UserFixture.createOAuth2User("user@example.com", "신규유저");
+    when(userCommandService.signupWithOAuth2(any(OAuth2UserInfo.class))).thenReturn(newUser);
 
-            // when
-            OAuth2User result = service.loadUser(userRequest);
+    UserPrincipal result = (UserPrincipal) sut.loadUser(userRequest);
 
-            // then
-            assertThat(result).isInstanceOf(UserPrincipal.class);
-            verify(userConnectionRepository).save(any(UserConnectionEntity.class));
-            verify(refreshTokenRepository).save(eq(email), any(String.class), any(Long.class));
-            verify(userMusicJpaRepository).save(any());
-        }
-    }
+    assertThat(result).isNotNull();
+    assertThat(result.getEmail()).isEqualTo("user@example.com");
+  }
 
-    static class MockClientRegistration {
-        public static ClientRegistration google() {
-            return ClientRegistration.withRegistrationId("google")
-                    .clientId("test-client-id")
-                    .clientSecret("test-secret")
-                    .authorizationGrantType(org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE)
-                    .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
-                    .scope("email", "profile")
-                    .authorizationUri("https://accounts.google.com/o/oauth2/auth")
-                    .tokenUri("https://oauth2.googleapis.com/token")
-                    .userInfoUri("https://openidconnect.googleapis.com/v1/userinfo")
-                    .userNameAttributeName("sub")
-                    .clientName("Google")
-                    .build();
-        }
-    }
+  private OAuth2UserRequest mockOAuth2UserRequest(String registrationId) {
+    ClientRegistration registration = ClientRegistration.withRegistrationId(registrationId)
+        .clientId("mock-client")
+        .clientSecret("mock-secret")
+        .redirectUri("http://localhost/callback")
+        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+        .authorizationUri("https://auth")
+        .tokenUri("https://token")
+        .userInfoUri("https://userinfo")
+        .userNameAttributeName("id")
+        .clientName("MockClient")
+        .scope("email", "profile")
+        .build();
+
+    OAuth2AccessToken token = new OAuth2AccessToken(
+        OAuth2AccessToken.TokenType.BEARER,
+        "access-token",
+        Instant.now(),
+        Instant.now().plusSeconds(3600)
+    );
+
+    return new OAuth2UserRequest(registration, token);
+  }
+
+  private Map<String, Object> spotifyAttributes() {
+    Map<String, Object> emailMap = new HashMap<>();
+    emailMap.put("value", "user@example.com");
+
+    Map<String, Object> attributes = new HashMap<>();
+    attributes.put("id", "spotify123");
+    attributes.put("display_name", "스포티유저");
+    attributes.put("emails", List.of(emailMap));
+    return attributes;
+  }
 }

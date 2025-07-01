@@ -1,25 +1,23 @@
 package com.pickone.domain.user.model.vo;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.pickone.domain.user.model.domain.AuthProvider;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Embeddable
 @Getter
+@Setter // 임시
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserAuthInfo {
+  @Column(nullable = false)
+  private String password;
 
-  @Column(name = "is_oauth", nullable = false)
-  private boolean isOauth;
+  @Enumerated(EnumType.STRING)
+  private AuthProvider provider;
+  private String providerId;
 
-//  @Column(name = "is_verified", nullable = false)
-//  private boolean isVerified;
-
-  public static UserAuthInfo of(boolean isOauth) {
-    return new UserAuthInfo(isOauth);
+  public static UserAuthInfo of(String password, AuthProvider provider, String providerId) {
+    return new UserAuthInfo(password, provider, providerId);
   }
 }

@@ -37,7 +37,7 @@ public class RecruitmentController {
     public ResponseEntity<BaseResponse<Long>> createRecruitment(@AuthenticationPrincipal UserPrincipal user,
                                                                 @RequestBody RecruitmentRequestDto requestDto) {
 
-        Long recruitmentId = recruitmentService.registerRecruitment(requestDto, user.getUserId());
+        Long recruitmentId = recruitmentService.registerRecruitment(requestDto, user.getId());
         return BaseResponse.success(recruitmentId);
     }
 
@@ -66,7 +66,7 @@ public class RecruitmentController {
             @AuthenticationPrincipal UserPrincipal user,
             @PathVariable Long id,
             @RequestBody RecruitmentRequestDto requestDto) {
-        Long result = recruitmentService.modifyRecruitment(requestDto, id, user.getUserId());
+        Long result = recruitmentService.modifyRecruitment(requestDto, id, user.getId());
         return BaseResponse.success(result);
     }
     @Operation(summary = "멤버 모집글 삭제 기능",
@@ -75,7 +75,7 @@ public class RecruitmentController {
     public ResponseEntity<BaseResponse<Void>> deleteRecruitment(
             @AuthenticationPrincipal UserPrincipal user,
             @PathVariable Long id) {
-        recruitmentService.deleteRecruitment(id, user.getUserId());
+        recruitmentService.deleteRecruitment(id, user.getId());
         return BaseResponse.success();
     }
 }

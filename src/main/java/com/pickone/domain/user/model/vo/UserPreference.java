@@ -1,42 +1,37 @@
 package com.pickone.domain.user.model.vo;
 
 import com.pickone.global.common.enums.Genre;
-import com.pickone.global.common.enums.Mbti;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
+import jakarta.persistence.*;
+import lombok.*;
+
 import java.util.ArrayList;
 import java.util.List;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Embeddable
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserPreference {
-
-  @ElementCollection(fetch = FetchType.LAZY)
-  @CollectionTable(name = "user_genres", joinColumns = @JoinColumn(name = "user_id"))
-  @Column(name = "genre")
   @Enumerated(EnumType.STRING)
-  private List<Genre> genres = new ArrayList<>();
+  private Genre primaryGenre;
+  @Enumerated(EnumType.STRING)
+  private Genre secondaryGenre;
+  @Enumerated(EnumType.STRING)
+  private Genre tertiaryGenre;
 
-  public static UserPreference ofNullable(List<Genre> genres) {
+  public static UserPreference from(List<Genre> genres) {
     return new UserPreference(
-        genres == null ? new ArrayList<>() : genres
+        genres.size() > 0 ? genres.get(0) : null,
+        genres.size() > 1 ? genres.get(1) : null,
+        genres.size() > 2 ? genres.get(2) : null
     );
   }
 
-  public UserPreference updateGenres(List<Genre> newGenres) {
-    return new UserPreference(newGenres == null ? this.genres : newGenres);
+  public List<Genre> asList() {
+    List<Genre> result = new ArrayList<>();
+    if (primaryGenre != null) result.add(primaryGenre);
+    if (secondaryGenre != null) result.add(secondaryGenre);
+    if (tertiaryGenre != null) result.add(tertiaryGenre);
+    return result;
   }
 }
-

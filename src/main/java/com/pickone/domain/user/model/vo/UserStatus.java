@@ -1,60 +1,40 @@
 package com.pickone.domain.user.model.vo;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
+import jakarta.persistence.*;
+import lombok.*;
+
 import java.time.LocalDateTime;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Embeddable
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserStatus {
 
   @Column(name = "is_public", nullable = false)
   private boolean isPublic;
 
   @Column(name = "is_active", nullable = false)
-  private boolean isActive;
+  private boolean active;
 
   @Column(name = "is_locked", nullable = false)
-  private boolean isLocked;
-
-  @Column(name = "credentials_expired_at")
-  private LocalDateTime credentialsExpiredAt;
+  private boolean locked;
 
   @Column(name = "is_verified", nullable = false)
   private boolean verified;
 
+  @Column(name = "credentials_expired_at")
+  private LocalDateTime credentialsExpiredAt;
+
   public static UserStatus init() {
-    return new UserStatus(false, true, false, null, false);
+    return new UserStatus(false, true, false, false, null);
   }
 
   public UserStatus verify() {
-    return new UserStatus(this.isPublic, this.isActive, this.isLocked, this.credentialsExpiredAt, true);
-  }
-
-  public UserStatus updatePublic(Boolean newPublic) {
-    return new UserStatus(newPublic != null ? newPublic : this.isPublic, this.isActive, this.isLocked, this.credentialsExpiredAt, this.verified);
-  }
-
-  public UserStatus activate() {
-    return new UserStatus(this.isPublic, true, this.isLocked, this.credentialsExpiredAt, this.verified);
+    return new UserStatus(this.isPublic, this.active, this.locked, true, this.credentialsExpiredAt);
   }
 
   public UserStatus lock() {
-    return new UserStatus(this.isPublic, this.isActive, true, this.credentialsExpiredAt, this.verified);
+    return new UserStatus(this.isPublic, this.active, true, this.verified, this.credentialsExpiredAt);
   }
-
-  public UserStatus unlock() {
-    return new UserStatus(this.isPublic, this.isActive, false, this.credentialsExpiredAt, this.verified);
-  }
-
-  public UserStatus deactivate() {
-    return new UserStatus(this.isPublic, false, this.isLocked, this.credentialsExpiredAt, this.verified);
-  }
-
 }

@@ -58,7 +58,13 @@ public class UserQueryDslRepositoryImpl implements UserQueryDslRepository {
 
     // 장르 필터 (다중) — List<Genre> genres VO 내부
     if (cond.getGenres() != null && !cond.getGenres().isEmpty()) {
-      where.and(userEntity.preference.genres.any().in(cond.getGenres()));
+      BooleanBuilder genreBuilder = new BooleanBuilder();
+      for (var genre : cond.getGenres()) {
+        genreBuilder.or(userEntity.preference.primaryGenre.eq(genre))
+            .or(userEntity.preference.secondaryGenre.eq(genre))
+            .or(userEntity.preference.tertiaryGenre.eq(genre));
+      }
+      where.and(genreBuilder);
     }
 
     // 나이 또는 생년월일 범위 — birthDate는 UserProfile VO 내 필드

@@ -60,7 +60,7 @@ public class ApplicationServiceTest {
       UserEntity savedUser = userJpaRepository.save(testUser);
 
 
-        UserEntity userEntity = userJpaRepository.findByProfile_Email(savedUser.getProfile().getEmail())
+        UserEntity userEntity = userJpaRepository.findByProfileEmail(savedUser.getProfile().getEmail())
                 .orElseThrow(() -> new RuntimeException("UserEntity not found"));
 
         Recruitment recruitment = Recruitment.builder()
@@ -100,7 +100,7 @@ public class ApplicationServiceTest {
       );
         UserEntity savedUser = userJpaRepository.save(testUser);  // ← userRepository → authRepository 로 변경
 
-        UserEntity userEntity = userJpaRepository.findByProfile_Email(savedUser.getProfile().getEmail())
+        UserEntity userEntity = userJpaRepository.findByProfileEmail(savedUser.getProfile().getEmail())
                 .orElseThrow(() -> new RuntimeException("UserEntity not found"));
         // 모집글 등록
         Recruitment recruitment = Recruitment.builder()
