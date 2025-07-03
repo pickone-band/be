@@ -5,4 +5,5 @@ import java.util.List;
 
 public interface TermQueryRepository {
   List<TermEntity> findLatestTerms();
+  List<Long> findRequiredLatestTermIds();
 }

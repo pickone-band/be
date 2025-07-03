@@ -1,55 +1,63 @@
 package com.pickone.domain.user.controller;
 
-import com.pickone.domain.user.dto.SignupRequestDto;
-import com.pickone.domain.user.dto.UpdatePreferenceRequestDto;
-import com.pickone.domain.user.dto.UserResponseDto;
-import com.pickone.domain.user.dto.UpdateProfileRequestDto;
-import com.pickone.domain.user.dto.ChangePasswordRequestDto;
+import com.pickone.domain.user.dto.*;
 import com.pickone.domain.user.service.UserCommandService;
 import com.pickone.domain.user.service.UserQueryService;
+import com.pickone.global.exception.BaseResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
+
   private final UserCommandService commandService;
   private final UserQueryService queryService;
 
   @PostMapping("/signup")
-  public UserResponseDto signup(@RequestBody SignupRequestDto dto) {
-    return commandService.signup(dto);
+  public ResponseEntity<BaseResponse<UserResponseDto>> signup(@RequestBody SignupRequestDto dto) {
+    UserResponseDto response = commandService.signup(dto);
+    return BaseResponse.success(response);
   }
 
   @PatchMapping("/{userId}/profile")
-  public void updateProfile(@PathVariable Long userId, @RequestBody UpdateProfileRequestDto dto) {
+  public ResponseEntity<BaseResponse<Void>> updateProfile(@PathVariable Long userId,
+      @RequestBody UpdateProfileRequestDto dto) {
     commandService.updateProfile(userId, dto);
+    return BaseResponse.success();
   }
 
   @PatchMapping("/{userId}/preference")
-  public void updatePreference(@PathVariable Long userId, @RequestBody UpdatePreferenceRequestDto dto) {
+  public ResponseEntity<BaseResponse<Void>> updatePreference(@PathVariable Long userId,
+      @RequestBody UpdatePreferenceRequestDto dto) {
     commandService.updatePreference(userId, dto);
+    return BaseResponse.success();
   }
 
-
   @PatchMapping("/{userId}/password")
-  public void changePassword(@PathVariable Long userId, @RequestBody ChangePasswordRequestDto dto) {
+  public ResponseEntity<BaseResponse<Void>> changePassword(@PathVariable Long userId,
+      @RequestBody ChangePasswordRequestDto dto) {
     commandService.changePassword(userId, dto);
+    return BaseResponse.success();
   }
 
   @PatchMapping("/{userId}/lock")
-  public void lockUser(@PathVariable Long userId) {
+  public ResponseEntity<BaseResponse<Void>> lockUser(@PathVariable Long userId) {
     commandService.lockUser(userId);
+    return BaseResponse.success();
   }
 
   @DeleteMapping("/{userId}")
-  public void deleteUser(@PathVariable Long userId) {
+  public ResponseEntity<BaseResponse<Void>> deleteUser(@PathVariable Long userId) {
     commandService.deleteUser(userId);
+    return BaseResponse.success();
   }
 
   @GetMapping("/{userId}")
-  public UserResponseDto getUser(@PathVariable Long userId) {
-    return queryService.getUser(userId);
+  public ResponseEntity<BaseResponse<UserResponseDto>> getUser(@PathVariable Long userId) {
+    UserResponseDto response = queryService.getUser(userId);
+    return BaseResponse.success(response);
   }
 }

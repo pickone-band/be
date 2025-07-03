@@ -1,8 +1,10 @@
 package com.pickone.domain.user.model.mapper;
 
+import com.pickone.domain.user.dto.UserInstrumentDto;
 import com.pickone.domain.user.dto.UserPreferenceDto;
 import com.pickone.domain.user.dto.UserResponseDto;
 import com.pickone.domain.user.model.entity.UserEntity;
+import com.pickone.domain.user.model.entity.UserInstrumentEntity;
 import com.pickone.domain.user.model.vo.UserPreference;
 
 public class UserMapper {
@@ -13,11 +15,26 @@ public class UserMapper {
         entity.getProfile().getEmail(),
         entity.getProfile().getBirthDate(),
         entity.getProfile().getGender(),
+        entity.getProfile().getMbti(),
         entity.getStatus().isActive(),
         entity.getStatus().isVerified(),
-        toPreferenceDto(entity.getPreference())
+        entity.getStatus().isLocked(),
+        entity.getSecurityInfo().isTwoFactorEnabled(),
+        toPreferenceDto(entity.getPreference()),
+        entity.getInstruments().stream()
+            .map(UserMapper::toInstrumentDto)
+            .toList()
     );
   }
+
+  public static UserInstrumentDto toInstrumentDto(UserInstrumentEntity entity) {
+    return new UserInstrumentDto(
+        entity.getId(),
+        entity.getInstrument(),
+        entity.getProficiency()
+    );
+  }
+
   public static UserPreferenceDto toPreferenceDto(UserPreference preference) {
     if (preference == null) return null;
     return new UserPreferenceDto(

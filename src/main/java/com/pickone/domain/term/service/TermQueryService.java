@@ -7,4 +7,5 @@ import java.util.List;
 public interface TermQueryService {
   TermResponseDto getTerm(Long termId);
   List<TermResponseDto> getLatestTerms();
+  List<Long> getRequiredLatestTermIds();
 }

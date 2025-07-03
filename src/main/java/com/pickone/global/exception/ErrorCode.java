@@ -25,14 +25,25 @@ public enum ErrorCode {
     // ✅ 회원 관련
     USER_INFO_NOT_FOUND(HttpStatus.NOT_FOUND, 2001, "해당 회원의 정보를 찾을 수 없습니다."),
     DUPLICATE_USERNAME(HttpStatus.BAD_REQUEST, 2101, "이미 사용 중인 로그인 아이디입니다."),
-    DUPLICATE_EMAIL(HttpStatus.BAD_REQUEST, 2102, "이미 사용 중인 이메일입니다."),
-    DUPLICATE_NICKNAME(HttpStatus.BAD_REQUEST, 2103, "이미 사용 중인 닉네임입니다."),
+
     ALREADY_BANNED(HttpStatus.BAD_REQUEST, 2201, "이미 정지된 회원입니다."),
     ALREADY_ACTIVE(HttpStatus.BAD_REQUEST, 2202, "이미 활성 상태의 회원입니다."),
     DUPLICATE_PHONE_NUMBER(HttpStatus.BAD_REQUEST, 2301, "이미 사용 중인 전화번호입니다."),
     PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, 2302, "해당 프로필 정보를 찾을 수 없습니다."),
     INVALID_PASSWORD_FORMAT(HttpStatus.BAD_REQUEST,2303,"비밀번호 형식이 올바르지 않습니다."),
 
+
+    // ✅ 회원가입 입력값 관련
+    INVALID_EMAIL(HttpStatus.BAD_REQUEST, 2401, "이메일을 입력해야 합니다."),
+    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, 2402, "비밀번호를 입력해야 합니다."),
+    INVALID_PASSWORD_CONFIRM(HttpStatus.BAD_REQUEST, 2403, "비밀번호 재입력을 입력해야 합니다."),
+    PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, 2404, "비밀번호와 비밀번호 확인이 일치하지 않습니다."),
+    INVALID_NICKNAME(HttpStatus.BAD_REQUEST, 2405, "닉네임을 입력해야 합니다."),
+    INVALID_BIRTH(HttpStatus.BAD_REQUEST, 2406, "생년월일을 입력해야 합니다."),
+    INVALID_GENDER(HttpStatus.BAD_REQUEST, 2407, "성별을 입력해야 합니다."),
+    REQUIRED_TERM_NOT_AGREED(HttpStatus.BAD_REQUEST, 2603, "필수 약관에 동의해야 합니다."),
+    DUPLICATE_EMAIL(HttpStatus.BAD_REQUEST, 2102, "이미 사용 중인 이메일입니다."),
+    DUPLICATE_NICKNAME(HttpStatus.BAD_REQUEST, 2103, "이미 사용 중인 닉네임입니다."),
 
     // ✅ OAuth2 / 소셜 로그인
     DUPLICATE_SOCIAL_ACCOUNT(HttpStatus.BAD_REQUEST, 2401, "이미 연결된 소셜 계정입니다."),
@@ -45,15 +56,12 @@ public enum ErrorCode {
     // ✅ 약관
     DUPLICATE_TERM_VERSION(HttpStatus.BAD_REQUEST, 2501, "이미 존재하는 약관 버전입니다."),
     TERM_NOT_FOUND(HttpStatus.NOT_FOUND, 2502, "해당 약관 정보를 찾을 수 없습니다."),
-    REQUIRED_TERM_NOT_CONSENTED(HttpStatus.BAD_REQUEST, 2604, "필수 약관에 대한 동의가 필요합니다."),
     CONSENT_NOT_FOUND(HttpStatus.NOT_FOUND, 2605, "해당 동의 내역을 찾을 수 없습니다."),
     CONSENT_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, 2606, "이미 등록된 약관 동의 내역입니다."),
     INVALID_CONSENT_OPERATION(HttpStatus.BAD_REQUEST, 2607, "잘못된 동의 처리 요청입니다."),
-    REQUIRED_TERM_NOT_AGREED(HttpStatus.BAD_REQUEST, 2603, "필수 약관에 동의해야 합니다."),
     TERM_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, 2504, "이미 등록된 약관입니다."),
 
     // ✅ 인증 및 로그인
-    INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, 4001, "비밀번호가 일치하지 않습니다."),
     UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED, 4002, "인증되지 않은 사용자입니다."),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, 4003, "유효하지 않은 토큰입니다."),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, 4004, "토큰이 만료되었습니다."),
@@ -61,10 +69,11 @@ public enum ErrorCode {
     ALREADY_LOGGED_OUT(HttpStatus.UNAUTHORIZED, 4006, "이미 로그아웃된 사용자입니다."),
     JWT_SIGNATURE_MISMATCH(HttpStatus.UNAUTHORIZED, 4007, "JWT 서명이 유효하지 않습니다."),
     JWT_MALFORMED(HttpStatus.UNAUTHORIZED, 4008, "잘못된 형식의 JWT 토큰입니다."),
-    PASSWORD_CONFIRM_NOT_MATCHED(HttpStatus.BAD_REQUEST, 4104, "비밀번호와 비밀번호 확인이 일치하지 않습니다."),
+    INVALID_PASSWORD_CREDENTIAL(HttpStatus.UNAUTHORIZED, 4104, "비밀번호가 올바르지 않습니다."),
     ALREADY_VERIFIED(HttpStatus.BAD_REQUEST, 4101, "이미 인증된 사용자입니다."),
     EMAIL_NOT_VERIFIED(HttpStatus.UNAUTHORIZED, 4105, "이메일 인증이 완료되지 않았습니다."),
     SAME_AS_OLD_PASSWORD(HttpStatus.BAD_REQUEST, 4106, "새 비밀번호가 기존 비밀번호와 동일합니다."),
+    LOGIN_USER_NOT_FOUND(HttpStatus.BAD_REQUEST, 4107, "해당 이메일로 등록된 사용자가 없습니다."),
 
     // ✅ Refresh Token
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, 7001, "유효하지 않은 리프레시 토큰입니다."),
