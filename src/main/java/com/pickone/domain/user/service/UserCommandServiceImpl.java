@@ -10,9 +10,12 @@ import com.pickone.domain.user.model.factory.UserFactory;
 import com.pickone.domain.user.model.policy.UserPolicy;
 import com.pickone.domain.user.model.mapper.UserMapper;
 import com.pickone.domain.user.repository.UserJpaRepository;
+import com.pickone.global.email.dto.EmailSendRequestDto;
+import com.pickone.global.email.service.EmailSendService;
 import com.pickone.global.exception.BusinessException;
 import com.pickone.global.exception.ErrorCode;
 import com.pickone.global.oauth2.model.domain.OAuth2UserInfo;
+import com.pickone.global.security.service.EmailTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,8 @@ public class UserCommandServiceImpl implements UserCommandService {
   private final UserFactory userFactory;
   private final UserPolicy userPolicy;
   private final PasswordEncoder passwordEncoder;
+  private final EmailTokenService emailTokenService;
+  private final EmailSendService emailSendService;
 
   @Transactional
   @Override
@@ -32,6 +37,15 @@ public class UserCommandServiceImpl implements UserCommandService {
     userPolicy.validateSignup(dto);
     UserEntity user = userFactory.create(dto, passwordEncoder);
     UserEntity saved = userRepository.save(user);
+
+    // 토큰 생성 & 저장
+    String token = emailTokenService.createAndSaveToken(saved.getProfile().getEmail());
+
+    // 이메일 발송 요청
+    String content = "인증 링크: http://3.35.49.195:8080/api/auth/verify-email?token=" + token;
+    EmailSendRequestDto emailRequest = new EmailSendRequestDto(saved.getProfile().getEmail(), "이메일 인증", content);
+    emailSendService.send(emailRequest);
+
     return UserMapper.toDto(saved);
   }
 
