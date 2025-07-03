@@ -5,6 +5,9 @@ import com.pickone.domain.user.model.entity.UserInstrumentEntity;
 import com.pickone.domain.user.repository.UserInstrumentJpaRepository;
 import com.pickone.domain.user.repository.UserJpaRepository;
 import com.pickone.global.common.enums.Instrument;
+import com.pickone.global.common.enums.Proficiency;
+import com.pickone.global.exception.BusinessException;
+import com.pickone.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -39,25 +42,21 @@ class UserInstrumentCommandServiceImplTest {
       UserEntity user = mock(UserEntity.class);
       List<UserInstrumentEntity> userInstruments = new ArrayList<>();
       when(user.getInstruments()).thenReturn(userInstruments);
+
       when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-      UserInstrumentEntity entity = mock(UserInstrumentEntity.class);
-      try (MockedStatic<UserInstrumentEntity> builderStatic = mockStatic(UserInstrumentEntity.class, Mockito.CALLS_REAL_METHODS)) {
-        UserInstrumentEntity.UserInstrumentEntityBuilder builder = mock(UserInstrumentEntity.UserInstrumentEntityBuilder.class, RETURNS_SELF);
-        builderStatic.when(UserInstrumentEntity::builder).thenReturn(builder);
-        when(builder.user(user)).thenReturn(builder);
-        when(builder.instrument(instrument)).thenReturn(builder);
-        when(builder.build()).thenReturn(entity);
+      UserInstrumentEntity entity = UserInstrumentEntity.of(user, instrument, Proficiency.NEVER_PLAYED);
+      when(userInstrumentRepository.save(any(UserInstrumentEntity.class))).thenReturn(entity);
 
-        when(userInstrumentRepository.save(entity)).thenReturn(entity);
+      sut.addInstrument(userId, instrument);
 
-        sut.addInstrument(userId, instrument);
+      verify(userRepository).findById(userId);
+      verify(userInstrumentRepository).save(any(UserInstrumentEntity.class));
+      verify(user).getInstruments();
 
-        verify(userRepository).findById(userId);
-        verify(userInstrumentRepository).save(entity);
-        verify(user).getInstruments();
-        assertThat(userInstruments).contains(entity);
-      }
+      // 리스트에 실제로 추가됐는지 확인
+      assertThat(userInstruments)
+          .anyMatch(ui -> ui.getInstrument() == instrument && ui.getProficiency() == Proficiency.NEVER_PLAYED);
     }
 
     @Test
@@ -68,8 +67,8 @@ class UserInstrumentCommandServiceImplTest {
       when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
       assertThatThrownBy(() -> sut.addInstrument(userId, instrument))
-          .isInstanceOf(RuntimeException.class)
-          .hasMessageContaining("User not found");
+          .isInstanceOf(BusinessException.class)
+          .hasMessageContaining(ErrorCode.USER_INFO_NOT_FOUND.getMessage());
     }
   }
 
@@ -101,8 +100,8 @@ class UserInstrumentCommandServiceImplTest {
           .thenReturn(Optional.empty());
 
       assertThatThrownBy(() -> sut.removeInstrument(userId, instrument))
-          .isInstanceOf(RuntimeException.class)
-          .hasMessageContaining("Not found");
+          .isInstanceOf(BusinessException.class)
+          .hasMessageContaining(ErrorCode.USER_INFO_NOT_FOUND.getMessage());
     }
   }
 
@@ -124,27 +123,18 @@ class UserInstrumentCommandServiceImplTest {
 
       doNothing().when(userInstrumentRepository).deleteByUserId(userId);
 
-      // 모든 builder static mocking은 한번만 해도 충분, 혹은 각 악기에 대해 반복적으로 할 수도 있음
+      // Save 호출시 UserInstrumentEntity.of를 직접 호출하여 실제 객체 생성
       for (Instrument i : instruments) {
-        UserInstrumentEntity entity = mock(UserInstrumentEntity.class);
-        try (MockedStatic<UserInstrumentEntity> builderStatic = mockStatic(UserInstrumentEntity.class, Mockito.CALLS_REAL_METHODS)) {
-          UserInstrumentEntity.UserInstrumentEntityBuilder builder = mock(UserInstrumentEntity.UserInstrumentEntityBuilder.class, RETURNS_SELF);
-          builderStatic.when(UserInstrumentEntity::builder).thenReturn(builder);
-          when(builder.user(user)).thenReturn(builder);
-          when(builder.instrument(i)).thenReturn(builder);
-          when(builder.build()).thenReturn(entity);
-          when(userInstrumentRepository.save(entity)).thenReturn(entity);
-        }
+        UserInstrumentEntity entity = UserInstrumentEntity.of(user, i, Proficiency.NEVER_PLAYED);
+        when(userInstrumentRepository.save(any(UserInstrumentEntity.class))).thenReturn(entity);
       }
 
       sut.setInstruments(userId, instruments);
 
       verify(userRepository).findById(userId);
       verify(userInstrumentRepository).deleteByUserId(userId);
-      // 악기 수만큼 save가 호출되어야 함
       verify(userInstrumentRepository, times(instruments.size())).save(any(UserInstrumentEntity.class));
     }
-
 
     @Test
     @DisplayName("유저가 없으면 예외 발생")
@@ -154,8 +144,8 @@ class UserInstrumentCommandServiceImplTest {
       when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
       assertThatThrownBy(() -> sut.setInstruments(userId, instruments))
-          .isInstanceOf(RuntimeException.class)
-          .hasMessageContaining("User not found");
+          .isInstanceOf(BusinessException.class)
+          .hasMessageContaining(ErrorCode.USER_INFO_NOT_FOUND.getMessage());
     }
   }
 }

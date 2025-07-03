@@ -27,6 +27,7 @@ public class UserInstrumentCommandServiceImpl implements UserInstrumentCommandSe
 
     UserInstrumentEntity entity = UserInstrumentEntity.of(user, instrument, Proficiency.NEVER_PLAYED);
     userInstrumentRepository.save(entity);
+    user.getInstruments().add(entity);
   }
 
   @Override
