@@ -70,7 +70,7 @@ class UserCommandServiceImplTest {
     @DisplayName("정상 프로필 변경")
     void updateProfile_success() {
       Long userId = 1L;
-      UpdateProfileRequestDto dto = new UpdateProfileRequestDto("nick", null, null, null);
+      UpdateProfileRequestDto dto = new UpdateProfileRequestDto("nick");
 
       UserEntity user = mock(UserEntity.class);
       when(userRepository.findById(userId)).thenReturn(Optional.of(user));
