@@ -23,4 +23,16 @@ public class TermQueryRepositoryImpl implements TermQueryRepository {
         TermEntity.class
     ).getResultList();
   }
+
+  @Override
+  public List<Long> findRequiredLatestTermIds() {
+    return em.createQuery(
+        "SELECT t.id FROM TermEntity t " +
+            "WHERE t.effectiveDate = (" +
+            "  SELECT MAX(te.effectiveDate) FROM TermEntity te " +
+            "  WHERE te.title = t.title" +
+            ") " +
+            "AND t.isRequired = true", Long.class
+    ).getResultList();
+  }
 }

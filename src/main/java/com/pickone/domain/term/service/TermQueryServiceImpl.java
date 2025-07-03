@@ -27,4 +27,9 @@ public class TermQueryServiceImpl implements TermQueryService {
     return termQueryRepository.findLatestTerms()
         .stream().map(TermMapper::toDto).toList();
   }
+
+  @Override
+  public List<Long> getRequiredLatestTermIds() {
+    return termQueryRepository.findRequiredLatestTermIds();
+  }
 }

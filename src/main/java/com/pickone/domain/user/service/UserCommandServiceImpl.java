@@ -10,6 +10,8 @@ import com.pickone.domain.user.model.factory.UserFactory;
 import com.pickone.domain.user.model.policy.UserPolicy;
 import com.pickone.domain.user.model.mapper.UserMapper;
 import com.pickone.domain.user.repository.UserJpaRepository;
+import com.pickone.global.exception.BusinessException;
+import com.pickone.global.exception.ErrorCode;
 import com.pickone.global.oauth2.model.domain.OAuth2UserInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,8 +39,21 @@ public class UserCommandServiceImpl implements UserCommandService {
   @Override
   public void updateProfile(Long userId, UpdateProfileRequestDto dto) {
     UserEntity user = userRepository.findById(userId)
-        .orElseThrow(() -> new RuntimeException("Not found"));
-    user.updateProfile(dto.nickname(), dto.birthDate(), dto.gender(), dto.mbti());
+        .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
+
+    if (userRepository.existsByProfileNickname(dto.nickname()) &&
+        !dto.nickname().equals(user.getProfile().getNickname())) {
+      throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
+    }
+
+    // 생년월일, 성별, MBTI는 변경 불가로 기존값 유지
+    user.updateProfile(
+        dto.nickname(),
+        user.getProfile().getBirthDate(),
+        user.getProfile().getGender(),
+        user.getProfile().getMbti()
+    );
+
     userRepository.save(user);
   }
 
@@ -46,7 +61,7 @@ public class UserCommandServiceImpl implements UserCommandService {
   @Override
   public void updatePreference(Long userId, UpdatePreferenceRequestDto dto) {
     UserEntity user = userRepository.findById(userId)
-        .orElseThrow(() -> new RuntimeException("Not found"));
+        .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
     user.updatePreference(dto.genres());
     userRepository.save(user);
   }
@@ -55,7 +70,7 @@ public class UserCommandServiceImpl implements UserCommandService {
   @Override
   public void changePassword(Long userId, ChangePasswordRequestDto dto) {
     UserEntity user = userRepository.findById(userId)
-        .orElseThrow(() -> new RuntimeException("Not found"));
+        .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
     user.changePassword(passwordEncoder.encode(dto.newPassword()));
     userRepository.save(user);
   }
@@ -64,15 +79,16 @@ public class UserCommandServiceImpl implements UserCommandService {
   @Override
   public void lockUser(Long userId) {
     UserEntity user = userRepository.findById(userId)
-        .orElseThrow(() -> new RuntimeException("Not found"));
-    user.lock();
+        .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
     userRepository.save(user);
   }
 
   @Transactional
   @Override
   public void deleteUser(Long userId) {
-    userRepository.deleteById(userId);
+    if (!userRepository.existsById(userId)) {
+      throw new BusinessException(ErrorCode.USER_INFO_NOT_FOUND);
+    }userRepository.deleteById(userId);
   }
 
   @Transactional

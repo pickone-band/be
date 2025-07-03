@@ -3,6 +3,8 @@ package com.pickone.domain.user.service;
 import com.pickone.domain.user.dto.UserResponseDto;
 import com.pickone.domain.user.model.mapper.UserMapper;
 import com.pickone.domain.user.repository.UserJpaRepository;
+import com.pickone.global.exception.BusinessException;
+import com.pickone.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +16,7 @@ public class UserQueryServiceImpl implements UserQueryService {
   @Override
   public UserResponseDto getUser(Long userId) {
     var user = userRepository.findById(userId)
-        .orElseThrow(() -> new RuntimeException("User not found"));
+        .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
     return UserMapper.toDto(user);
   }
 }

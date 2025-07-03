@@ -1,7 +1,9 @@
 package com.pickone.domain.user.dto;
 
 import com.pickone.domain.user.model.domain.Gender;
+import com.pickone.global.common.enums.Mbti;
 import java.time.LocalDate;
+import java.util.List;
 
 public record UserResponseDto(
     Long id,
@@ -9,7 +11,11 @@ public record UserResponseDto(
     String email,
     LocalDate birthDate,
     Gender gender,
+    Mbti mbti,
     boolean isActive,
     boolean isVerified,
-    UserPreferenceDto preference // 내장값 Dto로 반환
+    boolean isLocked,
+    boolean twoFactorEnabled,
+    UserPreferenceDto preference,
+    List<UserInstrumentDto> instruments
 ) {}
