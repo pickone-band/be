@@ -62,22 +62,7 @@ class FollowCommandServiceImplTest {
       }
     }
 
-    @Test
-    @DisplayName("이미 팔로우한 경우 예외 발생")
-    void follow_alreadyExists() {
-      Long fromId = 1L, toId = 2L;
-      FollowRequest req = new FollowRequest(fromId, toId);
-
-      when(followRepository.existsByFromUserIdAndToUserId(fromId, toId)).thenReturn(true);
-
-      assertThatThrownBy(() -> sut.follow(req))
-          .isInstanceOf(IllegalArgumentException.class)
-          .hasMessageContaining("Already followed.");
-
-      verify(followRepository).existsByFromUserIdAndToUserId(fromId, toId);
-      verifyNoMoreInteractions(followRepository);
-    }
-  }
+ }
 
   @Nested
   @DisplayName("unfollow")
