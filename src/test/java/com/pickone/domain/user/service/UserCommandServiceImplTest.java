@@ -1,15 +1,20 @@
 package com.pickone.domain.user.service;
 
+import com.pickone.domain.consent.dto.ConsentRequestDto;
 import com.pickone.domain.user.dto.*;
 import com.pickone.domain.user.model.domain.Gender;
 import com.pickone.domain.user.model.entity.UserEntity;
 import com.pickone.domain.user.model.factory.UserFactory;
 import com.pickone.domain.user.model.mapper.UserMapper;
 import com.pickone.domain.user.model.policy.UserPolicy;
+import com.pickone.domain.user.model.vo.UserProfile;
 import com.pickone.domain.user.repository.UserJpaRepository;
 import com.pickone.global.common.enums.Mbti;
+import com.pickone.global.email.dto.EmailSendRequestDto;
+import com.pickone.global.email.service.EmailSendService;
 import com.pickone.global.exception.BusinessException;
 import com.pickone.global.oauth2.model.domain.OAuth2UserInfo;
+import com.pickone.global.security.service.EmailTokenService;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +34,9 @@ class UserCommandServiceImplTest {
   @Mock private UserFactory userFactory;
   @Mock private UserPolicy userPolicy;
   @Mock private PasswordEncoder passwordEncoder;
+  @Mock
+  private EmailTokenService emailTokenService;
+  @Mock private EmailSendService emailSendService;
   @InjectMocks private UserCommandServiceImpl sut;
 
   @BeforeEach
@@ -39,17 +47,36 @@ class UserCommandServiceImplTest {
   @Nested
   @DisplayName("signup")
   class Signup {
+
     @Test
     @DisplayName("정상 회원가입")
     void signup_success() {
-      SignupRequestDto dto = mock(SignupRequestDto.class);
+      SignupRequestDto dto = new SignupRequestDto(
+          "test@example.com",
+          "password123",
+          "password123",
+          "tester",
+          LocalDate.of(1990, 1, 1),
+          Gender.MALE,
+          List.of(new ConsentRequestDto(1L, true))
+      );
+
       doNothing().when(userPolicy).validateSignup(dto);
 
+      UserProfile profile = UserProfile.of("tester", "test@example.com", LocalDate.of(1990, 1, 1),
+          Gender.MALE, null);
+
       UserEntity user = mock(UserEntity.class);
+      when(user.getProfile()).thenReturn(profile);
+
       UserEntity saved = mock(UserEntity.class);
+      when(saved.getProfile()).thenReturn(profile);
 
       when(userFactory.create(dto, passwordEncoder)).thenReturn(user);
       when(userRepository.save(user)).thenReturn(saved);
+      when(emailTokenService.createAndSaveToken(profile.getEmail()))
+          .thenReturn("dummy-token");  // 추가: 토큰 생성 동작 모킹
+      doNothing().when(emailSendService).send(any(EmailSendRequestDto.class));  // 추가
 
       try (MockedStatic<UserMapper> staticMapper = mockStatic(UserMapper.class)) {
         UserResponseDto responseDto = mock(UserResponseDto.class);
@@ -61,6 +88,8 @@ class UserCommandServiceImplTest {
         verify(userPolicy).validateSignup(dto);
         verify(userFactory).create(dto, passwordEncoder);
         verify(userRepository).save(user);
+        verify(emailTokenService).createAndSaveToken(profile.getEmail());
+        verify(emailSendService).send(any(EmailSendRequestDto.class));  // 검증 추가
       }
     }
   }
