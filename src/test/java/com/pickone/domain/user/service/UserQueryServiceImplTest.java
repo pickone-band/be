@@ -4,6 +4,8 @@ import com.pickone.domain.user.dto.UserResponseDto;
 import com.pickone.domain.user.model.entity.UserEntity;
 import com.pickone.domain.user.model.mapper.UserMapper;
 import com.pickone.domain.user.repository.UserJpaRepository;
+import com.pickone.global.exception.BusinessException;
+import com.pickone.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,7 +51,7 @@ class UserQueryServiceImplTest {
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> sut.getUser(userId))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("User not found");
+        .isInstanceOf(BusinessException.class);
+
   }
 }

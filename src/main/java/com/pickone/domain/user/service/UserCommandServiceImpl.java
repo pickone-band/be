@@ -46,12 +46,12 @@ public class UserCommandServiceImpl implements UserCommandService {
       throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
     }
 
-    // 생년월일, 성별, MBTI는 변경 불가로 기존값 유지
+
     user.updateProfile(
         dto.nickname(),
-        user.getProfile().getBirthDate(),
-        user.getProfile().getGender(),
-        user.getProfile().getMbti()
+        user.getProfile().getBirthDate(),  // 기존 생년월일 유지
+        user.getProfile().getGender(),     // 기존 성별 유지
+        dto.mbti() != null ? dto.mbti() : user.getProfile().getMbti() // mbti는 입력값이 있으면 변경
     );
 
     userRepository.save(user);
@@ -80,6 +80,7 @@ public class UserCommandServiceImpl implements UserCommandService {
   public void lockUser(Long userId) {
     UserEntity user = userRepository.findById(userId)
         .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
+    user.lock();
     userRepository.save(user);
   }
 

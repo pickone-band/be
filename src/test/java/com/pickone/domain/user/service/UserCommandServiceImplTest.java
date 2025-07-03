@@ -1,22 +1,24 @@
 package com.pickone.domain.user.service;
 
 import com.pickone.domain.user.dto.*;
+import com.pickone.domain.user.model.domain.Gender;
 import com.pickone.domain.user.model.entity.UserEntity;
 import com.pickone.domain.user.model.factory.UserFactory;
-import com.pickone.domain.user.model.policy.UserPolicy;
 import com.pickone.domain.user.model.mapper.UserMapper;
+import com.pickone.domain.user.model.policy.UserPolicy;
 import com.pickone.domain.user.repository.UserJpaRepository;
+import com.pickone.global.common.enums.Mbti;
+import com.pickone.global.exception.BusinessException;
 import com.pickone.global.oauth2.model.domain.OAuth2UserInfo;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Optional;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -49,8 +51,8 @@ class UserCommandServiceImplTest {
       when(userFactory.create(dto, passwordEncoder)).thenReturn(user);
       when(userRepository.save(user)).thenReturn(saved);
 
-      UserResponseDto responseDto = mock(UserResponseDto.class);
       try (MockedStatic<UserMapper> staticMapper = mockStatic(UserMapper.class)) {
+        UserResponseDto responseDto = mock(UserResponseDto.class);
         staticMapper.when(() -> UserMapper.toDto(saved)).thenReturn(responseDto);
 
         UserResponseDto result = sut.signup(dto);
@@ -70,32 +72,41 @@ class UserCommandServiceImplTest {
     @DisplayName("정상 프로필 변경")
     void updateProfile_success() {
       Long userId = 1L;
-      UpdateProfileRequestDto dto = new UpdateProfileRequestDto("nick");
+      UpdateProfileRequestDto dto = new UpdateProfileRequestDto("newNick", Mbti.INFP);
 
-      UserEntity user = mock(UserEntity.class);
+      UserEntity user = spy(UserEntity.of(
+          "test@example.com",
+          "encryptedPassword",
+          "oldNick",
+          Gender.FEMALE,
+          LocalDate.of(1990, 1, 1),
+          Mbti.ENFJ,
+          List.of()
+      ));
+
       when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-
-      doNothing().when(user).updateProfile(any(), any(), any(), any());
-      when(userRepository.save(user)).thenReturn(user);
+      when(userRepository.existsByProfileNickname(dto.nickname())).thenReturn(false);
 
       sut.updateProfile(userId, dto);
 
       verify(userRepository).findById(userId);
-      verify(user).updateProfile(any(), any(), any(), any());
+      verify(userRepository).existsByProfileNickname(dto.nickname());
       verify(userRepository).save(user);
+
+      assertThat(user.getProfile().getNickname()).isEqualTo(dto.nickname());
+      assertThat(user.getProfile().getMbti()).isEqualTo(dto.mbti());
     }
 
     @Test
     @DisplayName("없는 유저는 예외 발생")
     void updateProfile_userNotFound() {
       Long userId = 2L;
-      UpdateProfileRequestDto dto = mock(UpdateProfileRequestDto.class);
+      UpdateProfileRequestDto dto = new UpdateProfileRequestDto("newNick", Mbti.ENFJ);
 
       when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
       assertThatThrownBy(() -> sut.updateProfile(userId, dto))
-          .isInstanceOf(RuntimeException.class)
-          .hasMessageContaining("Not found");
+          .isInstanceOf(BusinessException.class);
     }
   }
 
@@ -108,10 +119,18 @@ class UserCommandServiceImplTest {
       Long userId = 1L;
       UpdatePreferenceRequestDto dto = new UpdatePreferenceRequestDto(List.of());
 
-      UserEntity user = mock(UserEntity.class);
+      UserEntity realUser = UserEntity.of(
+          "test2@example.com",
+          "password",
+          "nickname",
+          Gender.MALE,
+          LocalDate.of(1985, 5, 5),
+          Mbti.ENFP,
+          List.of()
+      );
+      UserEntity user = spy(realUser);
+
       when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-      doNothing().when(user).updatePreference(any());
-      when(userRepository.save(user)).thenReturn(user);
 
       sut.updatePreference(userId, dto);
 
@@ -128,20 +147,27 @@ class UserCommandServiceImplTest {
     @DisplayName("비밀번호 변경 성공")
     void changePassword_success() {
       Long userId = 1L;
-      ChangePasswordRequestDto dto = new ChangePasswordRequestDto("new");
+      ChangePasswordRequestDto dto = new ChangePasswordRequestDto("newPassword");
 
-      UserEntity user = mock(UserEntity.class);
+      UserEntity realUser = UserEntity.of(
+          "test3@example.com",
+          "oldPassword",
+          "nickname3",
+          Gender.FEMALE,
+          LocalDate.of(1995, 6, 6),
+          Mbti.INTJ,
+          List.of()
+      );
+      UserEntity user = spy(realUser);
+
       when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-
-      when(passwordEncoder.encode(dto.newPassword())).thenReturn("hashed");
-      doNothing().when(user).changePassword("hashed");
-      when(userRepository.save(user)).thenReturn(user);
+      when(passwordEncoder.encode(dto.newPassword())).thenReturn("hashedPassword");
 
       sut.changePassword(userId, dto);
 
       verify(userRepository).findById(userId);
       verify(passwordEncoder).encode(dto.newPassword());
-      verify(user).changePassword("hashed");
+      verify(user).changePassword("hashedPassword");
       verify(userRepository).save(user);
     }
   }
@@ -153,11 +179,19 @@ class UserCommandServiceImplTest {
     @DisplayName("유저 잠금 성공")
     void lockUser_success() {
       Long userId = 1L;
-      UserEntity user = mock(UserEntity.class);
+
+      UserEntity realUser = UserEntity.of(
+          "test4@example.com",
+          "password",
+          "nickname4",
+          Gender.MALE,
+          LocalDate.of(1992, 7, 7),
+          Mbti.ISTP,
+          List.of()
+      );
+      UserEntity user = spy(realUser);
 
       when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-      doNothing().when(user).lock();
-      when(userRepository.save(user)).thenReturn(user);
 
       sut.lockUser(userId);
 
@@ -174,11 +208,24 @@ class UserCommandServiceImplTest {
     @DisplayName("정상적으로 유저 삭제")
     void deleteUser_success() {
       Long userId = 1L;
-      doNothing().when(userRepository).deleteById(userId);
+
+      when(userRepository.existsById(userId)).thenReturn(true);
 
       sut.deleteUser(userId);
 
+      verify(userRepository).existsById(userId);
       verify(userRepository).deleteById(userId);
+    }
+
+    @Test
+    @DisplayName("없는 유저 삭제 시 예외 발생")
+    void deleteUser_notFound() {
+      Long userId = 2L;
+
+      when(userRepository.existsById(userId)).thenReturn(false);
+
+      assertThatThrownBy(() -> sut.deleteUser(userId))
+          .isInstanceOf(BusinessException.class);
     }
   }
 
