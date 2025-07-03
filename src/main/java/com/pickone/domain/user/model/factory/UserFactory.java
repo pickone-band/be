@@ -23,7 +23,7 @@ public class UserFactory {
         dto.gender(),
         dto.birthDate(),
         null,          // MBTI: 현재 dto에 없음
-        null           // 장르: 현재 dto에 없음
+        Collections.emptyList()           // 장르: 현재 dto에 없음
     );
   }
 

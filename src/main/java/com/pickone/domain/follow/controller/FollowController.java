@@ -4,7 +4,10 @@ import com.pickone.domain.follow.dto.FollowRequest;
 import com.pickone.domain.follow.dto.FollowResponse;
 import com.pickone.domain.follow.service.FollowCommandService;
 import com.pickone.domain.follow.service.FollowQueryService;
+import com.pickone.global.exception.BaseResponse;
+import com.pickone.global.exception.SuccessCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,29 +20,40 @@ public class FollowController {
   private final FollowQueryService queryService;
 
   @PostMapping
-  public FollowResponse follow(@RequestBody FollowRequest request) {
-    return commandService.follow(request);
+  public ResponseEntity<BaseResponse<FollowResponse>> follow(@RequestBody FollowRequest request) {
+    FollowResponse response = commandService.follow(request);
+    if (response == null) {
+      // 언팔로우 처리되었을 때 성공 메시지
+      return BaseResponse.success(SuccessCode.DELETED, null);
+    }
+    return BaseResponse.success(SuccessCode.CREATED, response);
   }
 
-  @DeleteMapping
-  public void unfollow(@RequestBody FollowRequest request) {
-    commandService.unfollow(request);
+  @DeleteMapping("/{fromUserId}/{toUserId}")
+  public ResponseEntity<BaseResponse<Void>> unfollow(
+      @PathVariable Long fromUserId,
+      @PathVariable Long toUserId) {
+    commandService.unfollow(new FollowRequest(fromUserId, toUserId));
+    return BaseResponse.success(SuccessCode.DELETED);
   }
 
   @GetMapping("/followers/{userId}")
-  public List<FollowResponse> getFollowers(@PathVariable Long userId) {
-    return queryService.getFollowers(userId);
+  public ResponseEntity<BaseResponse<List<FollowResponse>>> getFollowers(@PathVariable Long userId) {
+    List<FollowResponse> followers = queryService.getFollowers(userId);
+    return BaseResponse.success(followers);
   }
 
   @GetMapping("/followings/{userId}")
-  public List<FollowResponse> getFollowings(@PathVariable Long userId) {
-    return queryService.getFollowings(userId);
+  public ResponseEntity<BaseResponse<List<FollowResponse>>> getFollowings(@PathVariable Long userId) {
+    List<FollowResponse> followings = queryService.getFollowings(userId);
+    return BaseResponse.success(followings);
   }
 
   @GetMapping("/is-following")
-  public boolean isFollowing(
+  public ResponseEntity<BaseResponse<Boolean>> isFollowing(
       @RequestParam Long fromUserId,
       @RequestParam Long toUserId) {
-    return queryService.isFollowing(fromUserId, toUserId);
+    boolean isFollowing = queryService.isFollowing(fromUserId, toUserId);
+    return BaseResponse.success(isFollowing);
   }
 }
