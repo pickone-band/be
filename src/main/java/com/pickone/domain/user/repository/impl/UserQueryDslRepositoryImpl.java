@@ -31,8 +31,12 @@ public class UserQueryDslRepositoryImpl implements UserQueryDslRepository {
 
     // VO 내부 필드 접근: 프로필 닉네임, 이메일
     if (hasText(cond.getKeyword())) {
-      where.and(userEntity.profile.nickname.containsIgnoreCase(cond.getKeyword())
-          .or(userEntity.profile.email.containsIgnoreCase(cond.getKeyword())));
+      String keyword = cond.getKeyword();
+      where.and(
+          userEntity.profile.nickname.containsIgnoreCase(keyword)
+              .or(userEntity.profile.email.containsIgnoreCase(keyword))
+              .or(userEntity.profile.introduction.containsIgnoreCase(keyword))
+      );
     }
 
     // 공개 여부: UserStatus VO 내 필드 (가정: status.isPublic)
@@ -60,9 +64,14 @@ public class UserQueryDslRepositoryImpl implements UserQueryDslRepository {
     if (cond.getGenres() != null && !cond.getGenres().isEmpty()) {
       BooleanBuilder genreBuilder = new BooleanBuilder();
       for (var genre : cond.getGenres()) {
-        genreBuilder.or(userEntity.preference.primaryGenre.eq(genre))
-            .or(userEntity.preference.secondaryGenre.eq(genre))
-            .or(userEntity.preference.tertiaryGenre.eq(genre));
+        genreBuilder.or(userEntity.preference.genre1.eq(genre))
+            .or(userEntity.preference.genre2.eq(genre))
+            .or(userEntity.preference.genre3.eq(genre))
+            .or(userEntity.preference.genre4.eq(genre))
+            .or(userEntity.preference.genre5.eq(genre))
+            .or(userEntity.preference.genre6.eq(genre))
+            .or(userEntity.preference.genre7.eq(genre))
+            .or(userEntity.preference.genre8.eq(genre));
       }
       where.and(genreBuilder);
     }
@@ -105,6 +114,7 @@ public class UserQueryDslRepositoryImpl implements UserQueryDslRepository {
       where.and(
           userEntity.profile.nickname.containsIgnoreCase(keyword)
               .or(userEntity.profile.email.containsIgnoreCase(keyword))
+              .or(userEntity.profile.introduction.containsIgnoreCase(keyword)) // 👈 추가
       );
     }
 

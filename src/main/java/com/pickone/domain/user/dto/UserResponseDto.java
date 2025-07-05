@@ -17,5 +17,6 @@ public record UserResponseDto(
     boolean isLocked,
     boolean twoFactorEnabled,
     UserPreferenceDto preference,
-    List<UserInstrumentDto> instruments
+    List<UserInstrumentDto> instruments,
+    String introduction
 ) {}

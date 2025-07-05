@@ -22,20 +22,22 @@ public class UserFactory {
         dto.nickname(),
         dto.gender(),
         dto.birthDate(),
-        null,          // MBTI: 현재 dto에 없음
-        Collections.emptyList()           // 장르: 현재 dto에 없음
+        null,                    // MBTI
+        Collections.emptyList(),// 장르
+        null                     // 👉 자기소개 없음 → null 또는 "" 등으로 설정
     );
   }
 
   public UserEntity createWithOAuth2(OAuth2UserInfo userInfo) {
     return UserEntity.of(
         userInfo.getEmail(),
-        null,  // 소셜 로그인은 비밀번호 없음
-        userInfo.getNickname(),
-        Gender.MALE,             // 기본값 (또는 Gender.UNKNOWN 등 정의 가능)
-        LocalDate.now(),         // 생일 정보 없음
         null,
-        Collections.emptyList()
+        userInfo.getNickname(),
+        Gender.MALE,
+        LocalDate.now(),
+        null,
+        Collections.emptyList(),
+        "안녕하세요! 소셜 가입 사용자입니다." // 기본 소개글
     );
   }
 }

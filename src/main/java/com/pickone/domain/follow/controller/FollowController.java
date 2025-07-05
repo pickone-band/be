@@ -12,22 +12,21 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/follow")
-@RequiredArgsConstructor
-public class FollowController {
-  private final FollowCommandService commandService;
-  private final FollowQueryService queryService;
+  @RestController
+  @RequestMapping("/api/follow")
+  @RequiredArgsConstructor
+  public class FollowController {
+    private final FollowCommandService commandService;
+    private final FollowQueryService queryService;
 
-  @PostMapping
-  public ResponseEntity<BaseResponse<FollowResponse>> follow(@RequestBody FollowRequest request) {
-    FollowResponse response = commandService.follow(request);
-    if (response == null) {
-      // 언팔로우 처리되었을 때 성공 메시지
-      return BaseResponse.success(SuccessCode.DELETED, null);
+    @PostMapping
+    public ResponseEntity<BaseResponse<FollowResponse>> follow(@RequestBody FollowRequest request) {
+      FollowResponse response = commandService.follow(request);
+      if (response == null) {
+        return BaseResponse.success(SuccessCode.DELETED, null);
+      }
+      return BaseResponse.success(SuccessCode.CREATED, response);
     }
-    return BaseResponse.success(SuccessCode.CREATED, response);
-  }
 
   @DeleteMapping("/{fromUserId}/{toUserId}")
   public ResponseEntity<BaseResponse<Void>> unfollow(

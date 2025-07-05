@@ -15,15 +15,16 @@ import com.pickone.global.email.service.EmailSendService;
 import com.pickone.global.exception.BusinessException;
 import com.pickone.global.oauth2.model.domain.OAuth2UserInfo;
 import com.pickone.global.security.service.EmailTokenService;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -34,10 +35,11 @@ class UserCommandServiceImplTest {
   @Mock private UserFactory userFactory;
   @Mock private UserPolicy userPolicy;
   @Mock private PasswordEncoder passwordEncoder;
-  @Mock
-  private EmailTokenService emailTokenService;
+  @Mock private EmailTokenService emailTokenService;
   @Mock private EmailSendService emailSendService;
   @InjectMocks private UserCommandServiceImpl sut;
+
+  private static final String DEFAULT_INTRO = "기본 자기소개입니다.";
 
   @BeforeEach
   void setUp() {
@@ -54,17 +56,16 @@ class UserCommandServiceImplTest {
       SignupRequestDto dto = new SignupRequestDto(
           "test@example.com",
           "password123",
-          "password123",
           "tester",
           LocalDate.of(1990, 1, 1),
           Gender.MALE,
           List.of(new ConsentRequestDto(1L, true))
       );
 
+
       doNothing().when(userPolicy).validateSignup(dto);
 
-      UserProfile profile = UserProfile.of("tester", "test@example.com", LocalDate.of(1990, 1, 1),
-          Gender.MALE, null);
+      UserProfile profile = UserProfile.of("tester", "test@example.com", LocalDate.of(1990, 1, 1), Gender.MALE, null, DEFAULT_INTRO);
 
       UserEntity user = mock(UserEntity.class);
       when(user.getProfile()).thenReturn(profile);
@@ -74,9 +75,8 @@ class UserCommandServiceImplTest {
 
       when(userFactory.create(dto, passwordEncoder)).thenReturn(user);
       when(userRepository.save(user)).thenReturn(saved);
-      when(emailTokenService.createAndSaveToken(profile.getEmail()))
-          .thenReturn("dummy-token");  // 추가: 토큰 생성 동작 모킹
-      doNothing().when(emailSendService).send(any(EmailSendRequestDto.class));  // 추가
+      when(emailTokenService.createAndSaveToken(profile.getEmail())).thenReturn("dummy-token");
+      doNothing().when(emailSendService).send(any(EmailSendRequestDto.class));
 
       try (MockedStatic<UserMapper> staticMapper = mockStatic(UserMapper.class)) {
         UserResponseDto responseDto = mock(UserResponseDto.class);
@@ -89,7 +89,7 @@ class UserCommandServiceImplTest {
         verify(userFactory).create(dto, passwordEncoder);
         verify(userRepository).save(user);
         verify(emailTokenService).createAndSaveToken(profile.getEmail());
-        verify(emailSendService).send(any(EmailSendRequestDto.class));  // 검증 추가
+        verify(emailSendService).send(any(EmailSendRequestDto.class));
       }
     }
   }
@@ -101,7 +101,8 @@ class UserCommandServiceImplTest {
     @DisplayName("정상 프로필 변경")
     void updateProfile_success() {
       Long userId = 1L;
-      UpdateProfileRequestDto dto = new UpdateProfileRequestDto("newNick", Mbti.INFP);
+      UpdateProfileRequestDto dto = new UpdateProfileRequestDto("newNick", Mbti.INFP, "안녕하세요. 새로운 소개입니다.");
+
 
       UserEntity user = spy(UserEntity.of(
           "test@example.com",
@@ -110,7 +111,8 @@ class UserCommandServiceImplTest {
           Gender.FEMALE,
           LocalDate.of(1990, 1, 1),
           Mbti.ENFJ,
-          List.of()
+          List.of(),
+          DEFAULT_INTRO
       ));
 
       when(userRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -130,7 +132,8 @@ class UserCommandServiceImplTest {
     @DisplayName("없는 유저는 예외 발생")
     void updateProfile_userNotFound() {
       Long userId = 2L;
-      UpdateProfileRequestDto dto = new UpdateProfileRequestDto("newNick", Mbti.ENFJ);
+      UpdateProfileRequestDto dto = new UpdateProfileRequestDto("newNick", Mbti.INFP, "안녕하세요. 새로운 소개입니다.");
+
 
       when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
@@ -155,7 +158,8 @@ class UserCommandServiceImplTest {
           Gender.MALE,
           LocalDate.of(1985, 5, 5),
           Mbti.ENFP,
-          List.of()
+          List.of(),
+          DEFAULT_INTRO
       );
       UserEntity user = spy(realUser);
 
@@ -185,7 +189,8 @@ class UserCommandServiceImplTest {
           Gender.FEMALE,
           LocalDate.of(1995, 6, 6),
           Mbti.INTJ,
-          List.of()
+          List.of(),
+          DEFAULT_INTRO
       );
       UserEntity user = spy(realUser);
 
@@ -216,7 +221,8 @@ class UserCommandServiceImplTest {
           Gender.MALE,
           LocalDate.of(1992, 7, 7),
           Mbti.ISTP,
-          List.of()
+          List.of(),
+          DEFAULT_INTRO
       );
       UserEntity user = spy(realUser);
 

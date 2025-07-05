@@ -100,7 +100,9 @@ public enum ErrorCode {
 
     CANNOT_FOLLOW_SELF(HttpStatus.BAD_REQUEST, 3101, "자신을 팔로우할 수 없습니다."),
     ALREADY_FOLLOWING(HttpStatus.BAD_REQUEST, 3102, "이미 팔로우한 사용자입니다."),
-    FOLLOW_RELATION_NOT_FOUND(HttpStatus.NOT_FOUND, 3103, "팔로우 관계를 찾을 수 없습니다.");
+    FOLLOW_RELATION_NOT_FOUND(HttpStatus.NOT_FOUND, 3103, "팔로우 관계를 찾을 수 없습니다."),
+
+    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, 9401, "알림을 찾을 수 없습니다."),;
 
     private final HttpStatus status;
     private final int code;

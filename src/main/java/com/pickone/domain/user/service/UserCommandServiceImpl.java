@@ -60,12 +60,12 @@ public class UserCommandServiceImpl implements UserCommandService {
       throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
     }
 
-
     user.updateProfile(
         dto.nickname(),
-        user.getProfile().getBirthDate(),  // 기존 생년월일 유지
-        user.getProfile().getGender(),     // 기존 성별 유지
-        dto.mbti() != null ? dto.mbti() : user.getProfile().getMbti() // mbti는 입력값이 있으면 변경
+        user.getProfile().getBirthDate(),    // 기존 생년월일 유지
+        user.getProfile().getGender(),       // 기존 성별 유지
+        dto.mbti() != null ? dto.mbti() : user.getProfile().getMbti(), // MBTI는 입력 시에만 변경
+        dto.introduction() != null ? dto.introduction() : user.getProfile().getIntroduction() // 👈 추가
     );
 
     userRepository.save(user);
