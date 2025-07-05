@@ -40,11 +40,11 @@
 
     public static UserEntity of(
         String email, String password, String nickname,
-        Gender gender, LocalDate birthDate, Mbti mbti, List<?> genres
+        Gender gender, LocalDate birthDate, Mbti mbti, List<?> genres, String introduction
     ) {
       return new UserEntity(
           null,
-          UserProfile.of(nickname, email, birthDate, gender, mbti),
+          UserProfile.of(nickname, email, birthDate, gender, mbti, introduction),
           UserStatus.init(),
           UserPreference.from((List) genres),
           UserAuthInfo.of(password, null, null),
@@ -55,8 +55,8 @@
       );
     }
 
-    public void updateProfile(String nickname, LocalDate birthDate, Gender gender, Mbti mbti) {
-      this.profile = UserProfile.of(nickname, this.profile.getEmail(), birthDate, gender, mbti);
+    public void updateProfile(String nickname, LocalDate birthDate, Gender gender, Mbti mbti, String introduction) {
+      this.profile = UserProfile.of(nickname, this.profile.getEmail(), birthDate, gender, mbti, introduction);
     }
 
     public void changePassword(String newPassword) {

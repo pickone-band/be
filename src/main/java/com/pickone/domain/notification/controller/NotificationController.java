@@ -1,35 +1,44 @@
-package com.pickone.domain.notification.controller;
+  package com.pickone.domain.notification.controller;
 
-import com.pickone.domain.notification.dto.NotificationDto;
-import com.pickone.domain.notification.service.NotificationCommandService;
-import com.pickone.domain.notification.service.NotificationQueryService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+  import com.pickone.domain.notification.dto.CreateNotificationRequest;
+  import com.pickone.domain.notification.dto.NotificationDto;
+  import com.pickone.domain.notification.service.NotificationCommandService;
+  import com.pickone.domain.notification.service.NotificationQueryService;
 
-import java.util.List;
+  import com.pickone.global.exception.BaseResponse;
+  import lombok.RequiredArgsConstructor;
+  import org.springframework.http.ResponseEntity;
+  import org.springframework.web.bind.annotation.*;
 
-@RestController
-@RequestMapping("/api/notifications")
-@RequiredArgsConstructor
-public class NotificationController {
-  private final NotificationCommandService commandService;
-  private final NotificationQueryService queryService;
+  import java.util.List;
 
-  @GetMapping("/{userId}")
-  public List<NotificationDto> getUserNotifications(@PathVariable Long userId) {
-    return queryService.getNotifications(userId);
+  @RestController
+  @RequestMapping("/api/notifications")
+  @RequiredArgsConstructor
+  public class NotificationController {
+    private final NotificationCommandService commandService;
+    private final NotificationQueryService queryService;
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<BaseResponse<List<NotificationDto>>> getUserNotifications(@PathVariable Long userId) {
+      List<NotificationDto> notifications = queryService.getNotifications(userId);
+      return BaseResponse.success(notifications);
+    }
+
+    @PostMapping
+    public ResponseEntity<BaseResponse<NotificationDto>> sendNotification(
+        @RequestBody CreateNotificationRequest request
+    ) {
+      NotificationDto notification = commandService.sendNotification(request.userId(),
+          request.message(),
+          request.type());
+      return BaseResponse.success(notification);
+    }
+
+    @PatchMapping("/{notificationId}/read")
+    public ResponseEntity<BaseResponse<Void>> markAsRead(@PathVariable String notificationId) {
+      commandService.markAsRead(notificationId);
+      return BaseResponse.success();
+    }
   }
 
-  @PostMapping
-  public NotificationDto sendNotification(
-      @RequestParam Long userId,
-      @RequestParam String message,
-      @RequestParam String type) {
-    return commandService.sendNotification(userId, message, type);
-  }
-
-  @PatchMapping("/{notificationId}/read")
-  public void markAsRead(@PathVariable String notificationId) {
-    commandService.markAsRead(notificationId);
-  }
-}

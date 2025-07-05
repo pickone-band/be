@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+import org.springframework.context.ApplicationEventPublisher;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -17,6 +18,7 @@ import static org.mockito.Mockito.*;
 class FollowCommandServiceImplTest {
 
   @Mock private UserFollowJpaRepository followRepository;
+  @Mock private ApplicationEventPublisher eventPublisher;
   @InjectMocks private FollowCommandServiceImpl sut;
 
   @BeforeEach

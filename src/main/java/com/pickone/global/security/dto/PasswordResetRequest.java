@@ -3,7 +3,6 @@ package com.pickone.global.security.dto;
 import jakarta.validation.constraints.NotBlank;
 
 public record PasswordResetRequest(
-    @NotBlank String token,
     @NotBlank String newPassword
 ) {
   public void validate() {

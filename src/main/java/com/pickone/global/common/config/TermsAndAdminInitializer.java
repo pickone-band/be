@@ -53,26 +53,46 @@ public class TermsAndAdminInitializer implements CommandLineRunner {
   private void initializeAdmin() {
     String adminEmail = "admin@example.com";
     if (userRepository.findByProfileEmail(adminEmail).isEmpty()) {
-      // 비밀번호 인코딩 분리
       String encodedPassword = passwordEncoder.encode("admin1234");
 
-      // UserEntity.of(...) 정적 팩토리 사용
       UserEntity admin = UserEntity.of(
-          adminEmail,                       // email
-          encodedPassword,                  // password
-          "운영자",                         // nickname
-          Gender.MALE,                      // gender
-          LocalDate.of(1990, 1, 1),         // birthDate
-          Mbti.ENFJ,                        // mbti
-          Collections.emptyList()           // genres
+          adminEmail,
+          encodedPassword,
+          "운영자",
+          Gender.MALE,
+          LocalDate.of(1990, 1, 1),
+          Mbti.ENFJ,
+          Collections.emptyList(),
+          "서비스 운영을 담당하는 관리자입니다." // 👈 introduction 추가
       );
 
-      // 필요시 권한, 상태 등 추가 세팅
       admin.verify(); // 인증 처리
-      admin.lock();   // 필요시 잠금, 아니면 생략
+      admin.lock();   // 필요시 잠금
 
       userRepository.save(admin);
       log.info("✅ 운영자 계정 생성 완료: {}", adminEmail);
     }
+
+    String userEmail = "user@example.com";
+    if (userRepository.findByProfileEmail(userEmail).isEmpty()) {
+      String encodedPassword = passwordEncoder.encode("user1234");
+
+      UserEntity user = UserEntity.of(
+          userEmail,
+          encodedPassword,
+          "일반사용자",
+          Gender.FEMALE,
+          LocalDate.of(1995, 5, 5),
+          Mbti.INFP,
+          Collections.emptyList(),
+          "안녕하세요. 음악을 좋아하는 사용자입니다." // 👈 introduction 추가
+      );
+
+      user.verify(); // 인증 완료
+
+      userRepository.save(user);
+      log.info("✅ 일반 사용자 계정 생성 완료: {}", userEmail);
+    }
   }
+
 }

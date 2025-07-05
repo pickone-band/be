@@ -6,8 +6,8 @@ import com.pickone.domain.user.model.entity.UserEntity;
 import com.pickone.domain.user.model.vo.UserAuthInfo;
 import com.pickone.global.common.enums.Genre;
 import com.pickone.global.common.enums.Mbti;
-
 import com.pickone.global.oauth2.model.domain.OAuth2Provider;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -25,7 +25,8 @@ public class UserFixture {
         Gender.MALE,
         LocalDate.of(1995, 1, 1),
         Mbti.ENFP,
-        List.of(Genre.POP, Genre.JAZZ)
+        List.of(Genre.POP, Genre.JAZZ),
+        "소셜 사용자 자기소개입니다." // ✅ introduction 추가
     );
     injectProvider(user, provider, providerId);
     return user;
@@ -39,7 +40,8 @@ public class UserFixture {
         Gender.FEMALE,
         LocalDate.of(1992, 6, 15),
         Mbti.ISTJ,
-        List.of(Genre.ACOUSTIC)
+        List.of(Genre.ACOUSTIC),
+        "일반 사용자 자기소개입니다." // ✅ introduction 추가
     );
   }
 

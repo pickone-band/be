@@ -5,6 +5,7 @@ import com.pickone.domain.term.dto.TermResponseDto;
 import com.pickone.domain.term.service.TermCommandService;
 import com.pickone.domain.term.service.TermQueryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,20 +14,24 @@ import java.util.List;
 @RequestMapping("/api/terms")
 @RequiredArgsConstructor
 public class TermController {
+
   private final TermCommandService commandService;
   private final TermQueryService queryService;
 
   @PostMapping
+  @PreAuthorize("hasRole('ADMIN')")
   public TermResponseDto create(@RequestBody TermRequestDto dto) {
     return commandService.createTerm(dto);
   }
 
   @PatchMapping("/{termId}")
+  @PreAuthorize("hasRole('ADMIN')")
   public void update(@PathVariable Long termId, @RequestBody TermRequestDto dto) {
     commandService.updateTerm(termId, dto);
   }
 
   @DeleteMapping("/{termId}")
+  @PreAuthorize("hasRole('ADMIN')")
   public void delete(@PathVariable Long termId) {
     commandService.deleteTerm(termId);
   }

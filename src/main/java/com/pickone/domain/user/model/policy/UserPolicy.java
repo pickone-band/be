@@ -35,13 +35,13 @@ public class UserPolicy {
       throw new BusinessException(ErrorCode.INVALID_PASSWORD);
     }
 
-    if (dto.passwordConfirm() == null || dto.passwordConfirm().isBlank()) {
-      throw new BusinessException(ErrorCode.INVALID_PASSWORD_CONFIRM);
-    }
-
-    if (!dto.password().equals(dto.passwordConfirm())) {
-      throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
-    }
+//    if (dto.passwordConfirm() == null || dto.passwordConfirm().isBlank()) {
+//      throw new BusinessException(ErrorCode.INVALID_PASSWORD_CONFIRM);
+//    }
+//
+//    if (!dto.password().equals(dto.passwordConfirm())) {
+//      throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
+//    }
 
     if (dto.nickname() == null || dto.nickname().isBlank()) {
       throw new BusinessException(ErrorCode.INVALID_NICKNAME);

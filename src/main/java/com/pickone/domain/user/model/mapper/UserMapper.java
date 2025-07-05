@@ -23,7 +23,8 @@ public class UserMapper {
         toPreferenceDto(entity.getPreference()),
         entity.getInstruments().stream()
             .map(UserMapper::toInstrumentDto)
-            .toList()
+            .toList(),
+        entity.getProfile().getIntroduction()
     );
   }
 
@@ -38,9 +39,14 @@ public class UserMapper {
   public static UserPreferenceDto toPreferenceDto(UserPreference preference) {
     if (preference == null) return null;
     return new UserPreferenceDto(
-        preference.getPrimaryGenre(),
-        preference.getSecondaryGenre(),
-        preference.getTertiaryGenre()
+        preference.getGenre1(),
+        preference.getGenre2(),
+        preference.getGenre3(),
+        preference.getGenre4(),
+        preference.getGenre5(),
+        preference.getGenre6(),
+        preference.getGenre7(),
+        preference.getGenre8()
     );
   }
 }

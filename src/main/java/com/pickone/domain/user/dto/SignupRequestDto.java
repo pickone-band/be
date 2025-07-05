@@ -14,8 +14,8 @@ public record SignupRequestDto(
     @NotBlank
     String password,
 
-    @NotBlank
-    String passwordConfirm,
+//    @NotBlank
+//    String passwordConfirm,
 
     @NotBlank
     String nickname,
