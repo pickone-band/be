@@ -55,5 +55,9 @@ public class UserController {
     return BaseResponse.success();
   }
 
- 
+  @GetMapping("/{userId}")
+  public ResponseEntity<BaseResponse<UserResponseDto>> getUser(@PathVariable Long userId) {
+    UserResponseDto response = queryService.getUser(userId);
+    return BaseResponse.success(response);
+  }
 }
