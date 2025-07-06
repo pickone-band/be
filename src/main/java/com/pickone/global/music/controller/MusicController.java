@@ -14,6 +14,9 @@ import com.pickone.global.oauth2.model.domain.OAuth2Provider;
 import com.pickone.global.oauth2.model.entity.UserConnectionEntity;
 import com.pickone.global.oauth2.repository.UserConnectionRepository;
 import com.pickone.global.security.service.JwtService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +29,9 @@ import java.util.List;
 @RequestMapping("/api/music")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Music", description = "소셜 뮤직 연동 및 재생 정보 관련 API")
 public class MusicController {
+
   private final JwtService jwtService;
   private final UserConnectionRepository connectionRepository;
   private final Map<OAuth2Provider, SocialMusicApiClient> musicApiClients;
@@ -44,10 +49,11 @@ public class MusicController {
         .orElseThrow(() -> new BusinessException(ErrorCode.SOCIAL_ACCOUNT_NOT_FOUND));
   }
 
-  // 현재 트랙
+  @Operation(summary = "현재 재생 중인 트랙 조회", description = "현재 사용자가 해당 플랫폼(Spotify 등)에서 재생 중인 곡 정보를 반환합니다.")
   @GetMapping("/current/{provider}")
-  public ResponseEntity<?> getCurrentTrack(@RequestHeader("Authorization") String authorization,
-      @PathVariable String provider) {
+  public ResponseEntity<?> getCurrentTrack(
+      @Parameter(description = "Authorization 헤더 (Bearer 토큰)") @RequestHeader("Authorization") String authorization,
+      @Parameter(description = "뮤직 플랫폼 이름 (예: spotify)") @PathVariable String provider) {
     UserConnectionEntity connection = getUserConnection(authorization, provider);
     SocialMusicApiClient client = musicApiClients.get(connection.getProvider());
     SocialMusicTrackDto track = client.getCurrentlyPlaying(connection.getAccessToken());
@@ -55,10 +61,11 @@ public class MusicController {
     return BaseResponse.success(SuccessCode.OK, info);
   }
 
-  // 재생 정보(플레이리스트/디바이스/활성 상태)
+  @Operation(summary = "현재 재생 상태 전체 정보 조회", description = "현재 곡, 디바이스, 활성 상태, 플레이리스트 등의 정보를 반환합니다.")
   @GetMapping("/playback/{provider}")
-  public ResponseEntity<?> getPlaybackInfo(@RequestHeader("Authorization") String authorization,
-      @PathVariable String provider) {
+  public ResponseEntity<?> getPlaybackInfo(
+      @Parameter(description = "Authorization 헤더 (Bearer 토큰)") @RequestHeader("Authorization") String authorization,
+      @Parameter(description = "뮤직 플랫폼 이름 (예: spotify)") @PathVariable String provider) {
     UserConnectionEntity connection = getUserConnection(authorization, provider);
     SocialMusicApiClient client = musicApiClients.get(connection.getProvider());
     SocialMusicTrackDto track = client.getCurrentlyPlaying(connection.getAccessToken());
@@ -73,20 +80,22 @@ public class MusicController {
     return BaseResponse.success(SuccessCode.OK, response);
   }
 
-  // 플레이리스트
+  @Operation(summary = "사용자 플레이리스트 조회", description = "연결된 플랫폼 계정에서 사용자의 플레이리스트 목록을 조회합니다.")
   @GetMapping("/playlists/{provider}")
-  public ResponseEntity<?> getPlaylists(@RequestHeader("Authorization") String authorization,
-      @PathVariable String provider) {
+  public ResponseEntity<?> getPlaylists(
+      @Parameter(description = "Authorization 헤더 (Bearer 토큰)") @RequestHeader("Authorization") String authorization,
+      @Parameter(description = "뮤직 플랫폼 이름 (예: spotify)") @PathVariable String provider) {
     UserConnectionEntity connection = getUserConnection(authorization, provider);
     SocialMusicApiClient client = musicApiClients.get(connection.getProvider());
     List<PlaylistInfoDto> playlists = client.getPlaylists(connection.getAccessToken());
     return BaseResponse.success(SuccessCode.OK, playlists);
   }
 
-  // [동기화] 플랫폼 음악 → DB 반영
+  @Operation(summary = "음악 동기화", description = "플랫폼에서 사용자의 음악 데이터를 불러와 DB에 동기화합니다.")
   @PostMapping("/sync/{provider}")
-  public ResponseEntity<?> syncMusic(@RequestHeader("Authorization") String authorization,
-      @PathVariable String provider) {
+  public ResponseEntity<?> syncMusic(
+      @Parameter(description = "Authorization 헤더 (Bearer 토큰)") @RequestHeader("Authorization") String authorization,
+      @Parameter(description = "뮤직 플랫폼 이름 (예: spotify)") @PathVariable String provider) {
     UserConnectionEntity connection = getUserConnection(authorization, provider);
     SocialMusicApiClient client = musicApiClients.get(connection.getProvider());
     List<SocialMusicTrackDto> tracks = client.getTracks(connection.getAccessToken());
