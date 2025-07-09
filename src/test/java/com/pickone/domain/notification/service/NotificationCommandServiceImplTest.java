@@ -1,129 +1,132 @@
 package com.pickone.domain.notification.service;
 
-import com.pickone.domain.notification.dto.NotificationDto;
+import com.pickone.domain.notification.dto.NotificationResponse;
+import com.pickone.domain.notification.entity.Notification;
+import com.pickone.domain.notification.mapper.NotificationMapper;
+import com.pickone.domain.notification.model.domain.NotificationStatus;
 import com.pickone.domain.notification.model.domain.NotificationType;
-import com.pickone.domain.notification.model.entity.NotificationDocument;
-import com.pickone.domain.notification.model.mapper.NotificationMapper;
 import com.pickone.domain.notification.repository.NotificationRepository;
 import com.pickone.global.exception.BusinessException;
+import com.pickone.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class NotificationCommandServiceImplTest {
 
+  @InjectMocks
+  private NotificationCommandServiceImpl notificationCommandService;
+
   @Mock
   private NotificationRepository notificationRepository;
-  @InjectMocks
-  private NotificationCommandServiceImpl sut;
+
+  @Mock
+  private NotificationMapper notificationMapper;
 
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
   }
 
-  @Nested
-  @DisplayName("sendNotification")
-  class SendNotification {
+  @Test
+  void sendNotification_success() {
+    // given
+    Long userId = 1L;
+    String message = "지원 결과가 도착했습니다.";
+    NotificationType type = NotificationType.APPLICATION;
 
-    @Test
-    @DisplayName("정상적으로 알림 전송")
-    void sendNotification_success() {
-      Long userId = 1L;
-      String message = "좋아요가 도착했습니다!";
-      NotificationType notificationType = NotificationType.LIKE;
+    Notification notification = mock(Notification.class);
+    Notification saved = mock(Notification.class);
+    NotificationResponse response = new NotificationResponse(
+        "64f1123a34e6d52267c12c8b",
+        userId,
+        message,
+        type,
+        NotificationStatus.UNREAD,
+        LocalDateTime.now()
+    );
 
-      NotificationDocument mockDoc = mock(NotificationDocument.class);
-      NotificationDocument savedDoc = mock(NotificationDocument.class);
-      NotificationDto mockDto = mock(NotificationDto.class);
+    when(notificationRepository.save(any())).thenReturn(saved);
+    when(notificationMapper.toResponse(saved)).thenReturn(response);
 
-      try (MockedStatic<NotificationDocument> staticDoc = mockStatic(NotificationDocument.class)) {
-        staticDoc.when(() -> NotificationDocument.of(eq(userId), eq(message), eq(notificationType)))
-            .thenReturn(mockDoc);
+    // when
+    NotificationResponse result = notificationCommandService.sendNotification(userId, message, type);
 
-        when(notificationRepository.save(mockDoc)).thenReturn(savedDoc);
+    // then
+    assertEquals(userId, result.userId());
+    assertEquals(message, result.message());
+    assertEquals(type, result.type());
+    verify(notificationRepository).save(any());
+    verify(notificationMapper).toResponse(saved);
+  }
 
-        try (MockedStatic<NotificationMapper> staticMapper = mockStatic(NotificationMapper.class)) {
-          staticMapper.when(() -> NotificationMapper.toDto(savedDoc))
-              .thenReturn(mockDto);
+  @Test
+  void markAsRead_success() {
+    // given
+    String notificationId = "64f1123a34e6d52267c12c8b";
+    Notification notification = mock(Notification.class);
 
-          NotificationDto result = sut.sendNotification(userId, message, notificationType);
+    when(notificationRepository.findById(notificationId)).thenReturn(Optional.of(notification));
 
-          assertThat(result).isSameAs(mockDto);
-          verify(notificationRepository).save(mockDoc);
-        }
-      }
-    }
+    // when
+    notificationCommandService.markAsRead(notificationId);
 
-    @Test
-    @DisplayName("알림 타입 대소문자 무관 변환")
-    void sendNotification_caseInsensitiveType() {
-      Long userId = 2L;
-      String message = "팔로우 알림입니다";
-      NotificationType notificationType = NotificationType.FOLLOW;
+    // then
+    verify(notificationRepository).findById(notificationId);
+    verify(notification).markRead();
+    verify(notificationRepository).save(notification);
+  }
 
-      NotificationDocument mockDoc = mock(NotificationDocument.class);
-      NotificationDocument savedDoc = mock(NotificationDocument.class);
-      NotificationDto mockDto = mock(NotificationDto.class);
+  @Test
+  void markAsRead_fail_notificationNotFound() {
+    // given
+    String notificationId = "invalidId";
+    when(notificationRepository.findById(notificationId)).thenReturn(Optional.empty());
 
-      try (MockedStatic<NotificationDocument> staticDoc = mockStatic(NotificationDocument.class)) {
-        staticDoc.when(() -> NotificationDocument.of(eq(userId), eq(message), eq(notificationType)))
-            .thenReturn(mockDoc);
+    // when & then
+    BusinessException ex = assertThrows(BusinessException.class,
+        () -> notificationCommandService.markAsRead(notificationId));
 
-        when(notificationRepository.save(mockDoc)).thenReturn(savedDoc);
+    assertEquals(ErrorCode.NOTIFICATION_NOT_FOUND, ex.getErrorCode());
+    verify(notificationRepository).findById(notificationId);
+    verify(notificationRepository, never()).save(any());
+  }
 
-        try (MockedStatic<NotificationMapper> staticMapper = mockStatic(NotificationMapper.class)) {
-          staticMapper.when(() -> NotificationMapper.toDto(savedDoc))
-              .thenReturn(mockDto);
+  @Test
+  void getNotifications_success() {
+    // given
+    Long userId = 1L;
+    Notification notification = mock(Notification.class);
+    NotificationResponse response = new NotificationResponse(
+        "notif-id",
+        userId,
+        "알림 메시지",
+        NotificationType.APPLICATION,
+        NotificationStatus.UNREAD,
+        LocalDateTime.now()
+    );
 
-          NotificationDto result = sut.sendNotification(userId, message, notificationType);
+    when(notificationRepository.findByUserIdOrderByCreatedAtDesc(userId)).thenReturn(List.of(notification));
+    when(notificationMapper.toResponse(notification)).thenReturn(response);
 
-          assertThat(result).isSameAs(mockDto);
-          verify(notificationRepository).save(mockDoc);
-        }
-      }
-    }
+    NotificationQueryServiceImpl queryService = new NotificationQueryServiceImpl(notificationRepository, notificationMapper);
 
-    @Nested
-    @DisplayName("markAsRead")
-    class MarkAsRead {
+    // when
+    List<NotificationResponse> results = queryService.getNotifications(userId);
 
-      @Test
-      @DisplayName("정상적으로 읽음 처리")
-      void markAsRead_success() {
-        String notiId = "abc123";
-
-        NotificationDocument doc = mock(NotificationDocument.class);
-        NotificationDocument savedDoc = mock(NotificationDocument.class);
-
-        when(notificationRepository.findById(notiId)).thenReturn(Optional.of(doc));
-        doNothing().when(doc).markRead();
-        when(notificationRepository.save(doc)).thenReturn(savedDoc);
-
-        sut.markAsRead(notiId);
-
-        verify(notificationRepository).findById(notiId);
-        verify(doc).markRead();
-        verify(notificationRepository).save(doc);
-      }
-
-      @Test
-      @DisplayName("알림이 없으면 예외 발생")
-      void markAsRead_notFound() {
-        String notiId = "not_found";
-        when(notificationRepository.findById(notiId)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> sut.markAsRead(notiId))
-            .isInstanceOf(BusinessException.class)
-        ;
-      }
-    }
+    // then
+    assertEquals(1, results.size());
+    assertEquals("notif-id", results.get(0).id());
+    verify(notificationRepository).findByUserIdOrderByCreatedAtDesc(userId);
+    verify(notificationMapper).toResponse(notification);
   }
 }

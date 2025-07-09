@@ -1,6 +1,6 @@
 package com.pickone.global.security.token;
 
-import com.pickone.global.security.model.entity.UserPrincipal;
+import com.pickone.global.security.entity.UserPrincipal;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
 
@@ -25,4 +25,6 @@ public interface TokenProvider {
   void blacklistToken(String token);
 
   boolean isTokenBlacklisted(String token);
+
+  Long getUserIdFromToken(String token);
 }

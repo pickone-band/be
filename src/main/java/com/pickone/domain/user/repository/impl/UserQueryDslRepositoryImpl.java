@@ -1,8 +1,8 @@
 package com.pickone.domain.user.repository.impl;
 
-import com.pickone.domain.user.dto.UserSearchConditionDto;
-import com.pickone.domain.user.model.entity.UserEntity;
-import com.pickone.domain.user.repository.UserQueryDslRepository;
+import com.pickone.domain.user.dto.UserSearchCondition;
+import com.pickone.domain.user.entity.User;
+import com.pickone.domain.user.repository.UserQueryRepository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -14,123 +14,120 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 
-import static com.pickone.domain.user.model.entity.QUserEntity.userEntity;
-import static com.pickone.domain.user.model.entity.QUserInstrumentEntity.userInstrumentEntity;
+import static com.pickone.domain.user.entity.QUser.user;
+import static com.pickone.domain.userInstrument.entity.QUserInstrument.userInstrument;
 import static org.springframework.util.StringUtils.hasText;
+
 
 @Repository
 @RequiredArgsConstructor
-public class UserQueryDslRepositoryImpl implements UserQueryDslRepository {
+public class UserQueryDslRepositoryImpl implements UserQueryRepository {
 
   private final JPAQueryFactory query;
 
   @Override
-  public Page<UserEntity> searchUsers(UserSearchConditionDto cond, Pageable pageable) {
-
+  public Page<User> searchUsers(UserSearchCondition cond, Pageable pageable) {
     BooleanBuilder where = new BooleanBuilder();
 
-    // VO 내부 필드 접근: 프로필 닉네임, 이메일
     if (hasText(cond.getKeyword())) {
       String keyword = cond.getKeyword();
       where.and(
-          userEntity.profile.nickname.containsIgnoreCase(keyword)
-              .or(userEntity.profile.email.containsIgnoreCase(keyword))
-              .or(userEntity.profile.introduction.containsIgnoreCase(keyword))
+          user.profile.nickname.containsIgnoreCase(keyword)
+              .or(user.profile.email.containsIgnoreCase(keyword))
+              .or(user.profile.introduction.containsIgnoreCase(keyword))
       );
     }
 
-    // 공개 여부: UserStatus VO 내 필드 (가정: status.isPublic)
     if (Boolean.TRUE.equals(cond.getOnlyPublic())) {
-      where.and(userEntity.status.isPublic.isTrue());
+      where.and(user.status.isPublic.isTrue());
     }
 
-    // 단일 enum 필드 (mbti, gender, role)
     if (cond.getGender() != null) {
-      where.and(userEntity.profile.gender.eq(cond.getGender()));
+      where.and(user.profile.gender.eq(cond.getGender()));
     }
+
     if (cond.getRole() != null) {
-      where.and(userEntity.role.eq(cond.getRole()));
+      where.and(user.role.eq(cond.getRole()));
     }
+
     if (cond.getMbti() != null) {
-      where.and(userEntity.profile.mbti.eq(cond.getMbti()));
+      where.and(user.profile.mbti.eq(cond.getMbti()));
     }
 
-    // 악기 필터 (다중)
     if (cond.getInstruments() != null && !cond.getInstruments().isEmpty()) {
-      where.and(userInstrumentEntity.instrument.in(cond.getInstruments()));
+      where.and(userInstrument.instrument.in(cond.getInstruments()));
     }
 
-    // 장르 필터 (다중) — List<Genre> genres VO 내부
     if (cond.getGenres() != null && !cond.getGenres().isEmpty()) {
       BooleanBuilder genreBuilder = new BooleanBuilder();
       for (var genre : cond.getGenres()) {
-        genreBuilder.or(userEntity.preference.genre1.eq(genre))
-            .or(userEntity.preference.genre2.eq(genre))
-            .or(userEntity.preference.genre3.eq(genre))
-            .or(userEntity.preference.genre4.eq(genre))
-            .or(userEntity.preference.genre5.eq(genre))
-            .or(userEntity.preference.genre6.eq(genre))
-            .or(userEntity.preference.genre7.eq(genre))
-            .or(userEntity.preference.genre8.eq(genre));
+        genreBuilder.or(user.preference.genre1.eq(genre))
+            .or(user.preference.genre2.eq(genre))
+            .or(user.preference.genre3.eq(genre))
+            .or(user.preference.genre4.eq(genre))
+            .or(user.preference.genre5.eq(genre))
+            .or(user.preference.genre6.eq(genre))
+            .or(user.preference.genre7.eq(genre))
+            .or(user.preference.genre8.eq(genre));
       }
       where.and(genreBuilder);
     }
 
-    // 나이 또는 생년월일 범위 — birthDate는 UserProfile VO 내 필드
     LocalDate today = LocalDate.now();
     if (cond.getMinAge() != null) {
-      where.and(userEntity.profile.birthDate.loe(today.minusYears(cond.getMinAge())));
+      where.and(user.profile.birthDate.loe(today.minusYears(cond.getMinAge())));
     }
     if (cond.getMaxAge() != null) {
-      where.and(userEntity.profile.birthDate.goe(today.minusYears(cond.getMaxAge() + 1).plusDays(1)));
+      where.and(user.profile.birthDate.goe(today.minusYears(cond.getMaxAge() + 1).plusDays(1)));
     }
     if (cond.getBirthDateFrom() != null) {
-      where.and(userEntity.profile.birthDate.goe(cond.getBirthDateFrom()));
+      where.and(user.profile.birthDate.goe(cond.getBirthDateFrom()));
     }
     if (cond.getBirthDateTo() != null) {
-      where.and(userEntity.profile.birthDate.loe(cond.getBirthDateTo()));
+      where.and(user.profile.birthDate.loe(cond.getBirthDateTo()));
     }
 
-    // 실제 쿼리 실행
-    List<UserEntity> content = query.selectDistinct(userEntity).from(userEntity)
-        .leftJoin(userEntity.instruments, userInstrumentEntity).fetchJoin()
+    List<User> content = query.selectDistinct(user)
+        .from(user)
+        .leftJoin(user.instruments, userInstrument).fetchJoin()
         .where(where)
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())
         .fetch();
 
-    Long count = query.select(userEntity.countDistinct()).from(userEntity)
-        .leftJoin(userEntity.instruments, userInstrumentEntity)
+    Long count = query.select(user.countDistinct())
+        .from(user)
+        .leftJoin(user.instruments, userInstrument)
         .where(where)
         .fetchOne();
 
     return PageableExecutionUtils.getPage(content, pageable, () -> count != null ? count : 0L);
   }
 
-  public Page<UserEntity> searchByKeywordAndPublic(String keyword, Boolean onlyPublic, Pageable pageable) {
+  @Override
+  public Page<User> searchByKeywordAndPublic(String keyword, Boolean onlyPublic, Pageable pageable) {
     BooleanBuilder where = new BooleanBuilder();
 
-    if (keyword != null && !keyword.isBlank()) {
+    if (hasText(keyword)) {
       where.and(
-          userEntity.profile.nickname.containsIgnoreCase(keyword)
-              .or(userEntity.profile.email.containsIgnoreCase(keyword))
-              .or(userEntity.profile.introduction.containsIgnoreCase(keyword)) // 👈 추가
+          user.profile.nickname.containsIgnoreCase(keyword)
+              .or(user.profile.email.containsIgnoreCase(keyword))
+              .or(user.profile.introduction.containsIgnoreCase(keyword))
       );
     }
 
     if (Boolean.TRUE.equals(onlyPublic)) {
-      where.and(userEntity.status.isPublic.isTrue());
+      where.and(user.status.isPublic.isTrue());
     }
 
-    // 실제 쿼리 실행
-    List<UserEntity> content = query.selectFrom(userEntity)
+    List<User> content = query.selectFrom(user)
         .where(where)
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())
         .fetch();
 
-    Long count = query.select(userEntity.count())
-        .from(userEntity)
+    Long count = query.select(user.count())
+        .from(user)
         .where(where)
         .fetchOne();
 

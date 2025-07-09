@@ -1,10 +1,10 @@
 package com.pickone.domain.term.service;
 
-import com.pickone.domain.term.dto.TermRequestDto;
-import com.pickone.domain.term.dto.TermResponseDto;
+import com.pickone.domain.term.dto.TermRequest;
+import com.pickone.domain.term.dto.TermResponse;
 
 public interface TermCommandService {
-  TermResponseDto createTerm(TermRequestDto dto);
-  void updateTerm(Long termId, TermRequestDto dto);
+  TermResponse createTerm(TermRequest dto);
+  void updateTerm(Long termId, TermRequest dto);
   void deleteTerm(Long termId);
 }

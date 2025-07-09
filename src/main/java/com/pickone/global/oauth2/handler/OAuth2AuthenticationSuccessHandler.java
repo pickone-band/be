@@ -1,6 +1,6 @@
 package com.pickone.global.oauth2.handler;
 
-import com.pickone.global.security.model.entity.UserPrincipal;
+import com.pickone.global.security.entity.UserPrincipal;
 import com.pickone.global.security.service.JwtService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,14 +1,10 @@
 package com.pickone.global.common.config;
 
-import com.pickone.domain.term.model.entity.TermEntity;
+import com.pickone.domain.term.entity.Term;
 import com.pickone.domain.term.repository.TermJpaRepository;
+import com.pickone.domain.user.entity.User;
 import com.pickone.domain.user.model.domain.Gender;
-import com.pickone.domain.user.model.domain.Role;
-import com.pickone.domain.user.model.entity.UserEntity;
-import com.pickone.domain.user.model.vo.UserAuthInfo;
-import com.pickone.domain.user.model.vo.UserPreference;
-import com.pickone.domain.user.model.vo.UserProfile;
-import com.pickone.domain.user.model.vo.UserStatus;
+
 import com.pickone.domain.user.repository.UserJpaRepository;
 import com.pickone.global.common.enums.Mbti;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +34,7 @@ public class TermsAndAdminInitializer implements CommandLineRunner {
 
   private void initializeTerms() {
     if (termRepository.count() == 0) {
-      TermEntity term = TermEntity.create(
+      Term term = Term.create(
           "서비스 이용약관",
           "서비스 이용에 대한 약관입니다.",
           "v1.0",
@@ -55,7 +51,7 @@ public class TermsAndAdminInitializer implements CommandLineRunner {
     if (userRepository.findByProfileEmail(adminEmail).isEmpty()) {
       String encodedPassword = passwordEncoder.encode("admin1234");
 
-      UserEntity admin = UserEntity.of(
+      User admin = User.create(
           adminEmail,
           encodedPassword,
           "운영자",
@@ -63,6 +59,7 @@ public class TermsAndAdminInitializer implements CommandLineRunner {
           LocalDate.of(1990, 1, 1),
           Mbti.ENFJ,
           Collections.emptyList(),
+          null,
           "서비스 운영을 담당하는 관리자입니다." // 👈 introduction 추가
       );
 
@@ -77,7 +74,7 @@ public class TermsAndAdminInitializer implements CommandLineRunner {
     if (userRepository.findByProfileEmail(userEmail).isEmpty()) {
       String encodedPassword = passwordEncoder.encode("user1234");
 
-      UserEntity user = UserEntity.of(
+      User user = User.create(
           userEmail,
           encodedPassword,
           "일반사용자",
@@ -85,6 +82,7 @@ public class TermsAndAdminInitializer implements CommandLineRunner {
           LocalDate.of(1995, 5, 5),
           Mbti.INFP,
           Collections.emptyList(),
+          null,
           "안녕하세요. 음악을 좋아하는 사용자입니다." // 👈 introduction 추가
       );
 

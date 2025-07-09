@@ -1,11 +1,11 @@
 package com.pickone.domain.messaging.repository;
 
-import com.pickone.domain.messaging.model.document.MessageDocument;
+import com.pickone.domain.messaging.document.Message;
 
 import java.util.List;
 
 public interface MessageAggregationRepository {
-  List<MessageDocument> findLatestMessagesPerRoom(List<Long> roomIds);
+  List<Message> findLatestMessagesPerRoom(List<Long> roomIds);
 
-  List<MessageDocument> findAllByRoomId(Long roomId);
+  List<Message> findAllByRoomId(Long roomId);
 }

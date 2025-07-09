@@ -1,9 +1,9 @@
 package com.pickone.domain.consent.service;
 
-import com.pickone.domain.consent.dto.ConsentRequestDto;
-import com.pickone.domain.consent.dto.ConsentResponseDto;
+import com.pickone.domain.consent.dto.ConsentRequest;
+import com.pickone.domain.consent.dto.ConsentResponse;
 
 public interface ConsentCommandService {
-  ConsentResponseDto saveConsent(Long userId, ConsentRequestDto dto);
+  ConsentResponse saveConsent(Long userId, ConsentRequest dto);
   void deleteConsent(Long userId, Long termId);
 }

@@ -1,7 +1,7 @@
 package com.pickone.domain.recruitments.model.entity;
 
 import com.pickone.domain.recruitments.dto.request.RecruitmentRequestDto;
-import com.pickone.domain.user.model.entity.UserEntity;
+import com.pickone.domain.user.entity.User;
 import com.pickone.global.common.entity.BaseEntity;
 import com.pickone.domain.recruitments.model.Status;
 import com.pickone.domain.recruitments.model.Type;
@@ -51,7 +51,7 @@ public class Recruitment extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity userEntity;
+    private User user;
 
     public void update(RecruitmentRequestDto dto) {
         if (dto.getTitle() != null) this.title = dto.getTitle();

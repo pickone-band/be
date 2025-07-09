@@ -1,11 +1,11 @@
 package com.pickone.domain.application.dto.request;
 
 import com.pickone.domain.application.model.entity.Application;
+import com.pickone.domain.recruitments.model.entity.Recruitment;
+import com.pickone.domain.user.entity.User;
 import com.pickone.global.common.enums.Instrument;
 import com.pickone.global.common.enums.Mbti;
 import com.pickone.global.common.enums.Proficiency;
-import com.pickone.domain.recruitments.model.entity.Recruitment;
-import com.pickone.domain.user.model.entity.UserEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,7 +26,7 @@ public class ApplicationRequestDto {
     private Instrument instrument;
     private Proficiency proficiency;
 
-    public Application toEntity(UserEntity userEntity, Recruitment recruitment) {
+    public Application toEntity(User user, Recruitment recruitment) {
         return Application.builder()
                 .message(message)
                 .portfolioUrl(portfolioUrl)
@@ -34,7 +34,7 @@ public class ApplicationRequestDto {
                 .mbti(mbti)
                 .instrument(instrument)
                 .proficiency(proficiency)
-                .userEntity(userEntity)
+                .user(user)
                 .recruitment(recruitment)
                 .build();
     }

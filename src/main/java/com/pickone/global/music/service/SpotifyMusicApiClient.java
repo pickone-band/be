@@ -1,9 +1,8 @@
 package com.pickone.global.music.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.pickone.global.music.dto.PlaylistInfoDto;
-import com.pickone.global.music.dto.SpotifyTrackDto;
-import com.pickone.global.music.dto.SocialMusicTrackDto;
+import com.pickone.global.music.dto.PlaylistInfoResponse;
+import com.pickone.global.music.dto.SocialMusicTrackResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,7 +18,7 @@ public class SpotifyMusicApiClient implements SocialMusicApiClient {
   private final WebClient webClient;
 
   @Override
-  public List<PlaylistInfoDto> getPlaylists(String accessToken) {
+  public List<PlaylistInfoResponse> getPlaylists(String accessToken) {
     var response = webClient.get()
         .uri("/me/playlists")
         .headers(h -> h.setBearerAuth(accessToken))
@@ -27,15 +26,15 @@ public class SpotifyMusicApiClient implements SocialMusicApiClient {
         .bodyToMono(JsonNode.class)
         .block();
 
-    List<PlaylistInfoDto> result = new ArrayList<>();
+    List<PlaylistInfoResponse> result = new ArrayList<>();
     if (response != null && response.has("items")) {
       for (JsonNode item : response.get("items")) {
-        result.add(new PlaylistInfoDto(
+        result.add(new PlaylistInfoResponse(
             item.get("id").asText(),
             item.get("name").asText(),
             item.has("description") ? item.get("description").asText() : "",
             item.has("images") && !item.get("images").isEmpty() ? item.get("images").get(0).get("url").asText() : null,
-            item.has("tracks") && item.get("tracks").has("total") ? item.get("tracks").get("total").asInt() : 0
+            item.path("tracks").path("total").asInt(0)
         ));
       }
     }
@@ -43,7 +42,7 @@ public class SpotifyMusicApiClient implements SocialMusicApiClient {
   }
 
   @Override
-  public SocialMusicTrackDto getCurrentlyPlaying(String accessToken) {
+  public SocialMusicTrackResponse getCurrentlyPlaying(String accessToken) {
     var response = webClient.get()
         .uri("/me/player/currently-playing")
         .headers(h -> h.setBearerAuth(accessToken))
@@ -53,21 +52,19 @@ public class SpotifyMusicApiClient implements SocialMusicApiClient {
 
     if (response == null || !response.has("item") || response.get("item").isNull()) return null;
     JsonNode item = response.get("item");
-    SpotifyTrackDto spotifyDto = new SpotifyTrackDto(
-        item.get("id").asText(),
+    return new SocialMusicTrackResponse(
         item.get("name").asText(),
         item.get("artists").get(0).get("name").asText(),
         item.get("album").get("name").asText(),
-        null, // genre는 platform DTO에만
-        item.has("album") && item.get("album").has("images") && item.get("album").get("images").size() > 0
-            ? item.get("album").get("images").get(0).get("url").asText() : null,
-        item.get("external_urls").get("spotify").asText()
+        null,
+        item.get("id").asText(),
+        item.path("album").path("images").isEmpty() ? null : item.get("album").get("images").get(0).get("url").asText(),
+        item.path("external_urls").path("spotify").asText()
     );
-    return SocialMusicTrackDto.fromSpotify(spotifyDto);
   }
 
   @Override
-  public List<SocialMusicTrackDto> getTracks(String accessToken) {
+  public List<SocialMusicTrackResponse> getTracks(String accessToken) {
     var response = webClient.get()
         .uri("/me/player/recently-played?limit=20")
         .headers(h -> h.setBearerAuth(accessToken))
@@ -75,21 +72,19 @@ public class SpotifyMusicApiClient implements SocialMusicApiClient {
         .bodyToMono(JsonNode.class)
         .block();
 
-    List<SocialMusicTrackDto> tracks = new ArrayList<>();
+    List<SocialMusicTrackResponse> tracks = new ArrayList<>();
     if (response != null && response.has("items")) {
       for (JsonNode play : response.get("items")) {
         JsonNode track = play.get("track");
-        SpotifyTrackDto spotifyDto = new SpotifyTrackDto(
-            track.get("id").asText(),
+        tracks.add(new SocialMusicTrackResponse(
             track.get("name").asText(),
             track.get("artists").get(0).get("name").asText(),
             track.get("album").get("name").asText(),
             null,
-            track.has("album") && track.get("album").has("images") && track.get("album").get("images").size() > 0
-                ? track.get("album").get("images").get(0).get("url").asText() : null,
-            track.get("external_urls").get("spotify").asText()
-        );
-        tracks.add(SocialMusicTrackDto.fromSpotify(spotifyDto));
+            track.get("id").asText(),
+            track.path("album").path("images").isEmpty() ? null : track.get("album").get("images").get(0).get("url").asText(),
+            track.path("external_urls").path("spotify").asText()
+        ));
       }
     }
     return tracks;
@@ -103,10 +98,11 @@ public class SpotifyMusicApiClient implements SocialMusicApiClient {
         .retrieve()
         .bodyToMono(JsonNode.class)
         .block();
+
     if (response == null || !response.has("devices")) return null;
     for (JsonNode device : response.get("devices")) {
-      if (device.has("is_active") && device.get("is_active").asBoolean()) {
-        return device.get("name").asText();
+      if (device.path("is_active").asBoolean(false)) {
+        return device.path("name").asText();
       }
     }
     return null;
@@ -120,11 +116,10 @@ public class SpotifyMusicApiClient implements SocialMusicApiClient {
         .retrieve()
         .bodyToMono(JsonNode.class)
         .block();
+
     if (response == null || !response.has("devices")) return false;
     for (JsonNode device : response.get("devices")) {
-      if (device.has("is_active") && device.get("is_active").asBoolean()) {
-        return true;
-      }
+      if (device.path("is_active").asBoolean(false)) return true;
     }
     return false;
   }

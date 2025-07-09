@@ -1,27 +1,33 @@
 package com.pickone.domain.messaging.controller;
 
-import com.pickone.domain.messaging.dto.MessageDto;
+import com.pickone.domain.messaging.dto.MessageResponse;
 import com.pickone.domain.messaging.dto.SendMessageRequest;
 import com.pickone.domain.messaging.service.MessageCommandService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
-@RequiredArgsConstructor
+@Slf4j
 @Controller
+@RequiredArgsConstructor
 public class StompMessageController {
 
   private final MessageCommandService messageCommandService;
+  private final SimpMessagingTemplate messagingTemplate;
 
   @MessageMapping("/chat/send")
-  @SendTo("/topic/room.{roomId}")
-  public MessageDto sendMessage(
+  public void sendMessage(
       @Payload SendMessageRequest request,
       @Header("userId") Long senderId
   ) {
-    return messageCommandService.sendMessage(senderId, request);
+    log.info("[StompMessageController] 메시지 전송 요청 - senderId: {}, roomId: {}", senderId,
+        request.roomId());
+    MessageResponse response = messageCommandService.sendMessage(senderId, request);
+    messagingTemplate.convertAndSend("/topic/room." + request.roomId(), response);
   }
 }

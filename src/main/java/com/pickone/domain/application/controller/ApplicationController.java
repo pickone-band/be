@@ -4,7 +4,7 @@ import com.pickone.domain.application.dto.request.ApplicationRequestDto;
 import com.pickone.domain.application.dto.response.ApplicationResponseDto;
 import com.pickone.domain.application.service.ApplicationService;
 import com.pickone.global.exception.BaseResponse;
-import com.pickone.global.security.model.entity.UserPrincipal;
+import com.pickone.global.security.entity.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

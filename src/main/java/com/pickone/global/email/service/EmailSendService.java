@@ -1,7 +1,8 @@
 package com.pickone.global.email.service;
 
-import com.pickone.global.email.dto.EmailSendRequestDto;
+import com.pickone.global.email.dto.EmailSendRequest;
 
 public interface EmailSendService {
-  void send(EmailSendRequestDto request);
+  void send(EmailSendRequest request);
+  void sendPasswordResetEmail(String toEmail, String resetToken);
 }

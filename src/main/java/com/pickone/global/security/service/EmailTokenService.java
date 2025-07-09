@@ -1,41 +1,45 @@
 package com.pickone.global.security.service;
 
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmailTokenService {
-  private final StringRedisTemplate redisTemplate;
-  private static final long TOKEN_EXPIRATION_SECONDS = 86400; // 1일
 
-  // 토큰 생성 및 Redis 저장
+  private final StringRedisTemplate redis;
+  private static final long EXPIRE_SECONDS = 86400; // 1일
+
   public String createAndSaveToken(String email) {
     String token = UUID.randomUUID().toString();
-    redisTemplate.opsForValue().set(token, email, TOKEN_EXPIRATION_SECONDS, TimeUnit.SECONDS);
+    redis.opsForValue().set(token, email, EXPIRE_SECONDS, TimeUnit.SECONDS);
+    log.debug("[EmailTokenService] 토큰 생성: email={}, token={}", email, token);
     return token;
   }
 
-  // 토큰으로 이메일 조회 (검증)
   public Optional<String> validateTokenAndGetEmail(String token) {
-    String email = redisTemplate.opsForValue().get(token);
-    if (email == null || email.isEmpty()) {
+    String email = redis.opsForValue().get(token);
+    if (email == null || email.isBlank()) {
+      log.warn("[EmailTokenService] 유효하지 않은 토큰: {}", token);
       return Optional.empty();
     }
-    // 토큰 사용 후 삭제
-    redisTemplate.delete(token);
+    redis.delete(token);
     return Optional.of(email);
   }
 
-  public String getEmailByToken(String token) {
-    return redisTemplate.opsForValue().get(token);
+  public void deleteToken(String token) {
+    redis.delete(token);
+    log.debug("[EmailTokenService] 토큰 삭제됨: {}", token);
   }
 
-  public void deleteToken(String token) {
-    redisTemplate.delete(token);
+  public String getEmailByToken(String token) {
+    return redis.opsForValue().get(token);
   }
 }

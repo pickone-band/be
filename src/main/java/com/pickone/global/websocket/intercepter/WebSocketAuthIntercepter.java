@@ -38,7 +38,7 @@ public class WebSocketAuthIntercepter implements ChannelInterceptor {
           String token = authHeader.substring(SecurityConstants.TOKEN_PREFIX.length());
 
           try {
-            if (tokenProvider.isTokenBlacklisted(token)) {
+            if (!tokenProvider.isTokenBlacklisted(token)) {
               Authentication auth = tokenProvider.getAuthentication(token);
               accessor.setUser(auth);
               SecurityContextHolder.getContext().setAuthentication(auth);

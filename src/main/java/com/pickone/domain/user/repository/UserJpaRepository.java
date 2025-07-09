@@ -1,12 +1,13 @@
 package com.pickone.domain.user.repository;
 
-import com.pickone.domain.user.model.entity.UserEntity;
-import java.util.Optional;
+
+import com.pickone.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserJpaRepository extends JpaRepository<UserEntity, Long> {
+import java.util.Optional;
 
-  Optional<UserEntity> findByProfileEmail(String email);
+public interface UserJpaRepository extends JpaRepository<User, Long> {
+  Optional<User> findByProfileEmail(String email);
   boolean existsByProfileEmail(String email);
   boolean existsByProfileNickname(String nickname);
 }

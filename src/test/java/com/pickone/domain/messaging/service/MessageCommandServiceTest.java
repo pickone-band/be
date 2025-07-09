@@ -1,32 +1,43 @@
 package com.pickone.domain.messaging.service;
 
-import com.pickone.domain.messaging.dto.MessageDto;
+import com.pickone.domain.messaging.document.Message;
+import com.pickone.domain.messaging.dto.MessageResponse;
 import com.pickone.domain.messaging.dto.SendMessageRequest;
-import com.pickone.domain.messaging.model.document.MessageDocument;
-import com.pickone.domain.messaging.model.policy.MessageSendPolicy;
+import com.pickone.domain.messaging.mapper.MessageMapper;
+import com.pickone.domain.messaging.repository.ChatRoomUserRepository;
 import com.pickone.domain.messaging.repository.MessageMongoRepository;
-import com.pickone.domain.messaging.repository.MessageReadStatusMongoRepository;
 import com.pickone.domain.notification.event.MessageSentEvent;
+import com.pickone.global.exception.BusinessException;
+import com.pickone.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.context.ApplicationEventPublisher;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class MessageCommandServiceTest {
 
-  @Mock private MessageMongoRepository messageRepository;
-  @Mock private MessageReadStatusMongoRepository readStatusRepository;
-  @Mock private MessageSendPolicy messageSendPolicy;
-  @Mock private ApplicationEventPublisher eventPublisher;
+  @InjectMocks
+  private MessageCommandService messageCommandService;
 
-  @InjectMocks private MessageCommandService sut;
+  @Mock
+  private MessageMongoRepository messageRepository;
+
+  @Mock
+  private ChatRoomUserRepository chatRoomUserRepository;
+
+  @Mock
+  private ApplicationEventPublisher eventPublisher;
+
+  @Mock
+  private MessageMapper messageMapper;
 
   @BeforeEach
   void setUp() {
@@ -34,105 +45,104 @@ class MessageCommandServiceTest {
   }
 
   @Test
-  @DisplayName("정상적으로 메시지 전송 (단톡방)")
-  void sendMessage_success() {
-    Long senderId = 1L, roomId = 100L;
-    String content = "hello world";
-    SendMessageRequest req = new SendMessageRequest(roomId, content);
+  void sendMessage_success_groupChat() {
+    // given
+    Long senderId = 1L;
+    Long roomId = 10L;
+    SendMessageRequest request = new SendMessageRequest(roomId, "Hello, Group!");
+    List<Long> participantIds = List.of(1L, 2L, 3L);
 
-    // 정책: 보낼 수 있는지 검증
-    doNothing().when(messageSendPolicy).validateCanSend(senderId, roomId);
+    Message message = mock(Message.class);
+    MessageResponse response = new MessageResponse(roomId, senderId, List.of(2L, 3L), request.content(), message.getSentAt());
 
-    // 정책: 수신자 목록 (단톡방, 여러 명)
-    List<Long> recipientIds = List.of(2L, 3L);
-    when(messageSendPolicy.getRecipientIds(roomId, senderId)).thenReturn(recipientIds);
+    when(chatRoomUserRepository.existsByUserIdAndChatRoomId(senderId, roomId)).thenReturn(true);
+    when(chatRoomUserRepository.findUserIdsByRoomId(roomId)).thenReturn(participantIds);
+    when(messageMapper.toResponse(any())).thenReturn(response);
 
-    MessageDocument message = mock(MessageDocument.class);
+    // when
+    MessageResponse result = messageCommandService.sendMessage(senderId, request);
 
-    // Argument matcher 일관 적용: eq/any
-    try (MockedStatic<MessageDocument> msgStatic = mockStatic(MessageDocument.class)) {
-      msgStatic.when(() -> MessageDocument.of(
-          eq(roomId), eq(senderId), eq(null), eq(content), any(LocalDateTime.class)
-      )).thenReturn(message);
+    // then
+    assertNotNull(result);
+    assertEquals(request.content(), result.content());
+    assertEquals(2, result.recipientIds().size());
 
-      when(message.getContent()).thenReturn(content);
-
-      when(messageRepository.save(message)).thenReturn(message);
-
-      MessageDto dto = mock(MessageDto.class);
-      try (MockedStatic<MessageDto> dtoStatic = mockStatic(MessageDto.class)) {
-        dtoStatic.when(() -> MessageDto.of(message)).thenReturn(dto);
-
-        // when
-        MessageDto result = sut.sendMessage(senderId, req);
-
-        // then
-        assertThat(result).isSameAs(dto);
-
-        verify(messageSendPolicy).validateCanSend(senderId, roomId);
-        verify(messageSendPolicy).getRecipientIds(roomId, senderId);
-        verify(messageRepository).save(message);
-        verify(eventPublisher).publishEvent(any(MessageSentEvent.class));
-      }
-    }
+    verify(messageRepository).save(any(Message.class));
+    verify(eventPublisher).publishEvent(any(MessageSentEvent.class));
   }
 
   @Test
-  @DisplayName("1:1 메시지 전송 시 receiverId가 설정됨")
-  void sendMessage_directMessage_receiverIdSet() {
-    Long senderId = 1L, roomId = 100L;
-    String content = "hi";
-    SendMessageRequest req = new SendMessageRequest(roomId, content);
+  void sendMessage_success_directMessage() {
+    // given
+    Long senderId = 1L;
+    Long receiverId = 2L;
+    Long roomId = 10L;
+    SendMessageRequest request = new SendMessageRequest(roomId, "Hello!");
 
-    doNothing().when(messageSendPolicy).validateCanSend(senderId, roomId);
+    List<Long> participantIds = List.of(senderId, receiverId);
+    Message message = mock(Message.class);
+    MessageResponse response = new MessageResponse(roomId, senderId, List.of(receiverId), request.content(), message.getSentAt());
 
-    // 수신자가 1명인 경우 (1:1)
-    List<Long> recipientIds = List.of(2L);
-    when(messageSendPolicy.getRecipientIds(roomId, senderId)).thenReturn(recipientIds);
+    when(chatRoomUserRepository.existsByUserIdAndChatRoomId(senderId, roomId)).thenReturn(true);
+    when(chatRoomUserRepository.findUserIdsByRoomId(roomId)).thenReturn(participantIds);
+    when(messageMapper.toResponse(any())).thenReturn(response);
 
-    MessageDocument message = mock(MessageDocument.class);
+    // when
+    MessageResponse result = messageCommandService.sendMessage(senderId, request);
 
-    try (MockedStatic<MessageDocument> msgStatic = mockStatic(MessageDocument.class)) {
-      msgStatic.when(() -> MessageDocument.of(
-          eq(roomId), eq(senderId), eq(2L), eq(content), any(LocalDateTime.class)
-      )).thenReturn(message);
+    // then
+    assertNotNull(result);
+    assertEquals(request.content(), result.content());
+    assertEquals(1, result.recipientIds().size());
+    assertEquals(receiverId, result.recipientIds().get(0));
 
-      when(message.getContent()).thenReturn(content);
-
-      when(messageRepository.save(message)).thenReturn(message);
-
-      MessageDto dto = mock(MessageDto.class);
-      try (MockedStatic<MessageDto> dtoStatic = mockStatic(MessageDto.class)) {
-        dtoStatic.when(() -> MessageDto.of(message)).thenReturn(dto);
-
-        MessageDto result = sut.sendMessage(senderId, req);
-
-        assertThat(result).isSameAs(dto);
-
-        verify(messageSendPolicy).validateCanSend(senderId, roomId);
-        verify(messageSendPolicy).getRecipientIds(roomId, senderId);
-        verify(messageRepository).save(message);
-        verify(eventPublisher).publishEvent(any(MessageSentEvent.class));
-      }
-    }
+    verify(messageRepository).save(any(Message.class));
+    verify(eventPublisher).publishEvent(any(MessageSentEvent.class));
   }
 
   @Test
-  @DisplayName("정책 위반 시 예외 발생")
-  void sendMessage_policyViolation() {
-    Long senderId = 1L, roomId = 100L;
-    String content = "forbidden";
-    SendMessageRequest req = new SendMessageRequest(roomId, content);
+  void sendMessage_fail_notParticipant() {
+    // given
+    Long senderId = 1L;
+    Long roomId = 10L;
+    SendMessageRequest request = new SendMessageRequest(roomId, "Unauthorized message");
 
-    doThrow(new IllegalStateException("Not allowed"))
-        .when(messageSendPolicy).validateCanSend(senderId, roomId);
+    when(chatRoomUserRepository.existsByUserIdAndChatRoomId(senderId, roomId)).thenReturn(false);
 
-    assertThatThrownBy(() -> sut.sendMessage(senderId, req))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessageContaining("Not allowed");
+    // when & then
+    BusinessException ex = assertThrows(BusinessException.class, () -> messageCommandService.sendMessage(senderId, request));
+    assertEquals(ErrorCode.CHAT_ROOM_ACCESS_DENIED, ex.getErrorCode());
 
-    verify(messageSendPolicy).validateCanSend(senderId, roomId);
-    verify(messageSendPolicy, never()).getRecipientIds(anyLong(), anyLong());
-    verifyNoInteractions(messageRepository, eventPublisher);
+    verify(messageRepository, never()).save(any(Message.class));
+    verify(eventPublisher, never()).publishEvent(any());
+  }
+
+  @Test
+  void sendMessage_recipientListExcludesSender() {
+    // given
+    Long senderId = 1L;
+    Long roomId = 10L;
+    SendMessageRequest request = new SendMessageRequest(roomId, "Check recipient IDs");
+
+    List<Long> participantIds = List.of(1L, 2L, 3L, 4L);
+    when(chatRoomUserRepository.existsByUserIdAndChatRoomId(senderId, roomId)).thenReturn(true);
+    when(chatRoomUserRepository.findUserIdsByRoomId(roomId)).thenReturn(participantIds);
+
+    ArgumentCaptor<Message> messageCaptor = ArgumentCaptor.forClass(Message.class);
+    when(messageMapper.toResponse(any())).thenAnswer(invocation -> {
+      Message msg = invocation.getArgument(0);
+      return new MessageResponse(msg.getRoomId(), msg.getSenderId(), participantIds.stream().filter(id -> !id.equals(senderId)).toList(), msg.getContent(), msg.getSentAt());
+    });
+
+    // when
+    MessageResponse result = messageCommandService.sendMessage(senderId, request);
+
+    // then
+    verify(messageRepository).save(messageCaptor.capture());
+    Message savedMessage = messageCaptor.getValue();
+
+    assertNull(savedMessage.getReceiverId()); // group chat
+    assertEquals(3, result.recipientIds().size());
+    assertFalse(result.recipientIds().contains(senderId));
   }
 }

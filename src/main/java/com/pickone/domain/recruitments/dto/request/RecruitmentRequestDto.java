@@ -4,7 +4,7 @@ import com.pickone.domain.recruitments.model.Status;
 import com.pickone.domain.recruitments.model.Type;
 import com.pickone.domain.recruitments.model.Visibility;
 import com.pickone.domain.recruitments.model.entity.Recruitment;
-import com.pickone.domain.user.model.entity.UserEntity;
+import com.pickone.domain.user.entity.User;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,7 +29,7 @@ public class RecruitmentRequestDto {
     private List<InstrumentProficiencyDto> instrumentProficiencyDto;
     private GenreRequestDto genreRequestDto;
 
-    public Recruitment toEntity(UserEntity userEntity) {
+    public Recruitment toEntity(User user) {
         return Recruitment.builder()
                 .type(type)
                 .status(status)
@@ -39,7 +39,7 @@ public class RecruitmentRequestDto {
                 .region(region)
                 .thumbnail(thumbnail)
                 .snsLink(snsLink)
-                .userEntity(userEntity)
+                .user(user)
                 .build();
     }
 }
