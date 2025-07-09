@@ -1,5 +1,9 @@
-package com.pickone.global.s3;
+package com.pickone.global.s3.service;
 
+import com.pickone.global.s3.dto.FileResponse;
+import com.pickone.global.s3.dto.FileUploadResult;
+import com.pickone.global.s3.entity.TestFileEntity;
+import com.pickone.global.s3.repository.TestFileRepository;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,17 +16,24 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class S3Service {
     private final S3Uploader s3Uploader;
-    private final TestFileRepository testFileRepository;    @Transactional
+    private final TestFileRepository testFileRepository;
 
-    public void saveFile(MultipartFile imgFile, String imgText) throws IOException {
-        if (!imgFile.isEmpty()) {
-            String storedFileName = s3Uploader.upload(imgFile, "profiles"); // s3 버킷에 images 디렉토리에 업로드
-            TestFileEntity testFileEntity = new TestFileEntity();
-            testFileEntity.setImgText(imgText);
-            testFileEntity.setImgUrl(storedFileName);
-            testFileRepository.save(testFileEntity);
+    @Transactional
+    public FileUploadResult saveFile(MultipartFile imgFile, String imgText) throws IOException {
+        if (imgFile.isEmpty()) {
+            throw new IllegalArgumentException("이미지 파일이 필요합니다.");
         }
+
+        String storedFileName = s3Uploader.upload(imgFile, "profiles"); // S3에 업로드된 URL 반환
+
+        TestFileEntity testFileEntity = new TestFileEntity();
+        testFileEntity.setImgText(imgText);
+        testFileEntity.setImgUrl(storedFileName);
+        TestFileEntity saved = testFileRepository.save(testFileEntity);
+
+        return new FileUploadResult(saved.getId(), storedFileName);
     }
+
     /** 단일 파일 조회 */
     @Transactional(readOnly = true)
     public FileResponse getFile(Long id) {

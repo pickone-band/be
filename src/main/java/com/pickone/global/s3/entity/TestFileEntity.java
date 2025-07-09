@@ -1,4 +1,4 @@
-package com.pickone.global.s3;
+package com.pickone.global.s3.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

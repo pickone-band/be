@@ -1,4 +1,4 @@
-package com.pickone.global.s3;
+package com.pickone.global.s3.config;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
