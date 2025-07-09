@@ -1,4 +1,4 @@
-package com.pickone.global.s3;
+package com.pickone.global.s3.service;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.PutObjectRequest;

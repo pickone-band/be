@@ -1,7 +1,13 @@
-package com.pickone.global.s3;
+package com.pickone.global.s3.controller;
 
+import com.pickone.global.exception.BaseResponse;
+import com.pickone.global.s3.dto.FileResponse;
+import com.pickone.global.s3.dto.FileUploadResponse;
+import com.pickone.global.s3.dto.FileUploadResult;
+import com.pickone.global.s3.service.S3Service;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -24,22 +30,22 @@ public class S3Controller {
 
     @Operation(summary = "파일 업로드", description = "Multipart 파일과 텍스트를 함께 업로드합니다.")
     @PostMapping(value = "/upload",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> upload(
+    ResponseEntity<BaseResponse<FileUploadResponse>> upload(
             @RequestPart("file") MultipartFile file,
-            @RequestPart("imgText") String imgText
-    ) {
-        try {
-            // 파라미터 이름(file, imgText)에 맞춰서 호출
-            s3Service.saveFile(file, imgText);
-            return ResponseEntity.ok("파일 업로드 성공");
-        } catch (Exception e) {
-            // 로그를 남기고 400 리턴
-            e.printStackTrace();
-            return ResponseEntity
-                    .badRequest()
-                    .body("파일 업로드 실패: " + e.getMessage());
-        }
+            @RequestPart(value = "imgText",required = false) String imgText
+    ) throws IOException {
+
+            // S3 업로드 + DB 저장 등을 처리하고, URL과 ID 반환
+            FileUploadResult result = s3Service.saveFile(file, imgText);
+
+            FileUploadResponse response = FileUploadResponse.builder()
+                    .fileId(result.getId())
+                    .imgUrl(result.getUrl())
+                    .build();
+
+            return BaseResponse.success(response);
     }
+
 
     /** 모든 업로드된 파일 목록 조회 */
     @Operation(summary = "전체 파일 목록 조회", description = "업로드된 모든 파일 정보를 반환합니다.")
@@ -55,4 +61,6 @@ public class S3Controller {
         return ResponseEntity.ok(s3Service.getFile(id));
     }
 }
+
+
 
