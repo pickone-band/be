@@ -1,103 +1,114 @@
 package com.pickone.domain.term.service;
 
-import com.pickone.domain.term.dto.TermResponseDto;
-import com.pickone.domain.term.model.entity.TermEntity;
-import com.pickone.domain.term.model.mapper.TermMapper;
+import com.pickone.domain.term.dto.TermResponse;
+import com.pickone.domain.term.entity.Term;
+import com.pickone.domain.term.mapper.TermMapper;
 import com.pickone.domain.term.repository.TermJpaRepository;
 import com.pickone.domain.term.repository.TermQueryRepository;
+import com.pickone.global.exception.BusinessException;
+import com.pickone.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class TermQueryServiceImplTest {
 
-  @Mock private TermJpaRepository termRepository;
-  @Mock private TermQueryRepository termQueryRepository;
-  @InjectMocks private TermQueryServiceImpl sut;
+  @InjectMocks
+  private TermQueryServiceImpl termQueryService;
+
+  @Mock
+  private TermJpaRepository termRepository;
+
+  @Mock
+  private TermQueryRepository termQueryRepository;
+
+  @Mock
+  private TermMapper termMapper;
 
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
   }
 
-  @Nested
-  @DisplayName("getTerm")
-  class GetTerm {
-    @Test
-    @DisplayName("존재하는 약관을 반환")
-    void getTerm_success() {
-      Long termId = 1L;
-      TermEntity entity = mock(TermEntity.class);
-      TermResponseDto dto = mock(TermResponseDto.class);
+  @Test
+  void getTerm_success() {
+    // given
+    Long termId = 1L;
+    Term term = mock(Term.class);
+    TermResponse response = new TermResponse(termId, "약관", "내용", "v1", true, LocalDateTime.now());
 
-      when(termRepository.findById(termId)).thenReturn(Optional.of(entity));
+    when(termRepository.findById(termId)).thenReturn(Optional.of(term));
+    when(termMapper.toDto(term)).thenReturn(response);
 
-      try (MockedStatic<TermMapper> staticMapper = mockStatic(TermMapper.class)) {
-        staticMapper.when(() -> TermMapper.toDto(entity)).thenReturn(dto);
+    // when
+    TermResponse result = termQueryService.getTerm(termId);
 
-        TermResponseDto result = sut.getTerm(termId);
-
-        assertThat(result).isSameAs(dto);
-        verify(termRepository).findById(termId);
-      }
-    }
-
-    @Test
-    @DisplayName("약관이 없으면 예외 발생")
-    void getTerm_notFound() {
-      Long termId = 99L;
-      when(termRepository.findById(termId)).thenReturn(Optional.empty());
-
-      assertThatThrownBy(() -> sut.getTerm(termId))
-          .isInstanceOf(IllegalArgumentException.class)
-          .hasMessageContaining("Term not found");
-    }
+    // then
+    assertEquals(termId, result.id());
+    verify(termRepository).findById(termId);
+    verify(termMapper).toDto(term);
+    verifyNoMoreInteractions(termRepository, termMapper);
   }
 
-  @Nested
-  @DisplayName("getLatestTerms")
-  class GetLatestTerms {
-    @Test
-    @DisplayName("최신 약관 리스트 반환")
-    void getLatestTerms_success() {
-      TermEntity e1 = mock(TermEntity.class);
-      TermEntity e2 = mock(TermEntity.class);
-      List<TermEntity> entities = Arrays.asList(e1, e2);
-      when(termQueryRepository.findLatestTerms()).thenReturn(entities);
+  @Test
+  void getTerm_fail_termNotFound() {
+    // given
+    Long termId = 999L;
+    when(termRepository.findById(termId)).thenReturn(Optional.empty());
 
-      TermResponseDto d1 = mock(TermResponseDto.class);
-      TermResponseDto d2 = mock(TermResponseDto.class);
+    // when & then
+    BusinessException ex = assertThrows(BusinessException.class, () -> termQueryService.getTerm(termId));
+    assertEquals(ErrorCode.TERM_NOT_FOUND, ex.getErrorCode());
 
-      try (MockedStatic<TermMapper> staticMapper = mockStatic(TermMapper.class)) {
-        staticMapper.when(() -> TermMapper.toDto(e1)).thenReturn(d1);
-        staticMapper.when(() -> TermMapper.toDto(e2)).thenReturn(d2);
+    verify(termRepository).findById(termId);
+    verifyNoMoreInteractions(termRepository);
+  }
 
-        List<TermResponseDto> result = sut.getLatestTerms();
+  @Test
+  void getLatestTerms_success() {
+    // given
+    Term term1 = mock(Term.class);
+    Term term2 = mock(Term.class);
+    List<Term> terms = List.of(term1, term2);
 
-        assertThat(result).containsExactly(d1, d2);
-        verify(termQueryRepository).findLatestTerms();
-      }
-    }
+    TermResponse response1 = new TermResponse(1L, "약관1", "내용1", "v1", true, LocalDateTime.now());
+    TermResponse response2 = new TermResponse(2L, "약관2", "내용2", "v1", false, LocalDateTime.now());
 
-    @Test
-    @DisplayName("최신 약관이 없으면 빈 리스트")
-    void getLatestTerms_empty() {
-      when(termQueryRepository.findLatestTerms()).thenReturn(Collections.emptyList());
+    when(termQueryRepository.findLatestTerms()).thenReturn(terms);
+    when(termMapper.toDto(term1)).thenReturn(response1);
+    when(termMapper.toDto(term2)).thenReturn(response2);
 
-      List<TermResponseDto> result = sut.getLatestTerms();
+    // when
+    List<TermResponse> results = termQueryService.getLatestTerms();
 
-      assertThat(result).isEmpty();
-      verify(termQueryRepository).findLatestTerms();
-    }
+    // then
+    assertEquals(2, results.size());
+    verify(termQueryRepository).findLatestTerms();
+    verify(termMapper, times(2)).toDto(any());
+    verifyNoMoreInteractions(termQueryRepository, termMapper);
+  }
+
+  @Test
+  void getRequiredLatestTermIds_success() {
+    // given
+    List<Long> ids = List.of(1L, 2L, 3L);
+    when(termQueryRepository.findRequiredLatestTermIds()).thenReturn(ids);
+
+    // when
+    List<Long> result = termQueryService.getRequiredLatestTermIds();
+
+    // then
+    assertEquals(3, result.size());
+    verify(termQueryRepository).findRequiredLatestTermIds();
+    verifyNoMoreInteractions(termQueryRepository);
   }
 }

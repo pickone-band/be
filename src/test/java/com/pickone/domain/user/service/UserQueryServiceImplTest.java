@@ -1,25 +1,30 @@
 package com.pickone.domain.user.service;
 
-import com.pickone.domain.user.dto.UserResponseDto;
-import com.pickone.domain.user.model.entity.UserEntity;
-import com.pickone.domain.user.model.mapper.UserMapper;
+import com.pickone.domain.user.dto.UserResponse;
+import com.pickone.domain.user.entity.User;
+import com.pickone.domain.user.mapper.UserMapper;
 import com.pickone.domain.user.repository.UserJpaRepository;
 import com.pickone.global.exception.BusinessException;
 import com.pickone.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class UserQueryServiceImplTest {
 
-  @Mock private UserJpaRepository userRepository;
-  @InjectMocks private UserQueryServiceImpl sut;
+  @InjectMocks
+  private UserQueryServiceImpl userQueryService;
+
+  @Mock
+  private UserJpaRepository userRepository;
+
+  @Mock
+  private UserMapper userMapper;
 
   @BeforeEach
   void setUp() {
@@ -27,31 +32,30 @@ class UserQueryServiceImplTest {
   }
 
   @Test
-  @DisplayName("유저 정보 정상 반환")
-  void getUser_success() {
+  void getUserById_success() {
     Long userId = 1L;
-    UserEntity user = mock(UserEntity.class);
-    UserResponseDto dto = mock(UserResponseDto.class);
 
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    try (MockedStatic<UserMapper> staticMapper = mockStatic(UserMapper.class)) {
-      staticMapper.when(() -> UserMapper.toDto(user)).thenReturn(dto);
+    User mockUser = mock(User.class);
+    UserResponse expectedResponse = mock(UserResponse.class);
 
-      UserResponseDto result = sut.getUser(userId);
+    when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+    when(userMapper.toDto(mockUser)).thenReturn(expectedResponse);
 
-      assertThat(result).isSameAs(dto);
-      verify(userRepository).findById(userId);
-    }
+    UserResponse result = userQueryService.getUser(userId);
+
+    assertNotNull(result);
+    assertEquals(expectedResponse, result);
   }
 
   @Test
-  @DisplayName("유저가 없으면 예외")
-  void getUser_notFound() {
-    Long userId = 2L;
+  void getUserById_userNotFound_shouldThrowException() {
+    Long userId = 99L;
+
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> sut.getUser(userId))
-        .isInstanceOf(BusinessException.class);
-
+    BusinessException ex = assertThrows(BusinessException.class, () ->
+        userQueryService.getUser(userId)
+    );
+    assertEquals(ErrorCode.USER_INFO_NOT_FOUND, ex.getErrorCode());
   }
 }

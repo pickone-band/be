@@ -1,6 +1,6 @@
 package com.pickone.domain.messaging.repository.impl;
 
-import com.pickone.domain.messaging.model.document.MessageDocument;
+import com.pickone.domain.messaging.document.Message;
 import com.pickone.domain.messaging.repository.MessageAggregationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -21,7 +21,7 @@ public class MessageAggregationRepositoryImpl implements MessageAggregationRepos
   private final MongoTemplate mongoTemplate;
 
   @Override
-  public List<MessageDocument> findLatestMessagesPerRoom(List<Long> roomIds) {
+  public List<Message> findLatestMessagesPerRoom(List<Long> roomIds) {
     Aggregation aggregation = Aggregation.newAggregation(
         match(Criteria.where("roomId").in(roomIds)),
         sort(Sort.Direction.DESC, "sentAt"),
@@ -32,14 +32,14 @@ public class MessageAggregationRepositoryImpl implements MessageAggregationRepos
         sort(Sort.Direction.DESC, "sentAt")
     );
 
-    return mongoTemplate.aggregate(aggregation, "messageDocument", MessageDocument.class)
+    return mongoTemplate.aggregate(aggregation, "messageDocument", Message.class)
         .getMappedResults();
   }
 
   @Override
-  public List<MessageDocument> findAllByRoomId(Long roomId) {
+  public List<Message> findAllByRoomId(Long roomId) {
     Query query = new Query(Criteria.where("roomId").is(roomId));
-    return mongoTemplate.find(query, MessageDocument.class);
+    return mongoTemplate.find(query, Message.class);
   }
 }
 

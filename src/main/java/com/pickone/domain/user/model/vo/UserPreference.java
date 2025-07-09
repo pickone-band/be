@@ -30,6 +30,9 @@ public class UserPreference {
   private Genre genre8;
 
   public static UserPreference from(List<Genre> genres) {
+    if (genres == null) {
+      genres = List.of(); // 빈 리스트 처리
+    }
     return new UserPreference(
         genres.size() > 0 ? genres.get(0) : null,
         genres.size() > 1 ? genres.get(1) : null,

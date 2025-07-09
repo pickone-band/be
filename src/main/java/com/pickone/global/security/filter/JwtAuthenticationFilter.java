@@ -29,35 +29,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       HttpServletResponse response,
       FilterChain filterChain) throws ServletException, IOException {
 
-    String requestURI = request.getRequestURI();
-    String token = tokenProvider.resolveToken(request);
-    Authentication currentAuth = SecurityContextHolder.getContext().getAuthentication();
+    final String uri = request.getRequestURI();
+    final String token = tokenProvider.resolveToken(request);
+    final Authentication current = SecurityContextHolder.getContext().getAuthentication();
 
-    log.debug("요청 URI: {}", requestURI);
+    log.debug("[JwtAuthenticationFilter] 요청 URI: {}", uri);
 
-    if (token != null && (currentAuth == null
-        || currentAuth instanceof AnonymousAuthenticationToken)) {
+    if (token != null && (current == null || current instanceof AnonymousAuthenticationToken)) {
       try {
-        log.debug("JWT 토큰 발견, 인증 처리 시도");
-        Authentication authentication = tokenProvider.getAuthentication(token);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        if (authentication instanceof UsernamePasswordAuthenticationToken usernameToken) {
-          usernameToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-          SecurityContextHolder.getContext().setAuthentication(usernameToken);
+        Authentication auth = tokenProvider.getAuthentication(token);
+        if (auth instanceof UsernamePasswordAuthenticationToken authToken) {
+          authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         }
-
-        log.info("JWT 인증 성공: 사용자 이메일={}", authentication.getName());
-
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        log.info("[JwtAuthenticationFilter] 인증 성공: {}", auth.getName());
       } catch (Exception e) {
-        log.warn("JWT 인증 실패: {}", e.getMessage());
+        log.warn("[JwtAuthenticationFilter] 인증 실패: {}", e.getMessage());
       }
+    } else if (token == null) {
+      log.debug("[JwtAuthenticationFilter] 토큰 없음");
     } else {
-      if (token == null) {
-        log.debug("JWT 토큰 없음");
-      } else {
-        log.debug("이미 인증된 상태, 토큰 재인증 생략: {}", currentAuth.getName());
-      }
+      log.debug("[JwtAuthenticationFilter] 이미 인증된 사용자: {}", current.getName());
     }
 
     filterChain.doFilter(request, response);

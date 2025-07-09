@@ -15,9 +15,8 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
   @Override
   public void handle(HttpServletRequest request, HttpServletResponse response,
-      AccessDeniedException accessDeniedException) throws IOException {
-    log.warn("접근 거부 발생: URI={}, 이유={}", request.getRequestURI(),
-        accessDeniedException.getMessage());
+      AccessDeniedException ex) throws IOException {
+    log.warn("[AccessDeniedHandler] 접근 거부: URI={}, 사유={}", request.getRequestURI(), ex.getMessage());
     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
     response.setContentType("application/json;charset=UTF-8");
     response.getWriter().write("{\"message\": \"Forbidden\"}");

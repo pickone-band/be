@@ -23,10 +23,12 @@ public class UserProfile {
   private Gender gender;
   @Enumerated(EnumType.STRING)
   private Mbti mbti;
+  @Column
+  private String profileImageUrl;
   @Column(length = 1000) // 길이 제한 원하는 대로 조절
   private String introduction; // 👈 추가된 필드
 
-  public static UserProfile of(String nickname, String email, LocalDate birthDate, Gender gender, Mbti mbti, String introduction) {
-    return new UserProfile(nickname, email, birthDate, gender, mbti, introduction);
+  public static UserProfile of(String nickname, String email, LocalDate birthDate, Gender gender, Mbti mbti, String profileImageUrl, String introduction) {
+    return new UserProfile(nickname, email, birthDate, gender, mbti, profileImageUrl, introduction);
   }
 }

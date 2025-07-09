@@ -1,6 +1,6 @@
 package com.pickone.domain.follow.repository;
 
-import com.pickone.domain.follow.model.entity.UserFollow;
+import com.pickone.domain.follow.entity.UserFollow;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

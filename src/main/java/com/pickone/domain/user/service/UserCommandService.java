@@ -1,19 +1,19 @@
 package com.pickone.domain.user.service;
 
-import com.pickone.domain.user.dto.SignupRequestDto;
-import com.pickone.domain.user.dto.UpdatePreferenceRequestDto;
-import com.pickone.domain.user.dto.UserResponseDto;
-import com.pickone.domain.user.dto.UpdateProfileRequestDto;
-import com.pickone.domain.user.dto.ChangePasswordRequestDto;
-import com.pickone.domain.user.model.entity.UserEntity;
+import com.pickone.domain.user.dto.ChangePasswordRequest;
+import com.pickone.domain.user.dto.SignupRequest;
+import com.pickone.domain.user.dto.UpdatePreferenceRequest;
+import com.pickone.domain.user.dto.UpdateProfileRequest;
+import com.pickone.domain.user.dto.UserResponse;
+import com.pickone.domain.user.entity.User;
 import com.pickone.global.oauth2.model.domain.OAuth2UserInfo;
 
 public interface UserCommandService {
-  UserResponseDto signup(SignupRequestDto dto);
-  void updateProfile(Long userId, UpdateProfileRequestDto dto);
-  void updatePreference(Long userId, UpdatePreferenceRequestDto dto);
-  void changePassword(Long userId, ChangePasswordRequestDto dto);
+  UserResponse signup(SignupRequest dto);
+  void updateProfile(Long userId, UpdateProfileRequest dto);
+  void updatePreference(Long userId, UpdatePreferenceRequest dto);
+  void changePassword(Long userId, ChangePasswordRequest dto);
   void lockUser(Long userId);
   void deleteUser(Long userId);
-  UserEntity signupWithOAuth2(OAuth2UserInfo userInfo);
+  User signupWithOAuth2(OAuth2UserInfo userInfo);
 }

@@ -1,148 +1,124 @@
 package com.pickone.domain.follow.service;
 
 import com.pickone.domain.follow.dto.FollowResponse;
-import com.pickone.domain.follow.model.entity.UserFollow;
-import com.pickone.domain.follow.model.mapper.FollowMapper;
+import com.pickone.domain.follow.entity.UserFollow;
+import com.pickone.domain.follow.mapper.FollowMapper;
 import com.pickone.domain.follow.repository.UserFollowJpaRepository;
-import com.pickone.domain.user.model.entity.UserEntity;
+import com.pickone.domain.user.entity.User;
 import com.pickone.domain.user.model.vo.UserProfile;
-import com.pickone.domain.user.repository.UserJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class FollowQueryServiceImplTest {
 
-  @Mock private UserFollowJpaRepository followRepository;
-  @Mock private UserJpaRepository userRepository;
-  @InjectMocks private FollowQueryServiceImpl sut;
+  @InjectMocks
+  private FollowQueryServiceImpl followQueryService;
+
+  @Mock
+  private UserFollowJpaRepository followRepository;
+
+  @Mock
+  private FollowMapper followMapper;
+
+  private User fromUser;
+  private User toUser;
+  private UserProfile fromUserProfile;
+  private UserProfile toUserProfile;
 
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
+
+    fromUserProfile = mock(UserProfile.class);
+    fromUser = mock(User.class);
+    when(fromUser.getProfile()).thenReturn(fromUserProfile);
+    when(fromUserProfile.getNickname()).thenReturn("팔로워닉네임");
+
+    toUserProfile = mock(UserProfile.class);
+    toUser = mock(User.class);
+    when(toUser.getProfile()).thenReturn(toUserProfile);
+    when(toUserProfile.getNickname()).thenReturn("팔로잉닉네임");
   }
 
   @Test
-  @DisplayName("getFollowers: 팔로워 리스트 반환")
   void getFollowers_success() {
+    // given
     Long userId = 1L;
-    UserFollow uf1 = mock(UserFollow.class);
-    UserFollow uf2 = mock(UserFollow.class);
-    List<UserFollow> entities = Arrays.asList(uf1, uf2);
+    UserFollow follow = mock(UserFollow.class);
+    FollowResponse expectedResponse = new FollowResponse(10L, 2L, userId, "팔로워닉네임");
 
-    when(followRepository.findByToUserId(userId)).thenReturn(entities);
-    when(uf1.getFromUserId()).thenReturn(10L);
-    when(uf2.getFromUserId()).thenReturn(20L);
+    when(followRepository.findByToUserId(userId)).thenReturn(List.of(follow));
+    when(follow.getFromUser()).thenReturn(fromUser);
+    when(followMapper.toDtoWithNickname(follow, "팔로워닉네임")).thenReturn(expectedResponse);
 
-    UserEntity user1 = mock(UserEntity.class);
-    UserEntity user2 = mock(UserEntity.class);
-    UserProfile profile1 = mock(UserProfile.class);
-    UserProfile profile2 = mock(UserProfile.class);
-    when(user1.getProfile()).thenReturn(profile1);
-    when(user2.getProfile()).thenReturn(profile2);
-    when(profile1.getNickname()).thenReturn("nick1");
-    when(profile2.getNickname()).thenReturn("nick2");
+    // when
+    List<FollowResponse> result = followQueryService.getFollowers(userId);
 
-    when(userRepository.findById(10L)).thenReturn(Optional.of(user1));
-    when(userRepository.findById(20L)).thenReturn(Optional.of(user2));
-
-    FollowResponse dto1 = mock(FollowResponse.class);
-    FollowResponse dto2 = mock(FollowResponse.class);
-
-    try (MockedStatic<FollowMapper> mapperStatic = mockStatic(FollowMapper.class)) {
-      mapperStatic.when(() -> FollowMapper.toDtoWithNickname(uf1, "nick1")).thenReturn(dto1);
-      mapperStatic.when(() -> FollowMapper.toDtoWithNickname(uf2, "nick2")).thenReturn(dto2);
-
-      List<FollowResponse> result = sut.getFollowers(userId);
-
-      assertThat(result).containsExactly(dto1, dto2);
-      verify(followRepository).findByToUserId(userId);
-    }
-  }
-
-  @Test
-  @DisplayName("getFollowers: 팔로워가 없으면 빈 리스트")
-  void getFollowers_empty() {
-    Long userId = 1L;
-    when(followRepository.findByToUserId(userId)).thenReturn(Collections.emptyList());
-
-    List<FollowResponse> result = sut.getFollowers(userId);
-
-    assertThat(result).isEmpty();
+    // then
+    assertEquals(1, result.size());
+    assertEquals(expectedResponse, result.get(0));
     verify(followRepository).findByToUserId(userId);
+    verify(followMapper).toDtoWithNickname(follow, "팔로워닉네임");
   }
 
   @Test
-  @DisplayName("getFollowings: 팔로잉 리스트 반환")
   void getFollowings_success() {
-    Long userId = 2L;
-    UserFollow uf1 = mock(UserFollow.class);
-    List<UserFollow> entities = List.of(uf1);
+    // given
+    Long userId = 1L;
+    UserFollow follow = mock(UserFollow.class);
+    FollowResponse expectedResponse = new FollowResponse(20L, userId, 3L, "팔로잉닉네임");
 
-    when(followRepository.findByFromUserId(userId)).thenReturn(entities);
-    when(uf1.getToUserId()).thenReturn(30L);
+    when(followRepository.findByFromUserId(userId)).thenReturn(List.of(follow));
+    when(follow.getToUser()).thenReturn(toUser);
+    when(followMapper.toDtoWithNickname(follow, "팔로잉닉네임")).thenReturn(expectedResponse);
 
-    UserEntity user1 = mock(UserEntity.class);
-    UserProfile profile1 = mock(UserProfile.class);
-    when(user1.getProfile()).thenReturn(profile1);
-    when(profile1.getNickname()).thenReturn("toNick");
+    // when
+    List<FollowResponse> result = followQueryService.getFollowings(userId);
 
-    when(userRepository.findById(30L)).thenReturn(Optional.of(user1));
-
-    FollowResponse dto1 = mock(FollowResponse.class);
-
-    try (MockedStatic<FollowMapper> mapperStatic = mockStatic(FollowMapper.class)) {
-      mapperStatic.when(() -> FollowMapper.toDtoWithNickname(uf1, "toNick")).thenReturn(dto1);
-
-      List<FollowResponse> result = sut.getFollowings(userId);
-
-      assertThat(result).containsExactly(dto1);
-      verify(followRepository).findByFromUserId(userId);
-    }
-  }
-
-  @Test
-  @DisplayName("getFollowings: 팔로잉이 없으면 빈 리스트")
-  void getFollowings_empty() {
-    Long userId = 2L;
-    when(followRepository.findByFromUserId(userId)).thenReturn(Collections.emptyList());
-
-    List<FollowResponse> result = sut.getFollowings(userId);
-
-    assertThat(result).isEmpty();
+    // then
+    assertEquals(1, result.size());
+    assertEquals(expectedResponse, result.get(0));
     verify(followRepository).findByFromUserId(userId);
+    verify(followMapper).toDtoWithNickname(follow, "팔로잉닉네임");
   }
 
   @Test
-  @DisplayName("isFollowing: 팔로우 관계 존재(true)")
   void isFollowing_true() {
-    Long from = 1L, to = 2L;
-    when(followRepository.existsByFromUserIdAndToUserId(from, to)).thenReturn(true);
+    // given
+    Long fromUserId = 1L;
+    Long toUserId = 2L;
 
-    boolean result = sut.isFollowing(from, to);
+    when(followRepository.existsByFromUserIdAndToUserId(fromUserId, toUserId)).thenReturn(true);
 
-    assertThat(result).isTrue();
-    verify(followRepository).existsByFromUserIdAndToUserId(from, to);
+    // when
+    boolean result = followQueryService.isFollowing(fromUserId, toUserId);
+
+    // then
+    assertTrue(result);
+    verify(followRepository).existsByFromUserIdAndToUserId(fromUserId, toUserId);
   }
 
   @Test
-  @DisplayName("isFollowing: 팔로우 관계 없음(false)")
   void isFollowing_false() {
-    Long from = 1L, to = 2L;
-    when(followRepository.existsByFromUserIdAndToUserId(from, to)).thenReturn(false);
+    // given
+    Long fromUserId = 1L;
+    Long toUserId = 3L;
 
-    boolean result = sut.isFollowing(from, to);
+    when(followRepository.existsByFromUserIdAndToUserId(fromUserId, toUserId)).thenReturn(false);
 
-    assertThat(result).isFalse();
-    verify(followRepository).existsByFromUserIdAndToUserId(from, to);
+    // when
+    boolean result = followQueryService.isFollowing(fromUserId, toUserId);
+
+    // then
+    assertFalse(result);
+    verify(followRepository).existsByFromUserIdAndToUserId(fromUserId, toUserId);
   }
 }

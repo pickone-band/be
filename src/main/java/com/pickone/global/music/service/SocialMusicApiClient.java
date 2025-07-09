@@ -1,13 +1,13 @@
 package com.pickone.global.music.service;
 
-import com.pickone.global.music.dto.SocialMusicTrackDto;
-import com.pickone.global.music.dto.PlaylistInfoDto;
+import com.pickone.global.music.dto.PlaylistInfoResponse;
+import com.pickone.global.music.dto.SocialMusicTrackResponse;
 import java.util.List;
 
 public interface SocialMusicApiClient {
-  List<PlaylistInfoDto> getPlaylists(String accessToken);
-  SocialMusicTrackDto getCurrentlyPlaying(String accessToken);
-  List<SocialMusicTrackDto> getTracks(String accessToken);
+  List<PlaylistInfoResponse> getPlaylists(String accessToken);
+  SocialMusicTrackResponse getCurrentlyPlaying(String accessToken);
+  List<SocialMusicTrackResponse> getTracks(String accessToken);
   String getDeviceName(String accessToken);
   boolean isActiveDevice(String accessToken);
 }

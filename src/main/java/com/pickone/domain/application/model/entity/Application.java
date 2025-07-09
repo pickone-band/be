@@ -3,11 +3,11 @@ package com.pickone.domain.application.model.entity;
 
 import com.pickone.domain.application.dto.request.ApplicationRequestDto;
 import com.pickone.domain.application.model.ApplicationStatus;
+import com.pickone.domain.user.entity.User;
 import com.pickone.global.common.enums.Instrument;
 import com.pickone.global.common.enums.Mbti;
 import com.pickone.global.common.enums.Proficiency;
 import com.pickone.domain.recruitments.model.entity.Recruitment;
-import com.pickone.domain.user.model.entity.UserEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -66,7 +66,7 @@ public class Application {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private UserEntity userEntity;
+    private User user;
 
     @PrePersist
     protected void onCreate() {

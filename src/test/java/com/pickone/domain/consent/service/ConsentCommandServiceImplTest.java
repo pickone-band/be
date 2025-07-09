@@ -1,158 +1,155 @@
 package com.pickone.domain.consent.service;
 
-import com.pickone.domain.consent.dto.ConsentRequestDto;
-import com.pickone.domain.consent.dto.ConsentResponseDto;
-import com.pickone.domain.consent.model.entity.ConsentEntity;
-import com.pickone.domain.consent.model.policy.ConsentPolicy;
-import com.pickone.domain.consent.model.factory.ConsentFactory;
-import com.pickone.domain.consent.model.mapper.ConsentMapper;
+import com.pickone.domain.consent.dto.ConsentRequest;
+import com.pickone.domain.consent.dto.ConsentResponse;
+import com.pickone.domain.consent.entity.Consent;
+import com.pickone.domain.consent.mapper.ConsentMapper;
 import com.pickone.domain.consent.repository.ConsentJpaRepository;
-import com.pickone.domain.term.model.entity.TermEntity;
+import com.pickone.domain.consent.validator.ConsentValidator;
+import com.pickone.domain.term.entity.Term;
 import com.pickone.domain.term.repository.TermJpaRepository;
-import com.pickone.domain.user.model.entity.UserEntity;
+import com.pickone.domain.user.entity.User;
 import com.pickone.domain.user.repository.UserJpaRepository;
+import com.pickone.global.exception.BusinessException;
+import com.pickone.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class ConsentCommandServiceImplTest {
 
-  @Mock private UserJpaRepository userRepository;
-  @Mock private TermJpaRepository termRepository;
-  @Mock private ConsentJpaRepository consentRepository;
-  @Mock private ConsentPolicy consentPolicy;
-  @Mock private ConsentFactory consentFactory;
-
   @InjectMocks
-  private ConsentCommandServiceImpl sut; // System Under Test
+  private ConsentCommandServiceImpl consentCommandService;
+
+  @Mock
+  private UserJpaRepository userRepository;
+
+  @Mock
+  private TermJpaRepository termRepository;
+
+  @Mock
+  private ConsentJpaRepository consentRepository;
+
+  @Mock
+  private ConsentValidator validator;
+
+  @Mock
+  private ConsentMapper consentMapper;
+
+  private User user;
+  private Term term;
 
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
+    user = mock(User.class);
+    term = mock(Term.class);
   }
 
-  @Nested
-  @DisplayName("saveConsent")
-  class SaveConsent {
+  @Test
+  void saveConsent_success() {
+    // given
+    Long userId = 1L;
+    Long termId = 2L;
+    ConsentRequest request = new ConsentRequest(termId, true);
+    Consent consentEntity = mock(Consent.class);
+    Consent savedConsent = mock(Consent.class);
+    ConsentResponse response = new ConsentResponse(10L, termId, true, LocalDateTime.now());
 
-    @Test
-    @DisplayName("정상적으로 동의 저장")
-    void saveConsent_success() {
-      // given
-      Long userId = 1L, termId = 100L;
-      ConsentRequestDto dto = new ConsentRequestDto(termId, true);
-      UserEntity user = mock(UserEntity.class);
-      TermEntity term = mock(TermEntity.class);
-      ConsentEntity entity = mock(ConsentEntity.class);
-      ConsentEntity saved = mock(ConsentEntity.class);
-      ConsentResponseDto expectedDto = mock(ConsentResponseDto.class);
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    when(termRepository.findById(termId)).thenReturn(Optional.of(term));
+    doNothing().when(validator).validateSaveConsent(user, term, true);
+    when(consentRepository.save(any(Consent.class))).thenReturn(savedConsent);
+    when(consentMapper.toDto(savedConsent)).thenReturn(response);
 
-      when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-      when(termRepository.findById(termId)).thenReturn(Optional.of(term));
-      // 정책 검증은 void
-      doNothing().when(consentPolicy).validateSaveConsent(user, term, true);
-      when(consentFactory.create(user, term, true)).thenReturn(entity);
-      when(consentRepository.save(entity)).thenReturn(saved);
+    // when
+    ConsentResponse result = consentCommandService.saveConsent(userId, request);
 
-      // ConsentMapper는 static method이므로 mock 불가 → 실제 동작 (구현체가 단순 변환일 것)
-      try (MockedStatic<ConsentMapper> mockedMapper = mockStatic(ConsentMapper.class)) {
-        mockedMapper.when(() -> ConsentMapper.toDto(saved)).thenReturn(expectedDto);
-
-        // when
-        ConsentResponseDto result = sut.saveConsent(userId, dto);
-
-        // then
-        assertThat(result).isSameAs(expectedDto);
-        verify(userRepository).findById(userId);
-        verify(termRepository).findById(termId);
-        verify(consentPolicy).validateSaveConsent(user, term, true);
-        verify(consentFactory).create(user, term, true);
-        verify(consentRepository).save(entity);
-      }
-    }
-
-    @Test
-    @DisplayName("유저가 없으면 예외 발생")
-    void saveConsent_userNotFound() {
-      Long userId = 1L, termId = 100L;
-      ConsentRequestDto dto = new ConsentRequestDto(termId, false);
-
-      when(userRepository.findById(userId)).thenReturn(Optional.empty());
-
-      assertThatThrownBy(() -> sut.saveConsent(userId, dto))
-          .isInstanceOf(RuntimeException.class)
-          .hasMessageContaining("User not found");
-    }
-
-    @Test
-    @DisplayName("약관이 없으면 예외 발생")
-    void saveConsent_termNotFound() {
-      Long userId = 1L, termId = 100L;
-      ConsentRequestDto dto = new ConsentRequestDto(termId, false);
-      UserEntity user = mock(UserEntity.class);
-
-      when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-      when(termRepository.findById(termId)).thenReturn(Optional.empty());
-
-      assertThatThrownBy(() -> sut.saveConsent(userId, dto))
-          .isInstanceOf(RuntimeException.class)
-          .hasMessageContaining("Term not found");
-    }
-
-    @Test
-    @DisplayName("정책 위반시 예외 발생")
-    void saveConsent_policyViolation() {
-      Long userId = 1L, termId = 100L;
-      ConsentRequestDto dto = new ConsentRequestDto(termId, true);
-      UserEntity user = mock(UserEntity.class);
-      TermEntity term = mock(TermEntity.class);
-
-      when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-      when(termRepository.findById(termId)).thenReturn(Optional.of(term));
-      doThrow(new IllegalStateException("Policy violation"))
-          .when(consentPolicy).validateSaveConsent(user, term, true);
-
-      assertThatThrownBy(() -> sut.saveConsent(userId, dto))
-          .isInstanceOf(IllegalStateException.class)
-          .hasMessageContaining("Policy violation");
-    }
+    // then
+    assertNotNull(result);
+    assertEquals(response, result);
+    verify(userRepository).findById(userId);
+    verify(termRepository).findById(termId);
+    verify(validator).validateSaveConsent(user, term, true);
+    verify(consentRepository).save(any(Consent.class));
+    verify(consentMapper).toDto(savedConsent);
   }
 
-  @Nested
-  @DisplayName("deleteConsent")
-  class DeleteConsent {
+  @Test
+  void saveConsent_fail_userNotFound() {
+    // given
+    Long userId = 99L;
+    ConsentRequest request = new ConsentRequest(1L, true);
+    when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-    @Test
-    @DisplayName("정상적으로 동의 삭제")
-    void deleteConsent_success() {
-      Long userId = 1L, termId = 100L;
-      ConsentEntity entity = mock(ConsentEntity.class);
+    // when & then
+    BusinessException ex = assertThrows(BusinessException.class,
+        () -> consentCommandService.saveConsent(userId, request));
 
-      when(consentRepository.findByUserIdAndTermId(userId, termId)).thenReturn(Optional.of(entity));
+    assertEquals(ErrorCode.USER_INFO_NOT_FOUND, ex.getErrorCode());
+    verify(userRepository).findById(userId);
+    verifyNoInteractions(termRepository, validator, consentRepository, consentMapper);
+  }
 
-      // when
-      sut.deleteConsent(userId, termId);
+  @Test
+  void saveConsent_fail_termNotFound() {
+    // given
+    Long userId = 1L;
+    Long termId = 99L;
+    ConsentRequest request = new ConsentRequest(termId, true);
 
-      // then
-      verify(consentRepository).findByUserIdAndTermId(userId, termId);
-      verify(consentRepository).delete(entity);
-    }
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    when(termRepository.findById(termId)).thenReturn(Optional.empty());
 
-    @Test
-    @DisplayName("동의가 없으면 예외 발생")
-    void deleteConsent_notFound() {
-      Long userId = 1L, termId = 100L;
-      when(consentRepository.findByUserIdAndTermId(userId, termId)).thenReturn(Optional.empty());
+    // when & then
+    BusinessException ex = assertThrows(BusinessException.class,
+        () -> consentCommandService.saveConsent(userId, request));
 
-      assertThatThrownBy(() -> sut.deleteConsent(userId, termId))
-          .isInstanceOf(RuntimeException.class)
-          .hasMessageContaining("Consent not found");
-    }
+    assertEquals(ErrorCode.TERM_NOT_FOUND, ex.getErrorCode());
+    verify(userRepository).findById(userId);
+    verify(termRepository).findById(termId);
+    verifyNoInteractions(validator, consentRepository, consentMapper);
+  }
+
+  @Test
+  void deleteConsent_success() {
+    // given
+    Long userId = 1L;
+    Long termId = 2L;
+    Consent consent = mock(Consent.class);
+    when(consentRepository.findByUserIdAndTermId(userId, termId)).thenReturn(Optional.of(consent));
+    when(consent.getId()).thenReturn(10L);
+
+    // when
+    consentCommandService.deleteConsent(userId, termId);
+
+    // then
+    verify(consentRepository).findByUserIdAndTermId(userId, termId);
+    verify(consentRepository).delete(consent);
+  }
+
+  @Test
+  void deleteConsent_fail_consentNotFound() {
+    // given
+    Long userId = 1L;
+    Long termId = 99L;
+    when(consentRepository.findByUserIdAndTermId(userId, termId)).thenReturn(Optional.empty());
+
+    // when & then
+    BusinessException ex = assertThrows(BusinessException.class,
+        () -> consentCommandService.deleteConsent(userId, termId));
+
+    assertEquals(ErrorCode.CONSENT_NOT_FOUND, ex.getErrorCode());
+    verify(consentRepository).findByUserIdAndTermId(userId, termId);
+    verify(consentRepository, never()).delete(any());
   }
 }

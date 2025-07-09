@@ -7,7 +7,7 @@ import com.pickone.domain.application.model.entity.Application;
 import com.pickone.domain.application.repository.ApplicationRepository;
 import com.pickone.domain.recruitments.model.entity.Recruitment;
 import com.pickone.domain.recruitments.repository.RecruitmentRepository;
-import com.pickone.domain.user.model.entity.UserEntity;
+import com.pickone.domain.user.entity.User;
 import com.pickone.domain.user.repository.UserJpaRepository;
 import com.pickone.global.exception.BusinessException;
 import com.pickone.global.exception.ErrorCode;
@@ -26,7 +26,7 @@ public class ApplicationService {
     @Transactional
     public Long applyToRecruitment(Long userId, Long recruitmentId, ApplicationRequestDto requestDto) {
         // 사용자 조회
-        UserEntity userEntity = userJpaRepository.findById(userId)
+        User user = userJpaRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
 
         // 모집글 조회
@@ -34,10 +34,10 @@ public class ApplicationService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_RECRUITMENT_ID));
 
         // 중복 신청 방지
-        if (applicationRepository.existsByUserEntityAndRecruitment(userEntity, recruitment)) {
+        if (applicationRepository.existsByUserAndRecruitment(user, recruitment)) {
             throw new BusinessException(ErrorCode.DUPLICATE_APPLICATION);
         }
-        Application application=applicationRepository.save(requestDto.toEntity(userEntity,recruitment));
+        Application application=applicationRepository.save(requestDto.toEntity(user,recruitment));
 
         return application.getId();
     }
@@ -45,11 +45,11 @@ public class ApplicationService {
 
     @Transactional
     public ApplicationResponseDto getMyApplication(Long userId, Long recruitmentId) {
-        UserEntity userEntity=userJpaRepository.findById(userId)
+        User user= userJpaRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
         Recruitment recruitment =recruitmentRepository.findById(recruitmentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_RECRUITMENT_ID));
-        Application application =applicationRepository.findByUserEntityAndRecruitment(userEntity,recruitment)
+        Application application =applicationRepository.findByUserAndRecruitment(user,recruitment)
                 .orElseThrow(() -> new BusinessException(ErrorCode.APPLICATION_INFO_NOT_FOUND));
 
         return ApplicationResponseDto.builder()
@@ -71,11 +71,11 @@ public class ApplicationService {
 
     @Transactional
     public void modifyApplication(Long userId, Long recruitmentId, ApplicationRequestDto requestDto) {
-        UserEntity userEntity=userJpaRepository.findById(userId)
+        User user=userJpaRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
         Recruitment recruitment =recruitmentRepository.findById(recruitmentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_RECRUITMENT_ID));
-        Application application =applicationRepository.findByUserEntityAndRecruitment(userEntity,recruitment)
+        Application application =applicationRepository.findByUserAndRecruitment(user,recruitment)
                 .orElseThrow(() -> new BusinessException(ErrorCode.APPLICATION_INFO_NOT_FOUND));
 
         application.update(requestDto);
@@ -83,11 +83,11 @@ public class ApplicationService {
 
     @Transactional
     public void cancelMyApplication(Long userId, Long recruitmentId) {
-        UserEntity userEntity=userJpaRepository.findById(userId)
+        User user=userJpaRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
         Recruitment recruitment =recruitmentRepository.findById(recruitmentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_RECRUITMENT_ID));
-        Application application =applicationRepository.findByUserEntityAndRecruitment(userEntity,recruitment)
+        Application application =applicationRepository.findByUserAndRecruitment(user,recruitment)
                 .orElseThrow(() -> new BusinessException(ErrorCode.APPLICATION_INFO_NOT_FOUND));
 
         if (application.getStatus() == ApplicationStatus.CANCELED) {

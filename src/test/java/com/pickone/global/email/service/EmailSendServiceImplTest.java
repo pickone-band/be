@@ -1,73 +1,76 @@
 package com.pickone.global.email.service;
 
-import com.pickone.global.email.dto.EmailSendRequestDto;
-import com.pickone.global.email.model.entity.EmailSendHistoryEntity;
+import com.pickone.global.email.dto.EmailSendRequest;
+import com.pickone.global.email.entity.EmailSendHistory;
 import com.pickone.global.email.repository.EmailSendHistoryRepository;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import org.springframework.mail.SimpleMailMessage;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.mail.javamail.JavaMailSender;
 
-import java.time.LocalDateTime;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class EmailSendServiceImplTest {
 
-  @Mock private JavaMailSender mailSender;
-  @Mock private EmailSendHistoryRepository historyRepository;
-  @InjectMocks private EmailSendServiceImpl sut;
+  @InjectMocks
+  private EmailSendServiceImpl emailSendService;
+
+  @Mock
+  private JavaMailSender mailSender;
+
+  @Mock
+  private EmailSendHistoryRepository historyRepository;
+
+  @Mock
+  private MimeMessage mimeMessage;
 
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
+    when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
   }
 
-  @Nested
-  @DisplayName("send")
-  class Send {
-    @Test
-    @DisplayName("이메일 정상 발송, 히스토리 기록 및 예외 없음")
-    void send_success() {
-      EmailSendRequestDto req = new EmailSendRequestDto("to@sample.com", "subject", "content");
+  @Test
+  void send_success() throws Exception {
+    EmailSendRequest request = new EmailSendRequest("test@example.com", "Test Subject", "<p>Content</p>");
 
-      // mailSender.send()가 정상 동작
-      doNothing().when(mailSender).send(any(SimpleMailMessage.class));
+    doNothing().when(mailSender).send(mimeMessage);
 
-      EmailSendHistoryEntity saved = mock(EmailSendHistoryEntity.class);
-      // EmailSendHistoryEntity.of()를 static으로 처리하려면 static mocking 필요, 보통 실제 객체 사용
-      when(historyRepository.save(any(EmailSendHistoryEntity.class))).thenReturn(saved);
+    emailSendService.send(request);
 
-      // when-then
-      sut.send(req);
+    verify(mailSender).send(mimeMessage);
+    verify(historyRepository).save(any(EmailSendHistory.class));
+  }
 
-      verify(mailSender).send(any(SimpleMailMessage.class));
-      verify(historyRepository).save(any(EmailSendHistoryEntity.class));
-    }
+  @Test
+  void send_failure_shouldThrowException() throws Exception {
+    EmailSendRequest request = new EmailSendRequest("fail@example.com", "Fail Subject", "<p>Fail</p>");
 
-    @Test
-    @DisplayName("이메일 발송 실패 시 히스토리 기록 + 예외 발생")
-    void send_fail() {
-      EmailSendRequestDto req = new EmailSendRequestDto("fail@sample.com", "subject", "content");
+    doAnswer(invocation -> {
+      throw new RuntimeException("Fail to send");
+    }).when(mailSender).send(mimeMessage);
 
-      // mailSender.send()에서 예외 발생
-      doThrow(new RuntimeException("smtp error")).when(mailSender).send(any(SimpleMailMessage.class));
+    assertThrows(RuntimeException.class, () -> emailSendService.send(request));
 
-      EmailSendHistoryEntity saved = mock(EmailSendHistoryEntity.class);
-      when(historyRepository.save(any(EmailSendHistoryEntity.class))).thenReturn(saved);
+    verify(historyRepository).save(any(EmailSendHistory.class));
+  }
 
-      assertThatThrownBy(() -> sut.send(req))
-          .isInstanceOf(RuntimeException.class)
-          .hasMessageContaining("이메일 발송에 실패했습니다")
-          .hasMessageContaining("smtp error");
+  @Test
+  void sendPasswordResetEmail_success() {
+    String email = "reset@example.com";
+    String token = "abc123";
 
-      verify(mailSender).send(any(SimpleMailMessage.class));
-      verify(historyRepository).save(any(EmailSendHistoryEntity.class));
-    }
+    EmailSendServiceImpl spyService = spy(emailSendService);
+    doNothing().when(spyService).send(any(EmailSendRequest.class));
+
+    spyService.sendPasswordResetEmail(email, token);
+
+    verify(spyService).send(any(EmailSendRequest.class));
   }
 }

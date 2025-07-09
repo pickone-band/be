@@ -11,7 +11,7 @@ import com.pickone.domain.recruitments.model.entity.RecruitmentInstrument;
 import com.pickone.domain.recruitments.repository.RecruitmentGenreRepository;
 import com.pickone.domain.recruitments.repository.RecruitmentInstrumentRepository;
 import com.pickone.domain.recruitments.repository.RecruitmentRepository;
-import com.pickone.domain.user.model.entity.UserEntity;
+import com.pickone.domain.user.entity.User;
 import com.pickone.domain.user.repository.UserJpaRepository;
 import com.pickone.global.exception.BusinessException;
 import com.pickone.global.exception.ErrorCode;
@@ -39,10 +39,10 @@ public class RecruitmentService {
      */
     @Transactional
     public Long registerRecruitment(RecruitmentRequestDto requestDto, Long userId) {
-        UserEntity userEntity = userJpaRepository.findById(userId)
+        User user = userJpaRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
 
-        Recruitment recruitment = recruitmentRepository.save(requestDto.toEntity(userEntity));
+        Recruitment recruitment = recruitmentRepository.save(requestDto.toEntity(user));
 
         List<InstrumentProficiencyDto> ipDtoList = requestDto.getInstrumentProficiencyDto();
         List<RecruitmentInstrument> allInstruments = ipDtoList.stream()
@@ -114,7 +114,7 @@ public class RecruitmentService {
         Recruitment recruitment = recruitmentRepository.findById(recruitmentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_RECRUITMENT_ID));
 
-        if (!recruitment.getUserEntity().getId().equals(userId)) {
+        if (!recruitment.getUser().getId().equals(userId)) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_RECRUITMENT_ACCESS);
         }
         System.out.println("userId: " + userId);
@@ -145,7 +145,7 @@ public class RecruitmentService {
         Recruitment recruitment = recruitmentRepository.findById(recruitmentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_RECRUITMENT_ID));
 
-        if (!recruitment.getUserEntity().getId().equals(userId)) {
+        if (!recruitment.getUser().getId().equals(userId)) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_RECRUITMENT_ACCESS);
         }
         recruitmentGenreRepository.deleteAllByRecruitmentId(recruitmentId);

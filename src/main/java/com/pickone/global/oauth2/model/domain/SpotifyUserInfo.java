@@ -1,5 +1,6 @@
 package com.pickone.global.oauth2.model.domain;
 
+import com.pickone.global.common.enums.Mbti;
 import java.util.List;
 import java.util.Map;
 
@@ -23,5 +24,15 @@ public class SpotifyUserInfo extends AbstractOAuth2UserInfo {
   @Override
   public String getNickname() {
     return (String) attributes.getOrDefault("display_name", "");
+  }
+
+  @Override
+  public String getIntroduction() {
+    return "";
+  }
+
+  @Override
+  public Mbti getMbti() {
+    return null;
   }
 }
