@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -85,5 +86,12 @@ public class EmailSendServiceImpl implements EmailSendService {
     this.send(request);  // HTML 전송 지원됨
 
     log.info("[EmailService] 비밀번호 재설정 이메일 발송 완료: email={}", email);
+  }
+
+  @Async
+  @Override
+  @Transactional
+  public void sendAsync(EmailSendRequest request) {
+    this.send(request);
   }
 }
