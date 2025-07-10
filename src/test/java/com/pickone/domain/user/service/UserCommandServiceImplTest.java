@@ -14,6 +14,7 @@ import com.pickone.global.exception.BusinessException;
 import com.pickone.global.oauth2.model.domain.OAuth2UserInfo;
 import com.pickone.global.security.service.EmailTokenService;
 import com.pickone.global.common.enums.Mbti;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -23,6 +24,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -69,8 +71,12 @@ class UserCommandServiceImplTest {
 
     UserResponse response = userCommandService.signup(request);
 
+    // then
     assertNotNull(response);
-    verify(emailSendService).send(any(EmailSendRequest.class));
+
+    // ✅ 비동기 메서드가 호출될 때까지 기다렸다가 검증
+    await().atMost(1, TimeUnit.SECONDS)
+        .untilAsserted(() -> verify(emailSendService).sendAsync(any(EmailSendRequest.class)));
   }
 
   @Test
