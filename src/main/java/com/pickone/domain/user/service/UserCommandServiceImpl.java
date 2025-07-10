@@ -49,7 +49,7 @@ public class UserCommandServiceImpl implements UserCommandService {
         "이메일 인증",
         "인증 링크: http://3.35.49.195:8080/api/auth/verify-email?token=" + token
     );
-    emailSendService.send(emailRequest);
+    emailSendService.sendAsync(emailRequest);
 
     return userMapper.toDto(saved);
   }
