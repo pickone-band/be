@@ -81,9 +81,9 @@ public class UserController {
   }
 
   @Operation(summary = "회원 상세 조회", description = "사용자의 상세 정보를 조회합니다.")
-  @GetMapping
+  @GetMapping("/{userId}")
   public ResponseEntity<BaseResponse<UserResponse>> getUser(
-      @Parameter(hidden = true) @AuthenticationPrincipal(expression = "id") Long userId) {
+      @Parameter(description = "사용자 ID") @PathVariable Long userId) {
     log.info("[UserController] 사용자 정보 조회 요청: userId={}", userId);
     return BaseResponse.success(queryService.getUser(userId));
   }

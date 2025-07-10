@@ -32,7 +32,7 @@ public class MessageAggregationRepositoryImpl implements MessageAggregationRepos
         sort(Sort.Direction.DESC, "sentAt")
     );
 
-    return mongoTemplate.aggregate(aggregation, "messageDocument", Message.class)
+    return mongoTemplate.aggregate(aggregation, "messages", Message.class)
         .getMappedResults();
   }
 
