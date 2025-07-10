@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,9 +27,9 @@ public class NotificationController {
   private final NotificationQueryService queryService;
 
   @Operation(summary = "사용자 알림 목록 조회", description = "특정 사용자의 모든 알림을 조회합니다.")
-  @GetMapping("/{userId}")
+  @GetMapping
   public ResponseEntity<BaseResponse<List<NotificationResponse>>> getUserNotifications(
-      @Parameter(description = "사용자 ID", example = "42") @PathVariable Long userId) {
+      @AuthenticationPrincipal(expression = "id") Long userId) {
 
     log.info("[NotificationController] 사용자 알림 목록 조회 요청 - userId: {}", userId);
     List<NotificationResponse> notifications = queryService.getNotifications(userId);
