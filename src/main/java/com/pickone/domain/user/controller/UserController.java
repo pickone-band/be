@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -31,9 +32,9 @@ public class UserController {
   }
 
   @Operation(summary = "프로필 수정", description = "사용자의 닉네임, MBTI, 자기소개를 수정합니다.")
-  @PatchMapping("/{userId}/profile")
+  @PatchMapping("/profile")
   public ResponseEntity<BaseResponse<Void>> updateProfile(
-      @Parameter(description = "사용자 ID") @PathVariable Long userId,
+      @Parameter(hidden = true) @AuthenticationPrincipal(expression = "id") Long userId,
       @RequestBody UpdateProfileRequest request) {
     log.info("[UserController] 프로필 수정 요청: userId={}, nickname={}, mbti={}, introduction={}",
         userId, request.nickname(), request.mbti(), request.introduction());
@@ -44,7 +45,7 @@ public class UserController {
   @Operation(summary = "선호 장르 수정", description = "사용자의 장르 선호 정보를 수정합니다.")
   @PatchMapping("/{userId}/preference")
   public ResponseEntity<BaseResponse<Void>> updatePreference(
-      @Parameter(description = "사용자 ID") @PathVariable Long userId,
+      @Parameter(hidden = true) @AuthenticationPrincipal(expression = "id") Long userId,
       @RequestBody UpdatePreferenceRequest request) {
     log.info("[UserController] 선호 장르 수정 요청: userId={}, genres={}", userId, request.genres());
     commandService.updatePreference(userId, request);
@@ -52,9 +53,9 @@ public class UserController {
   }
 
   @Operation(summary = "비밀번호 변경", description = "사용자의 비밀번호를 변경합니다.")
-  @PatchMapping("/{userId}/password")
+  @PatchMapping("/password")
   public ResponseEntity<BaseResponse<Void>> changePassword(
-      @Parameter(description = "사용자 ID") @PathVariable Long userId,
+      @Parameter(hidden = true) @AuthenticationPrincipal(expression = "id") Long userId,
       @RequestBody ChangePasswordRequest request) {
     log.info("[UserController] 비밀번호 변경 요청: userId={}", userId);
     commandService.changePassword(userId, request);
@@ -62,9 +63,9 @@ public class UserController {
   }
 
   @Operation(summary = "사용자 잠금", description = "해당 사용자를 잠금 처리합니다.")
-  @PatchMapping("/{userId}/lock")
+  @PatchMapping("/lock")
   public ResponseEntity<BaseResponse<Void>> lockUser(
-      @Parameter(description = "사용자 ID") @PathVariable Long userId) {
+      @Parameter(hidden = true) @AuthenticationPrincipal(expression = "id") Long userId) {
     log.info("[UserController] 사용자 잠금 요청: userId={}", userId);
     commandService.lockUser(userId);
     return BaseResponse.success();
@@ -80,9 +81,9 @@ public class UserController {
   }
 
   @Operation(summary = "회원 상세 조회", description = "사용자의 상세 정보를 조회합니다.")
-  @GetMapping("/{userId}")
+  @GetMapping
   public ResponseEntity<BaseResponse<UserResponse>> getUser(
-      @Parameter(description = "사용자 ID") @PathVariable Long userId) {
+      @Parameter(hidden = true) @AuthenticationPrincipal(expression = "id") Long userId) {
     log.info("[UserController] 사용자 정보 조회 요청: userId={}", userId);
     return BaseResponse.success(queryService.getUser(userId));
   }
