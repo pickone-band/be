@@ -7,6 +7,7 @@ import com.pickone.global.exception.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -86,5 +87,14 @@ public class UserController {
       @Parameter(description = "사용자 ID") @PathVariable Long userId) {
     log.info("[UserController] 사용자 정보 조회 요청: userId={}", userId);
     return BaseResponse.success(queryService.getUser(userId));
+  }
+
+  @Operation(summary = "닉네임으로 사용자 ID 조회", description = "닉네임 목록으로 사용자 ID 리스트를 조회합니다.")
+  @GetMapping("/resolve-ids")
+  public ResponseEntity<BaseResponse<List<UserIdResponse>>> getUserIdsByNicknames(
+      @RequestParam List<String> nicknames
+  ) {
+    log.info("[UserController] 닉네임으로 ID 조회 요청: {}", nicknames);
+    return BaseResponse.success(queryService.getUserIdsByNicknames(nicknames));
   }
 }
