@@ -129,6 +129,7 @@ public class UserPrincipal implements UserDetails, OAuth2User, Principal {
 
   @Override
   public String getName() {
-    return email != null ? email : String.valueOf(id);
+    return String.valueOf(id); // ✅ 이메일 말고 ID만 반환
   }
+
 }
