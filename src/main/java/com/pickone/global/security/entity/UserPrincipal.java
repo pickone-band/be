@@ -3,6 +3,7 @@ package com.pickone.global.security.entity;
 import com.pickone.domain.user.entity.User;
 import com.pickone.domain.user.model.vo.*;
 import com.pickone.domain.user.model.domain.Role;
+import java.security.Principal;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @Getter
-public class UserPrincipal implements UserDetails, OAuth2User {
+public class UserPrincipal implements UserDetails, OAuth2User, Principal {
   private final Long id;
   private final String email;
   private final String password;

@@ -2,6 +2,7 @@ package com.pickone.global.websocket.intercepter;
 
 import com.pickone.global.security.config.SecurityConstants;
 import com.pickone.global.security.token.TokenProvider;
+import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
@@ -40,7 +41,7 @@ public class WebSocketAuthIntercepter implements ChannelInterceptor {
           try {
             if (!tokenProvider.isTokenBlacklisted(token)) {
               Authentication auth = tokenProvider.getAuthentication(token);
-              accessor.setUser(auth);
+              accessor.setUser((Principal) auth.getPrincipal());
               SecurityContextHolder.getContext().setAuthentication(auth);
               log.info("웹소켓 인증 성공: user={}", auth.getName());
             } else {
