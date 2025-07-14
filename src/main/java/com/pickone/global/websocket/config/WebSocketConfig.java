@@ -60,6 +60,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     converters.add(converter);
 
     log.info("[WebSocketConfig] JSON 메시지 컨버터 등록 완료");
-    return false; // Spring 기본 컨버터 제거하고 커스텀만 사용
+    return false;
   }
 }

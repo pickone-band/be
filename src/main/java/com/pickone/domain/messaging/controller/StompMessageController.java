@@ -3,6 +3,7 @@ package com.pickone.domain.messaging.controller;
 import com.pickone.domain.messaging.dto.MessageResponse;
 import com.pickone.domain.messaging.dto.SendMessageRequest;
 import com.pickone.domain.messaging.service.MessageCommandService;
+import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.Header;
@@ -24,8 +25,9 @@ public class StompMessageController {
   @MessageMapping("/chat/send")
   public void sendMessage(
       @Payload SendMessageRequest request,
-      @AuthenticationPrincipal(expression = "id") Long senderId
+      Principal principal
   ) {
+    Long senderId = Long.parseLong(principal.getName()); // or 사용자 ID 파싱 방식에 따라 적절히 수정
     log.info("[StompMessageController] 메시지 전송 요청 - senderId: {}, roomId: {}", senderId,
         request.roomId());
     MessageResponse response = messageCommandService.sendMessage(senderId, request);
