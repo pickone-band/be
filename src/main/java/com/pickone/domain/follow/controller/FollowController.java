@@ -51,7 +51,7 @@ public class FollowController {
   @Operation(summary = "팔로워 목록 조회", description = "해당 사용자를 팔로우 중인 사용자 목록을 조회합니다.")
   @GetMapping("/followers")
   public ResponseEntity<BaseResponse<List<FollowResponse>>> getFollowers(
-      @AuthenticationPrincipal(expression = "id") Long userId) {
+      @RequestParam Long userId) {
     log.info("[FollowController] 팔로워 목록 조회 - 대상 ID: {}", userId);
     return BaseResponse.success(queryService.getFollowers(userId));
   }
@@ -59,7 +59,7 @@ public class FollowController {
   @Operation(summary = "팔로잉 목록 조회", description = "해당 사용자가 팔로우 중인 사용자 목록을 조회합니다.")
   @GetMapping("/followings")
   public ResponseEntity<BaseResponse<List<FollowResponse>>> getFollowings(
-      @AuthenticationPrincipal(expression = "id") Long userId) {
+      @RequestParam Long userId) {
     log.info("[FollowController] 팔로잉 목록 조회 - 사용자 ID: {}", userId);
     return BaseResponse.success(queryService.getFollowings(userId));
   }
@@ -67,9 +67,10 @@ public class FollowController {
   @Operation(summary = "팔로우 여부 확인", description = "특정 사용자(from)가 다른 사용자(to)를 팔로우하고 있는지 확인합니다.")
   @GetMapping("/is-following")
   public ResponseEntity<BaseResponse<Boolean>> isFollowing(
-      @AuthenticationPrincipal(expression = "id") Long fromUserId,
+      @RequestParam Long fromUserId,
       @RequestParam Long toUserId) {
     log.info("[FollowController] 팔로우 여부 확인 - from: {}, to: {}", fromUserId, toUserId);
     return BaseResponse.success(queryService.isFollowing(fromUserId, toUserId));
   }
+
 }
