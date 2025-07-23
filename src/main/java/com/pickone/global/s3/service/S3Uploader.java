@@ -40,6 +40,16 @@ public class S3Uploader {
         return uploadImageUrl; // 업로드된 파일의 S3 URL 주소 반환
     }
 
+    public String uploadKey(MultipartFile multipartFile, String dirName) throws IOException {
+        File file = convert(multipartFile)
+                .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File 전환 실패"));
+
+        String key = dirName + "/" + UUID.randomUUID() + multipartFile.getOriginalFilename();
+        amazonS3Client.putObject(new PutObjectRequest(bucket, key, file));
+        removeNewFile(file);
+        return key;  // key만 반환
+    }
+
     // 실질적인 s3 업로드 부분
     private String putS3(File uploadFile, String fileName) {
         amazonS3Client.putObject(
@@ -76,4 +86,8 @@ public class S3Uploader {
         return amazonS3Client.getUrl(bucket, key).toString();
     }
 
+    public void delete(String key) {
+        amazonS3Client.deleteObject(bucket, key);
+        log.info("S3 객체 삭제 완료 - bucket: {}, key: {}", bucket, key);
+    }
 }
