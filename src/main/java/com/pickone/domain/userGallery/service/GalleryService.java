@@ -37,7 +37,7 @@ public class GalleryService {
     }
 
     @Transactional(readOnly = true)
-    public List<GalleryItem> list(Long targetUserId,Long userId) {
+    public List<GalleryItem> list(Long targetUserId) {
         User user = userJpaRepository.findById(targetUserId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
 
