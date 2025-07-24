@@ -1,8 +1,12 @@
 package com.pickone.domain.userGallery.service;
 
 
+import com.pickone.domain.user.entity.User;
+import com.pickone.domain.user.repository.UserJpaRepository;
 import com.pickone.domain.userGallery.entity.GalleryItem;
 import com.pickone.domain.userGallery.repository.GalleryItemRepository;
+import com.pickone.global.exception.BusinessException;
+import com.pickone.global.exception.ErrorCode;
 import com.pickone.global.s3.service.S3Uploader;
 import java.io.IOException;
 import java.util.List;
@@ -16,7 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class GalleryService {
     private final S3Uploader s3Uploader;
     private final GalleryItemRepository repo;
-
+    private final UserJpaRepository userJpaRepository;
     @Transactional
     public GalleryItem upload(MultipartFile file, Long userId, String caption) throws IOException {
         // 1) S3에 업로드 (profiles가 아니라 gallery 디렉터리 사용)
@@ -33,8 +37,11 @@ public class GalleryService {
     }
 
     @Transactional(readOnly = true)
-    public List<GalleryItem> list(Long userId) {
-        return repo.findAllByUserIdOrderByUploadedAtDesc(userId);
+    public List<GalleryItem> list(Long targetUserId,Long userId) {
+        User user = userJpaRepository.findById(targetUserId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_INFO_NOT_FOUND));
+
+        return repo.findAllByUserIdOrderByUploadedAtDesc(targetUserId);
     }
 
     @Transactional

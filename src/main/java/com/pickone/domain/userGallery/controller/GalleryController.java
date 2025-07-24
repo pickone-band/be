@@ -46,12 +46,13 @@ public class GalleryController {
     }
 
     @Operation(summary = "갤러리 목록 조회", description = "현재 로그인된 사용자의 갤러리 이미지 목록을 조회합니다.")
-    @GetMapping
+    @GetMapping("/{targetUserId}")
     public ResponseEntity<BaseResponse<List<GalleryItemResponseDto>>> list(
             @Parameter(hidden = true)
-            @AuthenticationPrincipal(expression = "id") Long userId
+            @AuthenticationPrincipal(expression = "id") Long userId,
+            @PathVariable("targetUserId") Long targetUserId
     ) {
-        List<GalleryItemResponseDto> list = galleryService.list(userId).stream()
+        List<GalleryItemResponseDto> list = galleryService.list(targetUserId,userId).stream()
                 .map(GalleryItemResponseDto::from)
                 .collect(Collectors.toList());
         return BaseResponse.success(list);
