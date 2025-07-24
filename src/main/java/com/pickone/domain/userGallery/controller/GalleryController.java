@@ -49,10 +49,9 @@ public class GalleryController {
     @GetMapping("/{targetUserId}")
     public ResponseEntity<BaseResponse<List<GalleryItemResponseDto>>> list(
             @Parameter(hidden = true)
-            @AuthenticationPrincipal(expression = "id") Long userId,
             @PathVariable("targetUserId") Long targetUserId
     ) {
-        List<GalleryItemResponseDto> list = galleryService.list(targetUserId,userId).stream()
+        List<GalleryItemResponseDto> list = galleryService.list(targetUserId).stream()
                 .map(GalleryItemResponseDto::from)
                 .collect(Collectors.toList());
         return BaseResponse.success(list);
