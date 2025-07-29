@@ -1,4 +1,4 @@
-package com.pickone.domain.userPerformance;
+package com.pickone.domain.userPerformance.entity;
 
 import com.pickone.domain.user.entity.User;
 import jakarta.persistence.CollectionTable;

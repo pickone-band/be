@@ -1,4 +1,4 @@
-package com.pickone.domain.userPerformance;
+package com.pickone.domain.userPerformance.dto;
 
 import java.time.LocalDate;
 import java.util.List;

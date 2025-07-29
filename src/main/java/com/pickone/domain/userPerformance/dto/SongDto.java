@@ -1,4 +1,4 @@
-package com.pickone.domain.userPerformance;
+package com.pickone.domain.userPerformance.dto;
 
 public record SongDto(
         String artist,

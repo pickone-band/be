@@ -1,5 +1,6 @@
-package com.pickone.domain.userPerformance;
+package com.pickone.domain.userPerformance.repository;
 
+import com.pickone.domain.userPerformance.entity.PerformanceRecord;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 

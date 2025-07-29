@@ -1,7 +1,13 @@
-package com.pickone.domain.userPerformance;
+package com.pickone.domain.userPerformance.service;
 
 import com.pickone.domain.user.entity.User;
 import com.pickone.domain.user.repository.UserJpaRepository;
+import com.pickone.domain.userPerformance.dto.PerformanceRecordRequest;
+import com.pickone.domain.userPerformance.dto.PerformanceRecordResponse;
+import com.pickone.domain.userPerformance.entity.Song;
+import com.pickone.domain.userPerformance.dto.SongDto;
+import com.pickone.domain.userPerformance.entity.PerformanceRecord;
+import com.pickone.domain.userPerformance.repository.PerformanceRecordRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

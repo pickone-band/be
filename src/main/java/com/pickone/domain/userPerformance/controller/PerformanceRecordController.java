@@ -1,5 +1,8 @@
-package com.pickone.domain.userPerformance;
+package com.pickone.domain.userPerformance.controller;
 
+import com.pickone.domain.userPerformance.dto.PerformanceRecordRequest;
+import com.pickone.domain.userPerformance.dto.PerformanceRecordResponse;
+import com.pickone.domain.userPerformance.service.PerformanceRecordService;
 import com.pickone.global.exception.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

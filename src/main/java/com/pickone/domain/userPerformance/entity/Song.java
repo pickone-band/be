@@ -1,4 +1,4 @@
-package com.pickone.domain.userPerformance;
+package com.pickone.domain.userPerformance.entity;
 
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
