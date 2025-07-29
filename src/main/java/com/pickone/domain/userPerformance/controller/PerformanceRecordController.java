@@ -39,10 +39,10 @@ public class PerformanceRecordController {
     // 특정 유저의 공연 목록 조회
     @Operation(summary = "공연기록 조회", description = "사용자의 모든 공연기록을 조회합니다")
     @GetMapping("/{userId}")
-    public ResponseEntity<List<PerformanceRecordResponse>> getPerformancesByUser(
+    public ResponseEntity<BaseResponse<List<PerformanceRecordResponse>>> getPerformancesByUser(
             @PathVariable Long userId
     ) {
         List<PerformanceRecordResponse> responses = performanceRecordService.findByUser(userId);
-        return ResponseEntity.ok(responses);
+        return BaseResponse.success(responses);
     }
 }
