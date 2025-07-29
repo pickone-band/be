@@ -26,7 +26,7 @@ public class PerformanceRecordController {
     private final PerformanceRecordService performanceRecordService;
 
     // 공연 등록
-    @Operation(summary = "공연기록 관리", description = "공연기록을 업로드 합니다.")
+    @Operation(summary = "공연기록 업로드", description = "공연기록을 업로드 합니다.")
     @PostMapping()
     public ResponseEntity<BaseResponse<Void>> createPerformance(
             @AuthenticationPrincipal(expression = "id") Long userId,
