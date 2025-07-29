@@ -26,6 +26,4 @@ public class GalleryItem {
     private String caption;
 
     private LocalDateTime uploadedAt = LocalDateTime.now();
-
-    // 생성자, 게터/세터...
 }
